@@ -17,18 +17,48 @@
           </select>
         </div>
         <p class="info-text">소스를 추가하면 DECASE가 가장 중요한 정보에 따라 요구사항 정의서를 제공합니다.</p>
-        <div class="file-upload-area">
-          <div class="upload-icon">+</div>
-          <p><strong>소스 업로드</strong></p>
-          <p>업로드할 파일을 선택하거나 드래그 앤 드롭하세요. (예: RFP, 회의록, 엑셀)</p>
-          <p>지원 파일 형식 : .pdf, .xlsx</p>
-          <input type="file" multiple @change="handleFileUpload" style="display: none;" ref="fileInput"/>
-          <button @click="triggerFileInput">파일 선택</button>
-          <div v-if="uploadedFiles.length > 0" class="uploaded-files-list">
-            <h4>업로드된 파일:</h4>
-            <ul>
-              <li v-for="file in uploadedFiles" :key="file.name">{{ file.name }}</li>
-            </ul>
+        <div class="file-upload-container">
+          <div class="file-upload-area">
+            <div class="upload-icon">+</div>
+            <p><strong>RFP 업로드</strong></p>
+            <p>업로드할 RFP 파일을 선택하거나 드래그 앤 드롭하세요.</p>
+            <p>지원 파일 형식 : .pdf</p>
+            <input type="file" multiple @change="handleRfpUpload" style="display: none;" ref="rfpInput"/>
+            <button @click="triggerRfpInput">파일 선택</button>
+            <div v-if="rfpFiles.length > 0" class="uploaded-files-list">
+              <h4>업로드된 RFP 파일:</h4>
+              <ul>
+                <li v-for="file in rfpFiles" :key="file.name">{{ file.name }}</li>
+              </ul>
+            </div>
+          </div>
+          <div class="file-upload-area">
+            <div class="upload-icon">+</div>
+            <p><strong>회의록 업로드</strong></p>
+            <p>업로드할 회의록 파일을 선택하거나 드래그 앤 드롭하세요.</p>
+            <p>지원 파일 형식 :.pdf,.doc,.docx</p>
+            <input type="file" multiple @change="handleMeetingUpload" style="display: none;" ref="meetingInput"/>
+            <button @click="triggerMeetingInput">파일 선택</button>
+            <div v-if="meetingFiles.length > 0" class="uploaded-files-list">
+              <h4>업로드된 회의록 파일:</h4>
+              <ul>
+                <li v-for="file in meetingFiles" :key="file.name">{{ file.name }}</li>
+              </ul>
+            </div>
+          </div>
+          <div class="file-upload-area">
+            <div class="upload-icon">+</div>
+            <p><strong>Excel 업로드</strong></p>
+            <p>업로드할 Excel 파일을 선택하거나 드래그 앤 드롭하세요.</p>
+            <p>지원 파일 형식 :.xlsx,.xls</p>
+            <input type="file" multiple @change="handleExcelUpload" style="display: none;" ref="excelInput"/>
+            <button @click="triggerExcelInput">파일 선택</button>
+            <div v-if="excelFiles.length > 0" class="uploaded-files-list">
+              <h4>업로드된 Excel 파일:</h4>
+              <ul>
+                <li v-for="file in excelFiles" :key="file.name">{{ file.name }}</li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>
@@ -42,12 +72,17 @@
 
 <script setup>
 import { defineEmits, ref } from 'vue';
-import ProjectCreationSuccessModal from './ProjectCreationSuccessModal.vue'; // Import the success modal
+import ProjectCreationSuccessModal from './ProjectCreationSuccessModal.vue';
 
 const emit = defineEmits(['close', 'createProject']);
-const fileInput = ref(null);
-const showSuccessModal = ref(false); // Reactive state for success modal visibility
-const uploadedFiles = ref([]); // Reactive state for uploaded files
+const rfpInput = ref(null);
+const meetingInput = ref(null);
+const excelInput = ref(null);
+const showSuccessModal = ref(false);
+const uploadedFiles = ref([]);
+const rfpFiles = ref([]); // Add this line
+const meetingFiles = ref([]); // Add this line
+const excelFiles = ref([]); // Add this line
 
 const close = () => {
   emit('close');
@@ -67,23 +102,58 @@ const closeSuccessModal = () => {
   close(); // Close the main modal after the success modal is closed
 };
 
-const triggerFileInput = () => {
-  fileInput.value.click();
+const triggerRfpInput = () => {
+  rfpInput.value.click();
 };
 
-const handleFileUpload = (event) => {
+const triggerMeetingInput = () => {
+  meetingInput.value.click();
+};
+
+const triggerExcelInput = () => {
+  excelInput.value.click();
+};
+
+const handleRfpUpload = (event) => {
   const files = event.target.files;
-  const allowedExtensions = ['pdf', 'xlsx', 'xls', 'doc', 'docx'];
   const filteredFiles = Array.from(files).filter(file => {
     const extension = file.name.split('.').pop().toLowerCase();
-    if (!allowedExtensions.includes(extension)) {
-      alert('허용되지 않은 형식입니다');
+    if (extension !== 'pdf') {
+      alert('RFP는 .pdf 파일만 업로드할 수 있습니다.');
       return false;
     }
     return true;
   });
-  uploadedFiles.value = [...uploadedFiles.value, ...filteredFiles];
-  console.log('업로드된 파일:', uploadedFiles.value);
+  rfpFiles.value = [...rfpFiles.value, ...filteredFiles];
+  console.log('업로드된 RFP 파일:', rfpFiles.value);
+};
+
+const handleMeetingUpload = (event) => {
+  const files = event.target.files;
+  const filteredFiles = Array.from(files).filter(file => {
+    const extension = file.name.split('.').pop().toLowerCase();
+    if (!['pdf', 'doc', 'docx'].includes(extension)) {
+      alert('회의록은 .pdf, .doc, .docx 형식만 가능합니다.');
+      return false;
+    }
+    return true;
+  });
+  meetingFiles.value = [...meetingFiles.value, ...filteredFiles];
+  console.log('업로드된 회의록 파일:', meetingFiles.value);
+};
+
+const handleExcelUpload = (event) => {
+  const files = event.target.files;
+  const filteredFiles = Array.from(files).filter(file => {
+    const extension = file.name.split('.').pop().toLowerCase();
+    if (!['xlsx', 'xls'].includes(extension)) {
+      alert('Excel은 .xlsx, .xls 파일만 업로드할 수 있습니다.');
+      return false;
+    }
+    return true;
+  });
+  excelFiles.value = [...excelFiles.value, ...filteredFiles];
+  console.log('업로드된 Excel 파일:', excelFiles.value);
 };
 </script>
 
@@ -163,6 +233,26 @@ const handleFileUpload = (event) => {
   font-size: 0.9em;
   color: #555;
   margin-bottom: 25px;
+}
+
+.file-upload-container {
+  display: flex;
+  gap: 20px;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.file-upload-container .file-upload-area {
+  flex: 1;
+  min-width: 0;
+}
+
+.file-upload-container .file-upload-area {
+  width: 32%;
+}
+
+.modal-content {
+  width: 900px;
 }
 
 .file-upload-area {
