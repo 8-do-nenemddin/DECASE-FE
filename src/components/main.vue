@@ -94,8 +94,8 @@
 	margin-bottom: 30px;
   }
   
-  .logo-container {
-  }
+  /* .logo-container {
+  } */
   
   .logo {
 	height: 50px;
@@ -107,8 +107,8 @@
 	margin: 0;
   }
   
-  .profile-section {
-  }
+  /* .profile-section {
+  } */
   
   .profile-icon {
 	width: 80px;
@@ -121,8 +121,8 @@
 	font-size: 1em;
   }
   
-  main {
-  }
+  /* main {
+  } */
   
   .toolbar {
 	display: flex;
