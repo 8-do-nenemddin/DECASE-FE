@@ -8,8 +8,8 @@
       </div>
       <div class="modal-body">
         <div class="form-group">
-          <input type="text" placeholder="프로젝트 이름을 입력하세요." />
-          <select>
+          <input type="text" v-model="projectName" placeholder="프로젝트 이름을 입력하세요." />
+          <select v-model="selectedDomain">
             <option disabled selected value="">도메인을 선택하세요.</option>
             <!-- Add domain options here -->
             <option value="domain1">도메인1</option>
@@ -45,7 +45,10 @@
             <div v-if="meetingFiles.length > 0" class="uploaded-files-list">
               <h4>업로드된 회의록 파일:</h4>
               <ul>
-                <li v-for="file in meetingFiles" :key="file.name">{{ file.name }}</li>
+                <li v-for="file in meetingFiles" :key="file.name">
+                  {{ file.name }}
+                  <button @click="removeMeetingFile(index)" class="delete-file-button">삭제</button>
+                </li>
               </ul>
             </div>
           </div>
@@ -59,14 +62,18 @@
             <div v-if="excelFiles.length > 0" class="uploaded-files-list">
               <h4>업로드된 Excel 파일:</h4>
               <ul>
-                <li v-for="file in excelFiles" :key="file.name">{{ file.name }}</li>
+                <li v-for="file in excelFiles" :key="file.name">
+                  {{ file.name }}
+                  <button @click="removeExcelFile(index)" class="delete-file-button">삭제</button>
+                </li>
               </ul>
             </div>
           </div>
         </div>
       </div>
       <div class="modal-footer">
-        <button class="create-project-button" @click="createProject">프로젝트 생성</button>
+        <p v-if="validationMessage" class="validation-message">{{ validationMessage }}</p>
+        <button class="create-project-button" @click="createProject" :disabled="!isFormValid">프로젝트 생성</button>
       </div>
     </div>
     <ProjectCreationSuccessModal v-if="showSuccessModal" @close="closeSuccessModal" />
@@ -74,7 +81,7 @@
 </template>
 
 <script setup>
-import { defineEmits, ref } from 'vue';
+import { defineEmits, ref, computed } from 'vue';
 import ProjectCreationSuccessModal from './ProjectCreationSuccessModal.vue';
 
 const emit = defineEmits(['close', 'createProject']);
@@ -82,17 +89,18 @@ const rfpInput = ref(null);
 const meetingInput = ref(null);
 const excelInput = ref(null);
 const showSuccessModal = ref(false);
-const uploadedFiles = ref([]);
-const rfpFiles = ref([]); // Add this line
-const meetingFiles = ref([]); // Add this line
-const excelFiles = ref([]); // Add this line
+const rfpFiles = ref([]);
+const meetingFiles = ref([]);
+const excelFiles = ref([]);
+const projectName = ref('');
+const selectedDomain = ref('');
+const validationMessage = ref('');
 
 const close = () => {
   emit('close');
 };
 
 const createProject = () => {
-  // Placeholder for project creation logic
   console.log('프로젝트 생성 로직');
   // emit('createProject'); // We might want to emit this after success modal is closed or handled
   showSuccessModal.value = true; // Show the success modal
@@ -170,6 +178,23 @@ const removeMeetingFile = (index) => {
 const removeExcelFile = (index) => {
   excelFiles.value.splice(index, 1);
 };
+
+const isFormValid = computed(() => {
+  if (projectName.value.trim() === '') {
+    validationMessage.value = '프로젝트 이름을 입력해주세요.';
+    return false;
+  }
+  if (selectedDomain.value === '') {
+    validationMessage.value = '도메인을 선택해주세요.';
+    return false;
+  }
+  if (rfpFiles.value.length === 0) {
+    validationMessage.value = 'RFP 파일을 업로드해주세요.';
+    return false;
+  }
+  validationMessage.value = '';
+  return true;
+});
 </script>
 
 <style scoped>
@@ -376,5 +401,11 @@ const removeExcelFile = (index) => {
 
 .delete-file-button:hover {
   background-color: #ff5252;
+}
+.validation-message {
+  color: #ff5252;
+  font-size: 0.9em;
+  margin-bottom: 10px;
+  text-align: center;
 }
 </style>
