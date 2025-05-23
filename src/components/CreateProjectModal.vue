@@ -73,8 +73,12 @@ const triggerFileInput = () => {
 
 const handleFileUpload = (event) => {
   const files = event.target.files;
-  // 기존 파일 목록에 새 파일을 추가합니다.
-  uploadedFiles.value = [...uploadedFiles.value, ...Array.from(files)];
+  const allowedExtensions = ['pdf', 'xlsx', 'xls', 'doc', 'docx'];
+  const filteredFiles = Array.from(files).filter(file => {
+    const extension = file.name.split('.').pop().toLowerCase();
+    return allowedExtensions.includes(extension);
+  });
+  uploadedFiles.value = [...uploadedFiles.value, ...filteredFiles];
   console.log('업로드된 파일:', uploadedFiles.value);
 };
 </script>
