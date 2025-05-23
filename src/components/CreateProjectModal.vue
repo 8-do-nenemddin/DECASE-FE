@@ -24,6 +24,12 @@
           <p>지원 파일 형식 : .pdf, .xlsx</p>
           <input type="file" multiple @change="handleFileUpload" style="display: none;" ref="fileInput"/>
           <button @click="triggerFileInput">파일 선택</button>
+          <div v-if="uploadedFiles.length > 0" class="uploaded-files-list">
+            <h4>업로드된 파일:</h4>
+            <ul>
+              <li v-for="file in uploadedFiles" :key="file.name">{{ file.name }}</li>
+            </ul>
+          </div>
         </div>
       </div>
       <div class="modal-footer">
@@ -41,6 +47,7 @@ import ProjectCreationSuccessModal from './ProjectCreationSuccessModal.vue'; // 
 const emit = defineEmits(['close', 'createProject']);
 const fileInput = ref(null);
 const showSuccessModal = ref(false); // Reactive state for success modal visibility
+const uploadedFiles = ref([]); // Reactive state for uploaded files
 
 const close = () => {
   emit('close');
@@ -66,8 +73,9 @@ const triggerFileInput = () => {
 
 const handleFileUpload = (event) => {
   const files = event.target.files;
-  // Handle file upload logic here
-  console.log('업로드된 파일:', files);
+  // 기존 파일 목록에 새 파일을 추가합니다.
+  uploadedFiles.value = [...uploadedFiles.value, ...Array.from(files)];
+  console.log('업로드된 파일:', uploadedFiles.value);
 };
 </script>
 
@@ -193,6 +201,34 @@ const handleFileUpload = (event) => {
     border: 1px solid #ddd;
     border-radius: 5px;
     cursor: pointer;
+}
+
+.uploaded-files-list {
+  margin-top: 15px;
+  text-align: left;
+}
+
+.uploaded-files-list h4 {
+  font-size: 0.9em;
+  margin-bottom: 5px;
+  color: #333;
+}
+
+.uploaded-files-list ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.uploaded-files-list li {
+  font-size: 0.8em;
+  color: #555;
+  padding: 3px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.uploaded-files-list li:last-child {
+  border-bottom: none;
 }
 
 .modal-footer {
