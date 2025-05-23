@@ -30,13 +30,16 @@
 				☰
 			  </button>
 			</div>
-			<select class="sort-dropdown">
-			  <option>최신 항목</option>
+			<select class="sort-dropdown" v-model="sortOption">
+			  <option value="date,asc">날짜 (오래된 순)</option>
+			  <option value="date,desc">날짜 (최신 순)</option>
+			  <option value="name,asc">이름 (오름차순)</option>
+			  <option value="name,desc">이름 (내림차순)</option>
 			</select>
 		  </div>
 		</div>
   
-		<component :is="selectedViewComponent" :projects="projects" />
+  		<component :is="selectedViewComponent" :projects="sortedProjects" />
 	  </main>
 	</div>
 	<CreateProjectModal v-if="showModal" @close="closeModal" @createProject="handleCreateProject" />
@@ -63,11 +66,15 @@
   };
 
   const projects = ref([
-	{ id: 1, name: 'Project 1', date: '2025.05.12', versionInfo: '버전 이력 7개' },
-	{ id: 2, name: 'Project 2', date: '2025.05.12', versionInfo: '버전 이력 7개' },
-	{ id: 3, name: 'Project 3', date: '2025.05.12', versionInfo: '버전 이력 7개' },
-	{ id: 4, name: 'Project 4', date: '2025.05.12', versionInfo: '버전 이력 7개' },
+	{ id: 1, name: 'Project 1', date: '2025.04.07', versionInfo: '버전 이력 1개' },
+	{ id: 2, name: 'Project 2', date: '2025.04.11', versionInfo: '버전 이력 2개' },
+	{ id: 3, name: 'Project 3', date: '2025.04.13', versionInfo: '버전 이력 3개' },
+	{ id: 4, name: 'Project 4', date: '2024.06.22', versionInfo: '버전 이력 4개' },
+	{ id: 5, name: 'Project 5', date: '2024.06.25', versionInfo: '버전 이력 5개' },
+	{ id: 6, name: 'Project 6', date: '2024.12.21', versionInfo: '버전 이력 6개' }
 	]);
+
+	console.log('프로젝트 데이터:', projects.value);
   
   const selectedView = ref('gallery');
   
@@ -78,6 +85,24 @@
   const selectedViewComponent = computed(() => {
 	return selectedView.value === 'gallery' ? ProjectGallery : ProjectList;
   });
+
+  const sortOption = ref('date,desc');
+  
+		const sortedProjects = computed(() => {
+		  const [field, order] = sortOption.value.split(',');
+		  
+		  return [...projects.value].sort((a, b) => {
+		    let comparison = 0;
+		    
+		    if (field === 'date') {
+		      comparison = new Date(a.date) - new Date(b.date);
+		    } else {
+		      comparison = a.name.localeCompare(b.name);
+		    }
+		    
+		    return order === 'asc' ? comparison : -comparison;
+		  });
+	});
   </script>
   
   <style scoped>
