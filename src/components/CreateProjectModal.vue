@@ -76,7 +76,11 @@ const handleFileUpload = (event) => {
   const allowedExtensions = ['pdf', 'xlsx', 'xls', 'doc', 'docx'];
   const filteredFiles = Array.from(files).filter(file => {
     const extension = file.name.split('.').pop().toLowerCase();
-    return allowedExtensions.includes(extension);
+    if (!allowedExtensions.includes(extension)) {
+      alert('허용되지 않은 형식입니다');
+      return false;
+    }
+    return true;
   });
   uploadedFiles.value = [...uploadedFiles.value, ...filteredFiles];
   console.log('업로드된 파일:', uploadedFiles.value);
