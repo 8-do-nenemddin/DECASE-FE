@@ -28,7 +28,10 @@
             <div v-if="rfpFiles.length > 0" class="uploaded-files-list">
               <h4>업로드된 RFP 파일:</h4>
               <ul>
-                <li v-for="file in rfpFiles" :key="file.name">{{ file.name }}</li>
+                <li v-for="(file, index) in rfpFiles" :key="file.name">
+                  {{ file.name }}
+                  <button @click="removeRfpFile(index)" class="delete-file-button">삭제</button>
+                </li>
               </ul>
             </div>
           </div>
@@ -154,6 +157,18 @@ const handleExcelUpload = (event) => {
   });
   excelFiles.value = [...excelFiles.value, ...filteredFiles];
   console.log('업로드된 Excel 파일:', excelFiles.value);
+};
+
+const removeRfpFile = (index) => {
+  rfpFiles.value.splice(index, 1);
+};
+
+const removeMeetingFile = (index) => {
+  meetingFiles.value.splice(index, 1);
+};
+
+const removeExcelFile = (index) => {
+  excelFiles.value.splice(index, 1);
 };
 </script>
 
@@ -346,5 +361,20 @@ const handleExcelUpload = (event) => {
 
 .create-project-button:hover {
   background-color: #d0d0d0;
+}
+
+.delete-file-button {
+  margin-left: 10px;
+  padding: 2px 5px;
+  font-size: 0.8em;
+  background-color: #ff6b6b;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.delete-file-button:hover {
+  background-color: #ff5252;
 }
 </style>
