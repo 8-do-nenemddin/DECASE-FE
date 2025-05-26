@@ -27,14 +27,26 @@
 					업로드된 파일 목록이 여기에 표시됩니다.
 				</p>
 				<ul v-if="item.name === '업로드한 파일' && item.files && item.files.length > 0" class="file-list file-list-scrollable">
-					<li v-for="(file, fileIndex) in item.files" :key="fileIndex" class="file-item">
-						<div class="file-line">
-						<span class="file-icon" :class="'file-icon-' + getFileIcon(file.name).type">
-							{{ getFileIcon(file.name).type }}
+					<li
+					v-for="(file, fileIndex) in item.files"
+					:key="fileIndex"
+					class="file-item"
+					>
+					<div class="file-line">
+						<span
+						class="file-icon"
+						:class="'file-icon-' + getFileIcon(file.name).type"
+						>
+						{{ getFileIcon(file.name).type }}
 						</span>
 						<span class="file-name">{{ file.name }}</span>
-						</div>
-						<div class="file-date">{{ file.date }}</div>
+
+						<!-- ❌ 삭제 버튼: 파일명 오른쪽에 위치 -->
+						<button class="delete-button" @click.stop="deleteUploadedFile(fileIndex)">
+						✕
+						</button>
+					</div>
+					<div class="file-date">{{ file.date }}</div>
 					</li>
 				</ul>
 
@@ -225,6 +237,13 @@ onMounted(() => {
   fetchExcelFromDemoFile();
 });
 
+const deleteUploadedFile = (indexToDelete) => {
+  const uploadItem = sidebarItems.value.find((item) => item.name === '업로드한 파일');
+  if (uploadItem && uploadItem.files.length > indexToDelete) {
+    uploadItem.files.splice(indexToDelete, 1);
+  }
+};
+
 </script>
 
 <style scoped>
@@ -368,6 +387,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 8px;
+  justify-content: space-between; /* 아이콘+이름 왼쪽, 삭제 버튼 오른쪽 */
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -570,5 +590,19 @@ onMounted(() => {
 }
 .file-list-scrollable::-webkit-scrollbar-track {
   background-color: transparent;
+}
+
+.delete-button {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: #ccc;
+  font-size: 0.9em;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.delete-button:hover {
+  color: #ff4d4f;
 }
 </style>
