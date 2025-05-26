@@ -8,7 +8,7 @@
 		</tr>
 	  </thead>
 	  <tbody>
-		<tr v-for="project in projects" :key="project.id">
+		<tr v-for="project in projects" :key="project.id" @click="navigateToProject(project.name)" class="project-row">
 		  <td class="title-cell">
 			{{ project.name }}
 		  </td>
@@ -20,12 +20,20 @@
   </template>
   
   <script setup>
+  import { useRouter } from 'vue-router';
+
   const props = defineProps({
 	projects: {
 	  type: Array,
 	  required: true
 	}
   });
+
+  const router = useRouter();
+
+  const navigateToProject = (projectName) => {
+    router.push({ name: 'ProjectHome', params: { projectName: projectName } });
+  };
   </script>
   
   <style scoped>
@@ -45,6 +53,14 @@
   .project-table th {
 	color: #aaa;
 	font-weight: normal;
+  }
+  
+  .project-row {
+    cursor: pointer; /* Add cursor pointer for better UX */
+  }
+
+  .project-row:hover {
+    background-color: #f0f0f0; /* Optional: Add hover effect */
   }
   
   .title-cell {

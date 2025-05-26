@@ -51,11 +51,13 @@
   
   <script setup>
   import { ref, computed } from 'vue';
+  import { useRouter } from 'vue-router'; // useRouter import 추가
   import CreateProjectModal from './CreateProjectModal.vue';
   import ProjectGallery from './ProjectGallery.vue';
   import ProjectList from './ProjectList.vue';
   
   const showModal = ref(false);
+  const router = useRouter(); // router 인스턴스 생성
   
   const openModal = () => {
 	showModal.value = true;
@@ -65,8 +67,15 @@
 	showModal.value = false;
   };
   
-  const handleCreateProject = () => {
-	console.log('새 프로젝트가 생성되었습니다.');
+  const handleCreateProject = (newProjectName) => {
+	// 실제 프로젝트 생성 로직 (예: API 호출, projects 배열에 추가 등) 이 필요할 수 있습니다.
+    // 우선은 생성되었다고 가정하고 바로 이동합니다.
+    // projects 배열에 새 프로젝트를 추가하는 로직이 있다면 여기에 추가하세요.
+    // 예: projects.value.push({ id: Date.now(), name: newProjectName, date: new Date().toISOString().split('T')[0], versionInfo: '버전 이력 0개' });
+
+	console.log(`새 프로젝트 '${newProjectName}'가 생성되었습니다.`);
+    closeModal(); // 모달 닫기
+    router.push({ name: 'ProjectHome', params: { projectName: newProjectName } }); // ProjectHome로 이동
   };
 
   const projects = ref([
