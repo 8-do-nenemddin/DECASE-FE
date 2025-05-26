@@ -4,6 +4,7 @@
 		<tr>
 		  <th>제목</th>
 		  <th>소스</th>
+		  <th>상태</th>
 		  <th>생성됨</th>
 		</tr>
 	  </thead>
@@ -13,6 +14,11 @@
 			{{ project.name }}
 		  </td>
 		  <td>{{ project.versionInfo }}</td>
+		  <td>
+			<span class="status-badge" :class="'status-' + project.status.toLowerCase()">
+			  {{ project.status }}
+			</span>
+		  </td>
 		  <td>{{ project.date }}</td>
 		</tr>
 	  </tbody>
@@ -43,11 +49,14 @@
 	color: #333;
   }
   
+  .project-table tr {
+  border-bottom: 1px solid #444;
+}
+
   .project-table th,
   .project-table td {
 	padding: 16px;
 	text-align: left;
-	border-bottom: 1px solid #444;
   }
   
   .project-table th {
@@ -75,5 +84,37 @@
 	border-radius: 4px;
 	object-fit: cover;
   }
+
+  .status-badge {
+	padding: 4px 8px;
+	border-radius: 12px;
+	font-size: 0.8em;
+  }
+  
+  .status-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.75em;
+  font-weight: 500;
+  min-width: 80px;
+  text-align: center;
+}
+
+	/* ✅ 상태별 배경/글자색 */
+	.status-done {
+	background-color: #ede7f6;
+	color: #512da8;
+	}
+
+	.status-in_progress {
+	background-color: #e8f5e9;
+	color: #2e7d32;
+	}
+
+	.status-not_started {
+	background-color: #f5f5f5;
+	color: #616161;
+	}
   </style>
   
