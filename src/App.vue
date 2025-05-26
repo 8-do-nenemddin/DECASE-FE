@@ -1,11 +1,11 @@
 <template>
-  <Main />
+  <router-view></router-view>
 </template>
 
 <script setup>
-import Main from './components/main.vue';
+// You can add any App-level script setup here if needed
 </script>
 
-<style scoped>
-/* App.vue에 특정한 스타일이 있다면 여기에 추가합니다. */
+<style>
+/* Global styles can go here or in style.css */
 </style>
