@@ -61,6 +61,11 @@
 							{{ getFileIcon(file.name).type }}
 						</span>
 						<span class="file-name">{{ file.name }}</span>
+
+						<!-- ⬇️ 다운로드 버튼 -->
+						<button class="download-button" @click.stop="downloadGeneratedFile(file)">
+							⬇︎
+						</button>
 						</div>
 						<div class="file-date">{{ file.date }}</div>
 					</li>
@@ -242,6 +247,14 @@ const deleteUploadedFile = (indexToDelete) => {
   if (uploadItem && uploadItem.files.length > indexToDelete) {
     uploadItem.files.splice(indexToDelete, 1);
   }
+};
+
+const downloadGeneratedFile = (file) => {
+  // 예시: 백엔드에 파일명이 포함된 경로 요청
+  const link = document.createElement('a');
+  link.href = `/api/download?filename=${encodeURIComponent(file.name)}`;
+  link.download = file.name;
+  link.click();
 };
 
 </script>
@@ -604,5 +617,19 @@ const deleteUploadedFile = (indexToDelete) => {
 
 .delete-button:hover {
   color: #ff4d4f;
+}
+
+.download-button {
+  background: none;
+  border: none;
+  color: #aaa;
+  font-size: 0.9em;
+  cursor: pointer;
+  padding: 2px 6px;
+  transition: color 0.2s ease;
+}
+
+.download-button:hover {
+  color: #007bff;
 }
 </style>
