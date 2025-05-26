@@ -1,6 +1,6 @@
 <template>
 	<div class="project-grid">
-	  <div class="project-card" v-for="project in projects" :key="project.id">
+	  <div class="project-card" v-for="project in projects" :key="project.id" @click="navigateToProject(project.name)">
 		<h2>{{ project.name }}</h2>
 		<p>{{ project.date }} ・ {{ project.versionInfo }}</p>
 	  </div>
@@ -8,12 +8,20 @@
   </template>
   
   <script setup>
+  import { useRouter } from 'vue-router';
+
   const props = defineProps({
 	projects: {
 	  type: Array,
 	  required: true
 	}
   });
+
+  const router = useRouter();
+
+  const navigateToProject = (projectName) => {
+    router.push({ name: 'ProjectHome', params: { projectName: projectName } });
+  };
   </script>
   
   <style scoped>
@@ -32,6 +40,7 @@
 	flex-direction: column;
 	justify-content: space-between;
 	background-color: #fff;
+    cursor: pointer; /* Add cursor pointer for better UX */
   }
   
   .project-card h2 {
