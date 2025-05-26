@@ -15,6 +15,10 @@
 	  <main>
 		<div class="toolbar">
 		  <button class="new-project-button" @click="openModal">+ 새로 만들기</button>
+		  <div class="search-container">
+			<span class="search-icon">🔍</span>
+			<input type="text" v-model="searchQuery" placeholder="프로젝트 검색" class="search-input" />
+		  </div>
 		  <div class="view-options">
 			<div class="view-toggle">
 			  <button 
@@ -77,6 +81,7 @@
 	console.log('프로젝트 데이터:', projects.value);
   
   const selectedView = ref('gallery');
+  const searchQuery = ref(''); // Add this line to store the search query
   
   const setView = (view) => {
 	selectedView.value = view;
@@ -91,7 +96,14 @@
 		const sortedProjects = computed(() => {
 		  const [field, order] = sortOption.value.split(',');
 		  
-		  return [...projects.value].sort((a, b) => {
+		  let filteredProjects = projects.value;
+		  if (searchQuery.value) {
+			filteredProjects = projects.value.filter(project => 
+			  project.name.toLowerCase().includes(searchQuery.value.toLowerCase())
+			);
+		  }
+
+		  return [...filteredProjects].sort((a, b) => {
 		    let comparison = 0;
 		    
 		    if (field === 'date') {
@@ -151,9 +163,33 @@
   
   .toolbar {
 	display: flex;
-	justify-content: space-between;
+	/* justify-content: space-between; */ /* Remove this line */
 	align-items: center;
 	margin-bottom: 20px;
+  }
+
+  .search-container {
+    display: flex;
+    align-items: center;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding-left: 8px; /* Add padding for the icon */
+    margin-left: auto; 
+    margin-right: 10px; 
+  }
+
+  .search-icon {
+    margin-right: 5px; /* Space between icon and input */
+  }
+
+  .search-input {
+    padding: 10px;
+    border: none; /* Remove individual border as container has it */
+    border-radius: 0; /* Remove individual radius */
+    font-size: 1em;
+    /* margin-left: auto; */ /* Remove this as it's handled by search-container */
+    /* margin-right: 10px; */ /* Remove this as it's handled by search-container */
+    outline: none; /* Remove focus outline if not desired */
   }
   
   .new-project-button {
