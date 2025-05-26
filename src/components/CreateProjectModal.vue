@@ -101,6 +101,7 @@ const close = () => {
 };
 
 const createProject = () => {
+  if (!isFormValid.value) return; // Ensure form is valid before proceeding
   console.log('프로젝트 생성 로직');
   // emit('createProject'); // We might want to emit this after success modal is closed or handled
   showSuccessModal.value = true; // Show the success modal
@@ -109,7 +110,7 @@ const createProject = () => {
 
 const closeSuccessModal = () => {
   showSuccessModal.value = false;
-  emit('createProject'); // Emit createProject after success modal is closed
+  emit('createProject', projectName.value); // Emit createProject with projectName after success modal is closed
   close(); // Close the main modal after the success modal is closed
 };
 
