@@ -2,7 +2,7 @@
 	<div id="app-container">
 	  <header>
 		<div class="logo-container">
-		  <img src="/DECASE.png" alt="DECASE Logo" class="logo" />
+		  <img src="/DECASE-light.png" alt="DECASE Logo" class="logo" />
 		</div>
 		<div class="welcome-message">
 		  <h1>DECASE에 오신 것을 환영합니다.</h1>
