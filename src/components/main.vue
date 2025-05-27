@@ -121,6 +121,10 @@
   </script>
   
   <style scoped>
+html, body {
+	background-color: white;
+}
+
   #app-container {
 	display: flex;
 	flex-direction: column;
@@ -135,7 +139,8 @@
   }
   
   .logo {
-	height: 50px;
+	height: 100px;
+	width: 120px;
   }
   
   .welcome-message h1 {
