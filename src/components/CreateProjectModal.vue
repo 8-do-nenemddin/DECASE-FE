@@ -37,9 +37,9 @@
           </div>
           <div class="file-upload-area">
             <div class="upload-icon">+</div>
-            <p><strong>회의록 업로드</strong></p>
-            <p>업로드할 회의록 파일을 선택하거나 드래그 앤 드롭하세요.</p>
-            <p>지원 파일 형식 :.pdf,.doc,.docx</p>
+            <p><strong>음성파일 업로드</strong></p>
+            <p>업로드할 음성 파일을 선택하거나 드래그 앤 드롭하세요.</p>
+            <p>지원 파일 형식 :.wav .mp3</p>
             <input type="file" multiple @change="handleMeetingUpload" style="display: none;" ref="meetingInput"/>
             <button @click="triggerMeetingInput">파일 선택</button>
             <div v-if="meetingFiles.length > 0" class="uploaded-files-list">
@@ -54,9 +54,9 @@
           </div>
           <div class="file-upload-area">
             <div class="upload-icon">+</div>
-            <p><strong>Excel 업로드</strong></p>
-            <p>업로드할 Excel 파일을 선택하거나 드래그 앤 드롭하세요.</p>
-            <p>지원 파일 형식 :.xlsx,.xls</p>
+            <p><strong>문서/텍스트 업로드</strong></p>
+            <p>업로드할 문서 파일을 선택하거나 드래그 앤 드롭하세요.</p>
+            <p>지원 파일 형식 :.pdf .xlsx .doc .docx .xls .txt</p>
             <input type="file" multiple @change="handleExcelUpload" style="display: none;" ref="excelInput"/>
             <button @click="triggerExcelInput">파일 선택</button>
             <div v-if="excelFiles.length > 0" class="uploaded-files-list">
