@@ -33,6 +33,12 @@
 				@click="setView('list')">
 				☰
 			  </button>
+			  <select class="status-dropdown" v-model="statusFilter">
+				<option value="all">모두</option>
+				<option value="not_started">NOT_STARTED</option>
+				<option value="in_progress">IN_PROGRESS</option>
+				<option value="done">DONE</option>
+			  </select>
 			</div>
 			<select class="sort-dropdown" v-model="sortOption">
 			  <option value="date,asc">날짜 (오래된 순)</option>
@@ -43,87 +49,75 @@
 		  </div>
 		</div>
   
-  		<component :is="selectedViewComponent" :projects="sortedProjects" />
+		<component :is="selectedViewComponent" :projects="sortedProjects" />
 	  </main>
+  
+	  <CreateProjectModal v-if="showModal" @close="closeModal" @createProject="handleCreateProject" />
 	</div>
-	<CreateProjectModal v-if="showModal" @close="closeModal" @createProject="handleCreateProject" />
   </template>
   
   <script setup>
   import { ref, computed } from 'vue';
-  import { useRouter } from 'vue-router'; // useRouter import 추가
+  import { useRouter } from 'vue-router';
   import CreateProjectModal from './CreateProjectModal.vue';
   import ProjectGallery from './ProjectGallery.vue';
   import ProjectList from './ProjectList.vue';
   
   const showModal = ref(false);
-  const router = useRouter(); // router 인스턴스 생성
+  const router = useRouter();
   
-  const openModal = () => {
-	showModal.value = true;
-  };
-  
-  const closeModal = () => {
-	showModal.value = false;
-  };
+  const openModal = () => { showModal.value = true; };
+  const closeModal = () => { showModal.value = false; };
   
   const handleCreateProject = (newProjectName) => {
-	// 실제 프로젝트 생성 로직 (예: API 호출, projects 배열에 추가 등) 이 필요할 수 있습니다.
-    // 우선은 생성되었다고 가정하고 바로 이동합니다.
-    // projects 배열에 새 프로젝트를 추가하는 로직이 있다면 여기에 추가하세요.
-    // 예: projects.value.push({ id: Date.now(), name: newProjectName, date: new Date().toISOString().split('T')[0], versionInfo: '버전 이력 0개' });
-
 	console.log(`새 프로젝트 '${newProjectName}'가 생성되었습니다.`);
-    closeModal(); // 모달 닫기
-    router.push({ name: 'ProjectHome', params: { projectName: newProjectName } }); // ProjectHome로 이동
+	closeModal();
+	router.push({ name: 'ProjectHome', params: { projectName: newProjectName } });
   };
-
+  
   const projects = ref([
-	{ id: 1, name: 'Project 1', date: '2025.04.07', versionInfo: '버전 이력 1개', status : 'NOT_STARTED'},
-	{ id: 2, name: 'Project 2', date: '2025.04.11', versionInfo: '버전 이력 2개', status : 'IN_PROGRESS'},
-	{ id: 3, name: 'Project 3', date: '2025.04.13', versionInfo: '버전 이력 3개', status : 'DONE' },
-	{ id: 4, name: 'Project 4', date: '2024.06.22', versionInfo: '버전 이력 4개', status : 'DONE' },
-	{ id: 5, name: 'Project 5', date: '2024.06.25', versionInfo: '버전 이력 5개', status : 'IN_PROGRESS' },
-	{ id: 6, name: 'Project 6', date: '2024.12.21', versionInfo: '버전 이력 6개', status : 'DONE' }
-	]);
-
-	console.log('프로젝트 데이터:', projects.value);
+	{ id: 1, name: 'Project 1', date: '2025.04.07', versionInfo: '버전 이력 1개', status: 'NOT_STARTED' },
+	{ id: 2, name: 'Project 2', date: '2025.04.11', versionInfo: '버전 이력 2개', status: 'IN_PROGRESS' },
+	{ id: 3, name: 'Project 3', date: '2025.04.13', versionInfo: '버전 이력 3개', status: 'DONE' },
+	{ id: 4, name: 'Project 4', date: '2024.06.22', versionInfo: '버전 이력 4개', status: 'DONE' },
+	{ id: 5, name: 'Project 5', date: '2024.06.25', versionInfo: '버전 이력 5개', status: 'IN_PROGRESS' },
+	{ id: 6, name: 'Project 6', date: '2024.12.21', versionInfo: '버전 이력 6개', status: 'DONE' },
+  ]);
   
   const selectedView = ref('gallery');
-  const searchQuery = ref(''); // Add this line to store the search query
+  const searchQuery = ref('');
+  const sortOption = ref('date,desc');
+  const statusFilter = ref('all');
   
-  const setView = (view) => {
-	selectedView.value = view;
-  };
+  const setView = (view) => { selectedView.value = view; };
   
   const selectedViewComponent = computed(() => {
 	return selectedView.value === 'gallery' ? ProjectGallery : ProjectList;
   });
-
-  const sortOption = ref('date,desc');
   
-		const sortedProjects = computed(() => {
-		  const [field, order] = sortOption.value.split(',');
-		  
-		  let filteredProjects = projects.value;
-		  if (searchQuery.value) {
-			filteredProjects = projects.value.filter(project => 
-			  project.name.toLowerCase().includes(searchQuery.value.toLowerCase())
-			);
-		  }
-
-		  return [...filteredProjects].sort((a, b) => {
-		    let comparison = 0;
-		    
-		    if (field === 'date') {
-		      comparison = new Date(a.date) - new Date(b.date);
-		    } else {
-		      comparison = a.name.localeCompare(b.name);
-		    }
-		    
-		    return order === 'asc' ? comparison : -comparison;
-		  });
+  const sortedProjects = computed(() => {
+	const [field, order] = sortOption.value.split(',');
+	let filtered = projects.value;
+  
+	if (searchQuery.value) {
+	  const keyword = searchQuery.value.toLowerCase();
+	  filtered = filtered.filter((project) => project.name.toLowerCase().includes(keyword));
+	}
+  
+	if (statusFilter.value !== 'all') {
+	  filtered = filtered.filter((project) => project.status.toLowerCase() === statusFilter.value);
+	}
+  
+	return [...filtered].sort((a, b) => {
+	  let comparison = 0;
+	  if (field === 'date') {
+		comparison = new Date(a.date) - new Date(b.date);
+	  } else {
+		comparison = a.name.localeCompare(b.name);
+	  }
+	  return order === 'asc' ? comparison : -comparison;
 	});
+  });
   </script>
   
   <style scoped>
@@ -140,9 +134,6 @@
 	margin-bottom: 30px;
   }
   
-  /* .logo-container {
-  } */
-  
   .logo {
 	height: 50px;
   }
@@ -152,9 +143,6 @@
 	font-weight: bold;
 	margin: 0;
   }
-  
-  /* .profile-section {
-  } */
   
   .profile-icon {
 	width: 80px;
@@ -167,38 +155,31 @@
 	font-size: 1em;
   }
   
-  /* main {
-  } */
-  
   .toolbar {
 	display: flex;
-	/* justify-content: space-between; */ /* Remove this line */
 	align-items: center;
 	margin-bottom: 20px;
   }
-
+  
   .search-container {
-    display: flex;
-    align-items: center;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    padding-left: 8px; /* Add padding for the icon */
-    margin-left: auto; 
-    margin-right: 10px; 
+	display: flex;
+	align-items: center;
+	border: 1px solid #ccc;
+	border-radius: 5px;
+	padding-left: 8px;
+	margin-left: auto;
+	margin-right: 10px;
   }
-
+  
   .search-icon {
-    margin-right: 5px; /* Space between icon and input */
+	margin-right: 5px;
   }
-
+  
   .search-input {
-    padding: 10px;
-    border: none; /* Remove individual border as container has it */
-    border-radius: 0; /* Remove individual radius */
-    font-size: 1em;
-    /* margin-left: auto; */ /* Remove this as it's handled by search-container */
-    /* margin-right: 10px; */ /* Remove this as it's handled by search-container */
-    outline: none; /* Remove focus outline if not desired */
+	padding: 10px;
+	border: none;
+	font-size: 1em;
+	outline: none;
   }
   
   .new-project-button {
