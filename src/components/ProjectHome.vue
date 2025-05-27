@@ -277,9 +277,10 @@ const downloadGeneratedFile = (file) => {
   flex-shrink: 0; /* Prevent header from shrinking */
 }
 
-.logo-container .logo {
-  height: 50px;
-}
+.logo {
+	height: 100px;
+	width: 120px;
+  }
 
 .project-title-container h1 {
   font-size: 2em;

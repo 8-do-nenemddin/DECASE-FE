@@ -1,20 +1,22 @@
 <template>
-	<div class="header">
-      <button class="nav-button" @click="goToSignIn">회원가입</button>
-      <button class="nav-button" @click="goToLogin">로그인</button>
+	<div class="back-groud">
+		<div class="header">
+      <button class="nav-button" @click="goToSignup">회원가입</button>
+      <button class="nav-button" @click="goToSignIn">로그인</button>
     </div>
     <div class="content">
       <img src="/DECASE-dark.png" alt="Logo" class="logo" />
       <p class="subtitle">정의서를 쉽게, 프로젝트를 빠르게.</p>
     </div>
+	</div>
 </template>
 
 <script setup>
 	import { useRouter } from 'vue-router';
 	const router = useRouter();
 
-	const goToLogin = () => {
-	router.push('/login');
+	const goToSignup= () => {
+	router.push('/signup');
 	};
 
 	const goToSignIn = () => {
@@ -23,12 +25,10 @@
 </script>
 
 <style>
-	html, body {
-		margin: 0;
-		padding: 0;
+	.back-groud {
 		background-color: black;
-		height: 100%;
-		overflow: hidden; /* 스크롤 제거 */
+		width: 100vw;
+		height: 100vh;
 	}
 
 	.header {
