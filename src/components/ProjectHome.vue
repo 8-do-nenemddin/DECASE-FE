@@ -2,7 +2,7 @@
   <div class="project-home-container">
     <header class="project-header-main-vue-style">
       <div class="logo-container">
-        <img src="/DECASE.png" alt="DECASE Logo" class="logo" />
+        <img src="/DECASE-light.png" alt="DECASE Logo" class="logo" />
       </div>
       <div class="project-title-container">
         <h1>{{ projectName }}</h1>
