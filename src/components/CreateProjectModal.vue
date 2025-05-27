@@ -3,7 +3,7 @@
     <div class="modal-content">
       <button class="close-button" @click="close">X</button>
       <div class="modal-header">
-        <img src="/DECASE.png" alt="DECASE Logo" class="modal-logo" />
+        <img src="/DECASE-light.png" alt="DECASE Logo" class="modal-logo" />
         <h2>프로젝트 생성</h2>
       </div>
       <div class="modal-body">
