@@ -10,7 +10,7 @@
         </h1>
       </div>
       <div class="profile-section">
-        <div class="profile-icon">
+        <div class="profile-icon" @click="toggleProfileSidebar">
           <span>프로필</span>
         </div>
       </div>
@@ -81,6 +81,39 @@
       @close="closeModal"
       @createProject="handleCreateProject"
     />
+
+    <!-- 프로필 사이드바 -->
+    <div
+      v-if="showProfileSidebar"
+      class="profile-sidebar-overlay"
+      @click="closeProfileSidebar"
+    >
+      <div class="profile-sidebar" @click.stop>
+        <div class="sidebar-content">
+          <div class="profile-info">
+            <div class="sidebar-profile-icon">
+              <span>프로필</span>
+            </div>
+            <div class="profile-name">김민주</div>
+            <div class="profile-company">SK AX</div>
+            <div class="profile-role">미래혁신부</div>
+          </div>
+
+          <div class="sidebar-divider"></div>
+
+          <button class="logout-button" @click="logout">로그아웃</button>
+          <div class="sidebar-footer">
+            <button class="withdraw-button" @click="withdraw">탈퇴하기</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <CreateProjectModal
+      v-if="showModal"
+      @close="closeModal"
+      @createProject="handleCreateProject"
+    />
   </div>
 </template>
 
@@ -94,6 +127,7 @@ import ProjectList from "./ProjectList.vue";
 const showModal = ref(false);
 const router = useRouter();
 const welcomeMessageFaded = ref(false);
+const showProfileSidebar = ref(false);
 
 // 환영 메시지 페이드 아웃 타이머
 onMounted(() => {
@@ -101,6 +135,26 @@ onMounted(() => {
     welcomeMessageFaded.value = true;
   }, 3000); // 3초 후 페이드 아웃 시작
 });
+
+const toggleProfileSidebar = () => {
+  showProfileSidebar.value = !showProfileSidebar.value;
+};
+
+const closeProfileSidebar = () => {
+  showProfileSidebar.value = false;
+};
+
+const logout = () => {
+  console.log("로그아웃");
+  showProfileSidebar.value = false;
+  // 로그아웃 로직 구현
+};
+
+const withdraw = () => {
+  console.log("탈퇴하기");
+  showProfileSidebar.value = false;
+  // 탈퇴 로직 구현
+};
 
 const openModal = () => {
   showModal.value = true;
@@ -268,6 +322,10 @@ const sortedProjects = computed(() => {
 
 .profile-section {
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
 }
 
 .profile-icon {
@@ -314,6 +372,180 @@ const sortedProjects = computed(() => {
 .profile-icon:hover::before {
   width: 100px;
   height: 100px;
+}
+
+/* 프로필 사이드바 오버레이 */
+.profile-sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 9999;
+  animation: overlayFadeIn 0.3s ease-out;
+}
+
+@keyframes overlayFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* 프로필 사이드바 */
+.profile-sidebar {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 280px;
+  height: 100vh;
+  background: white;
+  box-shadow: -4px 0 25px rgba(0, 0, 0, 0.15);
+  z-index: 10000;
+  animation: sidebarSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes sidebarSlideIn {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.sidebar-content {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 60px 40px 40px;
+}
+
+.profile-info {
+  text-align: center;
+  /* flex: 1; */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 20px;
+}
+
+.sidebar-profile-icon {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #666;
+  font-size: 16px;
+  font-weight: 500;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+.profile-name {
+  font-size: 20px;
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 15px 0;
+}
+
+.profile-company {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 5px 0;
+}
+
+.profile-role {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
+}
+
+.sidebar-divider {
+  width: 100%;
+  height: 1px;
+  background: #e0e0e0;
+  margin-top: 10px;
+}
+
+.sidebar-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-top: 0;
+}
+
+.logout-button {
+  width: 100%;
+  padding: 20px;
+  background: white;
+  color: #333;
+  border: none;
+  border-top: 1px solid #e0e0e0;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.logout-button:hover {
+  background: #f8f9fa;
+}
+
+.withdraw-button {
+  width: 100%;
+  background: white;
+  color: #c4393d;
+  border: none;
+  padding: 20px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  text-align: right;
+}
+
+.withdraw-button:hover {
+  background: rgba(196, 57, 61, 0.05);
+}
+/* 반응형 사이드바 */
+@media (max-width: 768px) {
+  .profile-sidebar {
+    width: 100vw;
+    right: 0;
+  }
+
+  .sidebar-content {
+    padding: 40px 30px 30px;
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar-content {
+    padding: 30px 20px 20px;
+  }
+
+  .profile-name {
+    font-size: 20px;
+  }
+
+  .profile-company {
+    font-size: 16px;
+  }
+
+  .profile-role {
+    font-size: 14px;
+  }
 }
 
 /* Main Content */
