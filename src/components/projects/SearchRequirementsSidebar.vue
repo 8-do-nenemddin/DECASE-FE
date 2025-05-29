@@ -71,6 +71,14 @@
               <option value="medium">보통</option>
               <option value="low">낮음</option>
             </select>
+
+            <label class="filter-label">난이도</label>
+            <select v-model="filters.priority" class="filter-select">
+              <option value="">선택</option>
+              <option value="high">높음</option>
+              <option value="medium">보통</option>
+              <option value="low">낮음</option>
+            </select>
           </div>
         </div>
 
@@ -83,18 +91,18 @@
             </label>
             <label class="checkbox-item">
               <input type="checkbox" v-model="options.proposal" />
-              <span class="checkbox-label">제안서</span>
+              <span class="checkbox-label">회의록</span>
             </label>
           </div>
 
           <div class="checkbox-group">
             <label class="checkbox-item">
               <input type="checkbox" v-model="options.additional" />
-              <span class="checkbox-label">추가 요청</span>
+              <span class="checkbox-label">추가 파일</span>
             </label>
             <label class="checkbox-item">
               <input type="checkbox" v-model="options.functional" />
-              <span class="checkbox-label">기능명세(요구)</span>
+              <span class="checkbox-label">회의록(음성)</span>
             </label>
           </div>
         </div>
@@ -146,13 +154,6 @@ const performSearch = () => {
 /* 사이드바 오버레이 */
 .sidebar-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(4px);
-  z-index: 50;
   animation: overlayFadeIn 0.3s ease-out;
 }
 
@@ -189,6 +190,7 @@ const performSearch = () => {
 }
 
 .sidebar-content {
+  margin-top: 70px;
   padding: 24px 20px;
   display: flex;
   flex-direction: column;
@@ -201,7 +203,7 @@ const performSearch = () => {
 }
 
 .search-input {
-  width: 100%;
+  width: 85%;
   padding: 12px 16px;
   border: 1px solid #d1d5db;
   border-radius: 8px;
@@ -230,7 +232,7 @@ const performSearch = () => {
 
 .filter-section {
   display: flex;
-  flex-direction: column;
+  /* flex-direction: column; */
   gap: 6px;
 }
 
@@ -271,7 +273,7 @@ const performSearch = () => {
 
 .checkbox-group {
   display: flex;
-  flex-direction: column;
+  /* flex-direction: column; */
   gap: 8px;
 }
 
