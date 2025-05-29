@@ -166,7 +166,7 @@ const closeModal = () => {
 const handleCreateProject = (newProjectName) => {
   console.log(`새 프로젝트 '${newProjectName}'가 생성되었습니다.`);
   closeModal();
-  router.push({ name: "ProjectHome", params: { projectName: newProjectName } });
+  router.push({ name: "ProjectMain", params: { projectName: newProjectName } });
 };
 
 const projects = ref([
@@ -262,6 +262,9 @@ const sortedProjects = computed(() => {
 }
 
 #app-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
   min-height: 100vh;
   background-color: #ffffff;
   font-family: "Apple SD Gothic Neo", "Malgun Gothic", "맑은 고딕", sans-serif;
