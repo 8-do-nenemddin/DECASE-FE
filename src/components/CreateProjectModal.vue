@@ -1,6 +1,7 @@
 <template>
   <div class="modal-overlay" @click="handleOverlayClick">
-    <div class="modal-container" @click.stop>
+    <!-- 프로젝트 생성 폼 -->
+    <div v-if="!showSuccessModal" class="modal-container" @click.stop>
       <div class="modal-header">
         <h2 class="modal-title">Create Project</h2>
         <p class="modal-subtitle">프로젝트에 대한 상세 정보를 입력해주세요.</p>
@@ -62,15 +63,24 @@
         </div>
       </div>
     </div>
+
+    <!-- 성공 모달 -->
+    <SuccessCreateProject
+      v-if="showSuccessModal"
+      @close="handleSuccessClose"
+      @confirm="handleSuccessConfirm"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref } from "vue";
+import SuccessCreateProject from "./ProjectCreationSuccessModal.vue";
 
 const emit = defineEmits(["close", "createProject"]);
 
 const isLoading = ref(false);
+const showSuccessModal = ref(false);
 const formData = ref({
   name: "",
   description: "",
@@ -81,7 +91,9 @@ const formData = ref({
 });
 
 const handleOverlayClick = () => {
-  emit("close");
+  if (!showSuccessModal.value) {
+    emit("close");
+  }
 };
 
 const handleCreateProject = async () => {
@@ -95,8 +107,21 @@ const handleCreateProject = async () => {
   // 로딩 시뮬레이션
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
-  emit("createProject", { ...formData.value });
   isLoading.value = false;
+  // 성공 모달 표시
+  showSuccessModal.value = true;
+};
+
+const handleSuccessConfirm = () => {
+  // 부모 컴포넌트에게 프로젝트 데이터 전달
+  emit("createProject", { ...formData.value });
+  showSuccessModal.value = false;
+  emit("close");
+};
+
+const handleSuccessClose = () => {
+  showSuccessModal.value = false;
+  emit("close");
 };
 </script>
 
