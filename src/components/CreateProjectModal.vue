@@ -1,412 +1,480 @@
 <template>
-  <div class="modal-overlay" @click.self="close">
-    <div class="modal-content">
-      <button class="close-button" @click="close">X</button>
+  <div class="modal-overlay" @click="handleOverlayClick">
+    <div class="modal-container" @click.stop>
       <div class="modal-header">
-        <img src="/DECASE-light.png" alt="DECASE Logo" class="modal-logo" />
-        <h2>프로젝트 생성</h2>
+        <h2 class="modal-title">Create Project</h2>
+        <p class="modal-subtitle">프로젝트에 대한 상세 정보를 입력해주세요.</p>
+        <button class="close-button" @click="$emit('close')">X</button>
       </div>
-      <div class="modal-body">
-        <div class="form-group">
-          <input type="text" v-model="projectName" placeholder="프로젝트 이름을 입력하세요." />
-          <select v-model="selectedDomain">
-            <option disabled selected value="">도메인을 선택하세요.</option>
-            <!-- Add domain options here -->
-            <option value="domain1">도메인1</option>
-            <option value="domain2">도메인2</option>
-          </select>
-        </div>
-        <p class="info-text">소스를 추가하면 DECASE가 가장 중요한 정보에 따라 요구사항 정의서를 제공합니다.</p>
-        <div class="file-upload-container">
-          <div class="file-upload-area">
-            <div class="upload-icon">+</div>
-            <p><strong>RFP 업로드</strong></p>
-            <p>업로드할 RFP 파일을 선택하거나 드래그 앤 드롭하세요.</p>
-            <p>지원 파일 형식 : .pdf</p>
-            <input type="file" multiple @change="handleRfpUpload" style="display: none;" ref="rfpInput"/>
-            <button @click="triggerRfpInput">파일 선택</button>
-            <div v-if="rfpFiles.length > 0" class="uploaded-files-list">
-              <h4>업로드된 RFP 파일:</h4>
-              <ul>
-                <li v-for="(file, index) in rfpFiles" :key="file.name">
-                  {{ file.name }}
-                  <button @click="removeRfpFile(index)" class="delete-file-button">삭제</button>
-                </li>
-              </ul>
-            </div>
-          </div>
-          <div class="file-upload-area">
-            <div class="upload-icon">+</div>
-            <p><strong>음성파일 업로드</strong></p>
-            <p>업로드할 음성 파일을 선택하거나 드래그 앤 드롭하세요.</p>
-            <p>지원 파일 형식 :.wav .mp3</p>
-            <input type="file" multiple @change="handleMeetingUpload" style="display: none;" ref="meetingInput"/>
-            <button @click="triggerMeetingInput">파일 선택</button>
-            <div v-if="meetingFiles.length > 0" class="uploaded-files-list">
-              <h4>업로드된 회의록 파일:</h4>
-              <ul>
-                <li v-for="file in meetingFiles" :key="file.name">
-                  {{ file.name }}
-                  <button @click="removeMeetingFile(index)" class="delete-file-button">삭제</button>
-                </li>
-              </ul>
-            </div>
-          </div>
-          <div class="file-upload-area">
-            <div class="upload-icon">+</div>
-            <p><strong>문서/텍스트 업로드</strong></p>
-            <p>업로드할 문서 파일을 선택하거나 드래그 앤 드롭하세요.</p>
-            <p>지원 파일 형식 :.pdf .xlsx .doc .docx .xls .txt</p>
-            <input type="file" multiple @change="handleExcelUpload" style="display: none;" ref="excelInput"/>
-            <button @click="triggerExcelInput">파일 선택</button>
-            <div v-if="excelFiles.length > 0" class="uploaded-files-list">
-              <h4>업로드된 Excel 파일:</h4>
-              <ul>
-                <li v-for="file in excelFiles" :key="file.name">
-                  {{ file.name }}
-                  <button @click="removeExcelFile(index)" class="delete-file-button">삭제</button>
-                </li>
-              </ul>
-            </div>
+
+      <div class="modal-content">
+        <!-- 프로젝트 기간 -->
+        <div class="date-section">
+          <div class="date-label">프로젝트 기간</div>
+          <div class="date-inputs">
+            <input
+              type="date"
+              v-model="formData.startDate"
+              class="date-input"
+            />
+            <span class="date-separator">~</span>
+            <input type="date" v-model="formData.endDate" class="date-input" />
           </div>
         </div>
-      </div>
-      <div class="modal-footer">
-        <p v-if="validationMessage" class="validation-message">{{ validationMessage }}</p>
-        <button class="create-project-button" @click="createProject" :disabled="!isFormValid">프로젝트 생성</button>
+
+        <!-- 프로젝트 이름 & 제안 PM -->
+        <div class="form-row">
+          <div class="form-field">
+            <label class="form-label">프로젝트 이름</label>
+            <input type="text" v-model="formData.name" class="form-input" />
+          </div>
+          <div class="form-field">
+            <label class="form-label">제안 PM</label>
+            <input type="text" v-model="formData.manager" class="form-input" />
+          </div>
+        </div>
+
+        <!-- 프로젝트 설명 -->
+        <div class="form-field full-width">
+          <label class="form-label">프로젝트 설명</label>
+          <textarea
+            v-model="formData.description"
+            class="form-textarea"
+          ></textarea>
+        </div>
+
+        <!-- 프로젝트 규모 -->
+        <div class="form-field full-width">
+          <label class="form-label">프로젝트 규모</label>
+          <input type="text" v-model="formData.category" class="form-input" />
+        </div>
+
+        <!-- 생성 버튼 -->
+        <div class="button-section">
+          <button
+            class="submit-button"
+            @click="handleCreateProject"
+            :disabled="isLoading"
+          >
+            <span v-if="isLoading" class="loading"></span>
+            <span v-else>생성</span>
+          </button>
+        </div>
       </div>
     </div>
-    <ProjectCreationSuccessModal v-if="showSuccessModal" @close="closeSuccessModal" />
   </div>
 </template>
 
 <script setup>
-import { defineEmits, ref, computed } from 'vue';
-import ProjectCreationSuccessModal from './ProjectCreationSuccessModal.vue';
+import { ref } from "vue";
 
-const emit = defineEmits(['close', 'createProject']);
-const rfpInput = ref(null);
-const meetingInput = ref(null);
-const excelInput = ref(null);
-const showSuccessModal = ref(false);
-const rfpFiles = ref([]);
-const meetingFiles = ref([]);
-const excelFiles = ref([]);
-const projectName = ref('');
-const selectedDomain = ref('');
-const validationMessage = ref('');
+const emit = defineEmits(["close", "createProject"]);
 
-const close = () => {
-  emit('close');
-};
-
-const createProject = () => {
-  if (!isFormValid.value) return; // Ensure form is valid before proceeding
-  console.log('프로젝트 생성 로직');
-  // emit('createProject'); // We might want to emit this after success modal is closed or handled
-  showSuccessModal.value = true; // Show the success modal
-  // Do not close the main modal immediately, let the success modal handle it or close after confirmation
-};
-
-const closeSuccessModal = () => {
-  showSuccessModal.value = false;
-  emit('createProject', projectName.value); // Emit createProject with projectName after success modal is closed
-  close(); // Close the main modal after the success modal is closed
-};
-
-const triggerRfpInput = () => {
-  rfpInput.value.click();
-};
-
-const triggerMeetingInput = () => {
-  meetingInput.value.click();
-};
-
-const triggerExcelInput = () => {
-  excelInput.value.click();
-};
-
-const handleRfpUpload = (event) => {
-  const files = event.target.files;
-  const filteredFiles = Array.from(files).filter(file => {
-    const extension = file.name.split('.').pop().toLowerCase();
-    if (extension !== 'pdf') {
-      alert('RFP는 .pdf 파일만 업로드할 수 있습니다.');
-      return false;
-    }
-    return true;
-  });
-  rfpFiles.value = [...rfpFiles.value, ...filteredFiles];
-  console.log('업로드된 RFP 파일:', rfpFiles.value);
-};
-
-const handleMeetingUpload = (event) => {
-  const files = event.target.files;
-  const filteredFiles = Array.from(files).filter(file => {
-    const extension = file.name.split('.').pop().toLowerCase();
-    if (!['pdf', 'doc', 'docx'].includes(extension)) {
-      alert('회의록은 .pdf, .doc, .docx 형식만 가능합니다.');
-      return false;
-    }
-    return true;
-  });
-  meetingFiles.value = [...meetingFiles.value, ...filteredFiles];
-  console.log('업로드된 회의록 파일:', meetingFiles.value);
-};
-
-const handleExcelUpload = (event) => {
-  const files = event.target.files;
-  const filteredFiles = Array.from(files).filter(file => {
-    const extension = file.name.split('.').pop().toLowerCase();
-    if (!['xlsx', 'xls'].includes(extension)) {
-      alert('Excel은 .xlsx, .xls 파일만 업로드할 수 있습니다.');
-      return false;
-    }
-    return true;
-  });
-  excelFiles.value = [...excelFiles.value, ...filteredFiles];
-  console.log('업로드된 Excel 파일:', excelFiles.value);
-};
-
-const removeRfpFile = (index) => {
-  rfpFiles.value.splice(index, 1);
-};
-
-const removeMeetingFile = (index) => {
-  meetingFiles.value.splice(index, 1);
-};
-
-const removeExcelFile = (index) => {
-  excelFiles.value.splice(index, 1);
-};
-
-const isFormValid = computed(() => {
-  if (projectName.value.trim() === '') {
-    validationMessage.value = '프로젝트 이름을 입력해주세요.';
-    return false;
-  }
-  if (selectedDomain.value === '') {
-    validationMessage.value = '도메인을 선택해주세요.';
-    return false;
-  }
-  if (rfpFiles.value.length === 0) {
-    validationMessage.value = 'RFP 파일을 업로드해주세요.';
-    return false;
-  }
-  validationMessage.value = '';
-  return true;
+const isLoading = ref(false);
+const formData = ref({
+  name: "",
+  description: "",
+  category: "",
+  manager: "",
+  startDate: "2025-05-29",
+  endDate: "2025-05-30",
 });
+
+const handleOverlayClick = () => {
+  emit("close");
+};
+
+const handleCreateProject = async () => {
+  if (!formData.value.name.trim()) {
+    alert("프로젝트 이름을 입력해주세요.");
+    return;
+  }
+
+  isLoading.value = true;
+
+  // 로딩 시뮬레이션
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+
+  emit("createProject", { ...formData.value });
+  isLoading.value = false;
+};
 </script>
 
 <style scoped>
+/* Modal Styles */
 .modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
+  inset: 0;
+  z-index: 50;
   display: flex;
-  justify-content: center;
   align-items: center;
-  z-index: 1000;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  opacity: 0;
+  animation: fadeIn 0.3s ease forwards;
 }
 
-.modal-content {
-  background-color: white;
-  padding: 30px;
-  border-radius: 15px;
-  width: 600px; /* Adjust as needed */
-  max-width: 90%;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+.modal-container {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  width: 100%;
+  max-width: 980px;
+  height: auto;
+  margin: 1rem;
+  overflow: hidden;
+  transform: scale(0.9) translateY(20px);
+  animation: slideUp 0.3s ease forwards;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.modal-container::-webkit-scrollbar {
+  display: none;
+}
+
+.modal-container {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@keyframes slideUp {
+  to {
+    transform: scale(1) translateY(0);
+  }
+}
+
+.modal-header {
   position: relative;
+  padding: 12px 48px 12px 48px;
+  border-bottom: 1px solid #f1f5f9;
   text-align: center;
+}
+
+.modal-title {
+  font-size: 36px;
+  font-weight: 700;
+  color: #1a202c;
+  margin-bottom: 8px;
+  letter-spacing: -0.025em;
+}
+
+.modal-subtitle {
+  font-size: 14px;
+  color: #64748b;
+  font-weight: 400;
 }
 
 .close-button {
   position: absolute;
-  top: 15px;
-  right: 15px;
-  background: #eee;
+  top: 24px;
+  right: 32px;
+  width: 32px;
+  height: 32px;
   border: none;
-  border-radius: 50%;
-  width: 30px;
-  height: 30px;
-  font-size: 16px;
+  background: #f8fafc;
+  border-radius: 8px;
   cursor: pointer;
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
 }
 
-.modal-header {
-  margin-bottom: 20px;
-}
-
-.modal-logo {
-  height: 40px; /* Adjust as needed */
-  margin-bottom: 10px;
-}
-
-.modal-header h2 {
-  font-size: 1.8em;
-  font-weight: bold;
-  margin: 0;
-  color: #333;
-}
-
-.modal-body .form-group {
-  display: flex;
-  gap: 15px;
-  margin-bottom: 15px;
-}
-
-.modal-body input[type="text"],
-.modal-body select {
-  flex-grow: 1;
-  padding: 12px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  font-size: 1em;
-}
-
-.info-text {
-  font-size: 0.9em;
-  color: #555;
-  margin-bottom: 25px;
-}
-
-.file-upload-container {
-  display: flex;
-  gap: 20px;
-  justify-content: space-between;
-  flex-wrap: wrap;
-}
-
-.file-upload-container .file-upload-area {
-  flex: 1;
-  min-width: 0;
-}
-
-.file-upload-container .file-upload-area {
-  width: 32%;
+.close-button:hover {
+  background: #e2e8f0;
+  color: #475569;
+  transform: scale(1.05);
 }
 
 .modal-content {
-  width: 900px;
-}
-
-.file-upload-area {
-  border: 2px dashed #ccc;
-  border-radius: 10px;
-  padding: 30px;
-  margin-bottom: 25px;
-  cursor: pointer;
-}
-
-.file-upload-area .upload-icon {
-  font-size: 2em;
-  color: #aaa;
-  background-color: #f0f0f0;
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
+  padding: 24px 48px 32px 48px;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* 프로젝트 기간 섹션 */
+.date-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.date-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.date-inputs {
+  display: flex;
   align-items: center;
-  margin: 0 auto 15px auto;
+  gap: 16px;
+  max-width: 320px;
 }
 
-.file-upload-area p {
-  margin: 5px 0;
-  font-size: 0.9em;
-  color: #555;
-}
-
-.file-upload-area p:nth-of-type(2) { /* "업로드할 파일을 선택하거나..." */
-  font-size: 0.8em;
-}
-
-.file-upload-area p:nth-of-type(3) { /* "지원 파일 형식..." */
-  font-size: 0.8em;
-  color: #777;
-}
-
-.file-upload-area button {
-    margin-top: 10px;
-    padding: 8px 15px;
-    font-size: 0.9em;
-    background-color: #f0f0f0;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-.uploaded-files-list {
-  margin-top: 15px;
-  text-align: left;
-}
-
-.uploaded-files-list h4 {
-  font-size: 0.9em;
-  margin-bottom: 5px;
-  color: #333;
-}
-
-.uploaded-files-list ul {
-  list-style-type: none;
-  padding: 0;
-  margin: 0;
-}
-
-.uploaded-files-list li {
-  font-size: 0.8em;
-  color: #555;
-  padding: 3px 0;
-  border-bottom: 1px solid #eee;
-}
-
-.uploaded-files-list li:last-child {
-  border-bottom: none;
-}
-
-.modal-footer {
-  text-align: right;
-}
-
-.create-project-button {
-  background-color: #e0e0e0; /* Light gray, as in the image */
-  color: #333;
-  border: none;
-  padding: 12px 25px;
+.date-input {
+  padding: 0px 16px;
+  flex: 1;
+  border: 1px solid #d1d5db;
   border-radius: 8px;
-  cursor: pointer;
-  font-size: 1em;
-  font-weight: bold;
+  font-size: 14px;
+  font-family: inherit;
+  color: #1f2937;
+  background: #ffffff;
+  transition: all 0.2s ease;
+  min-height: 40px;
 }
 
-.create-project-button:hover {
-  background-color: #d0d0d0;
+.date-input:focus {
+  outline: none;
+  border-color: #e53e3e;
+  box-shadow: 0 0 0 3px rgba(229, 62, 62, 0.1);
 }
 
-.delete-file-button {
-  margin-left: 10px;
-  padding: 2px 5px;
-  font-size: 0.8em;
-  background-color: #ff6b6b;
+.date-separator {
+  font-weight: 500;
+  color: #64748b;
+  font-size: 14px;
+  margin: 0 4px;
+}
+
+/* 폼 행 (2열 레이아웃) */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-field.full-width {
+  grid-column: 1 / -1;
+}
+
+.form-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.form-input {
+  padding: 0px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  color: #1f2937;
+  background: #ffffff;
+  transition: all 0.2s ease;
+  min-height: 40px;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #e53e3e;
+  box-shadow: 0 0 0 3px rgba(229, 62, 62, 0.1);
+}
+
+.form-input:hover {
+  border-color: #9ca3af;
+}
+
+.form-textarea {
+  padding: 12px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  color: #1f2937;
+  background: #ffffff;
+  transition: all 0.2s ease;
+  resize: none;
+  min-height: 100px;
+  line-height: 1.5;
+}
+
+.form-textarea:focus {
+  outline: none;
+  border-color: #e53e3e;
+  box-shadow: 0 0 0 3px rgba(229, 62, 62, 0.1);
+}
+
+.form-textarea:hover {
+  border-color: #9ca3af;
+}
+
+/* 버튼 섹션 */
+.button-section {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.submit-button {
+  background: #000000;
   color: white;
   border: none;
-  border-radius: 3px;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 80px;
+  font-family: inherit;
 }
 
-.delete-file-button:hover {
-  background-color: #ff5252;
+.submit-button:hover:not(:disabled) {
+  background: #1f2937;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
-.validation-message {
-  color: #ff5252;
-  font-size: 0.9em;
-  margin-bottom: 10px;
-  text-align: center;
+
+.submit-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.submit-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.loading {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .modal-container {
+    margin: 16px;
+    max-width: calc(100vw - 32px);
+  }
+
+  .modal-header {
+    padding: 40px 40px 32px 40px;
+  }
+
+  .modal-content {
+    padding: 32px 40px 40px 40px;
+    gap: 28px;
+  }
+
+  .modal-title {
+    font-size: 28px;
+  }
+
+  .modal-subtitle {
+    font-size: 15px;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+
+  .date-inputs {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+    max-width: none;
+  }
+
+  .date-separator {
+    text-align: center;
+    margin: 4px 0;
+  }
+
+  .close-button {
+    top: 32px;
+    right: 32px;
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .modal-container {
+    margin: 12px;
+    max-width: calc(100vw - 24px);
+  }
+
+  .modal-header {
+    padding: 32px 32px 24px 32px;
+  }
+
+  .modal-content {
+    padding: 24px 32px 32px 32px;
+    gap: 24px;
+  }
+
+  .modal-title {
+    font-size: 24px;
+  }
+
+  .modal-subtitle {
+    font-size: 14px;
+  }
+
+  .close-button {
+    top: 24px;
+    right: 24px;
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+  }
+
+  .form-textarea {
+    min-height: 120px;
+  }
+
+  .form-input,
+  .date-input {
+    padding: 14px 16px;
+    font-size: 15px;
+    min-height: 48px;
+  }
+
+  .form-textarea {
+    padding: 14px 16px;
+    font-size: 15px;
+  }
+
+  .submit-button {
+    padding: 14px 28px;
+    font-size: 15px;
+  }
 }
 </style>
