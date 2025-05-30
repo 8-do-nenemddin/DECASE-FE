@@ -32,7 +32,12 @@
               <line x1="3" y1="18" x2="21" y2="18"></line>
             </svg>
           </button>
-          <button class="icon-button" title="내보내기">
+          <!-- 소스 업로드 -->
+          <button
+            class="icon-button"
+            @click="openSourceUploadModal"
+            title="내보내기"
+          >
             <svg
               width="20"
               height="20"
@@ -94,16 +99,25 @@
       </div>
     </main>
 
-    <!-- 사이드바 -->
+    <!-- 검색 사이드바 -->
     <SearchRequirementsSidebar v-if="showSidebar" @close="closeSidebar" />
+
+    <!-- 소스 업로드 모달 -->
+    <UploadSourceModal
+      v-if="showSourceUploadModal"
+      @close="closeSourceUploadModal"
+      @createProject="handleUploadSource"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref } from "vue";
 import SearchRequirementsSidebar from "./SearchRequirementsSidebar.vue";
+import UploadSourceModal from "./UploadSourceModal.vue";
 
 const showSidebar = ref(false);
+const showSourceUploadModal = ref(false);
 
 const toggleSidebar = () => {
   showSidebar.value = !showSidebar.value;
@@ -111,6 +125,19 @@ const toggleSidebar = () => {
 
 const closeSidebar = () => {
   showSidebar.value = false;
+};
+
+const openSourceUploadModal = () => {
+  showSourceUploadModal.value = true;
+};
+const closeSourceUploadModal = () => {
+  showSourceUploadModal.value = false;
+};
+
+const handleUploadSource = (newSourceName) => {
+  console.log(`요구사항 정의서 생성 중...`);
+  closeModal();
+  // router.push({ name: "", params: { sourceName: newSourceName } });
 };
 </script>
 
