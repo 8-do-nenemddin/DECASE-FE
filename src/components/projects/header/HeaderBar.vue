@@ -72,7 +72,7 @@
           <circle cx="12" cy="7" r="4"></circle>
         </svg>
       </button>
-      <button class="icon-button" title="설정">
+      <button class="icon-button" @click="handleGoSettings" title="설정">
         <svg
           width="20"
           height="20"
@@ -106,9 +106,12 @@
 
 <script setup>
 import { ref } from "vue";
+import { useRouter } from "vue-router";
 import SearchRequirementsSidebar from "./SearchRequirementsSidebar.vue";
 import ManageFileSidebar from "./ManageFileSidebar.vue";
 import UploadSourceModal from "./UploadSourceModal.vue";
+
+const router = useRouter();
 
 const showSidebar = ref(false);
 const showFileListSidebar = ref(false);
@@ -144,6 +147,11 @@ const handleUploadSource = (newSourceName) => {
   console.log(`요구사항 정의서 생성 중...`);
   closeModal();
   // router.push({ name: "", params: { sourceName: newSourceName } });
+};
+
+const handleGoSettings = (projectId) => {
+  console.log(`'${projectId}' 세팅`);
+  router.push({ name: "ProjectSetting", params: { projectId: projectId } });
 };
 </script>
 
