@@ -1,85 +1,105 @@
 <template>
   <div class="modal-overlay" @click="handleOverlayClick">
     <div class="modal-container" @click.stop>
-      <!-- X 버튼 -->
-      <button class="close-button" @click="$emit('close')">X</button>
+      <!-- 로딩 상태가 아닐 때: 업로드 UI -->
+      <div v-if="!isGenerating">
+        <!-- X 버튼 -->
+        <button class="close-button" @click="$emit('close')">X</button>
 
-      <!-- 업로드 영역 -->
-      <div
-        class="upload-area"
-        @click="handleUploadAreaClick"
-        @drop="handleDrop"
-        @dragover="handleDragOver"
-        @dragenter="handleDragEnter"
-        @dragleave="handleDragLeave"
-        :class="{ 'drag-over': isDragOver }"
-      >
-        <!-- 업로드 아이콘 -->
-        <div class="upload-icon">
-          <svg
-            width="48"
-            height="48"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="17,8 12,3 7,8"></polyline>
-            <line x1="12" y1="3" x2="12" y2="15"></line>
-          </svg>
-        </div>
-
-        <!-- 업로드 제목 -->
-        <h2 class="upload-title">소스 업로드</h2>
-
-        <!-- 업로드 설명 -->
-        <p class="upload-description">
-          업로드할 파일을 선택하거나 드래그 앤 드롭해주세요. (예: RFP, 회의록,
-          엑셀)<br />
-          지원 파일 형식 : pdf, .xlsx, .xls, .wav
-        </p>
-
-        <!-- 히든 파일 인풋 -->
-        <input
-          type="file"
-          ref="fileInput"
-          @change="handleFileSelect"
-          multiple
-          accept=".pdf,.xlsx,.xls,.wav"
-          style="display: none"
-        />
-      </div>
-
-      <!-- 선택된 파일 목록 -->
-      <div v-if="selectedFiles.length > 0" class="file-list">
-        <h3 class="file-list-title">선택된 파일</h3>
+        <!-- 업로드 영역 -->
         <div
-          v-for="(file, index) in selectedFiles"
-          :key="index"
-          class="file-item"
+          class="upload-area"
+          @click="handleUploadAreaClick"
+          @drop="handleDrop"
+          @dragover="handleDragOver"
+          @dragenter="handleDragEnter"
+          @dragleave="handleDragLeave"
+          :class="{ 'drag-over': isDragOver }"
         >
-          <div class="file-info">
-            <span class="file-name">{{ file.name }}</span>
-            <span class="file-size">{{ formatFileSize(file.size) }}</span>
+          <!-- 업로드 아이콘 -->
+          <div class="upload-icon">
+            <svg
+              width="48"
+              height="48"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17,8 12,3 7,8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
           </div>
-          <button class="remove-file" @click="removeFile(index)">×</button>
+
+          <!-- 업로드 제목 -->
+          <h2 class="upload-title">소스 업로드</h2>
+
+          <!-- 업로드 설명 -->
+          <p class="upload-description">
+            업로드할 파일을 선택하거나 드래그 앤 드롭해주세요. (예: RFP, 회의록,
+            엑셀)<br />
+            지원 파일 형식 : pdf, .xlsx, .xls, .wav, .docx
+          </p>
+
+          <!-- 히든 파일 인풋 -->
+          <input
+            type="file"
+            ref="fileInput"
+            @change="handleFileSelect"
+            multiple
+            accept=".pdf,.xlsx,.xls,.wav"
+            style="display: none"
+          />
+        </div>
+
+        <!-- 선택된 파일 목록 -->
+        <div v-if="selectedFiles.length > 0" class="file-list">
+          <h3 class="file-list-title">선택된 파일</h3>
+          <div
+            v-for="(file, index) in selectedFiles"
+            :key="index"
+            class="file-item"
+          >
+            <div class="file-info">
+              <span class="file-name">{{ file.name }}</span>
+              <span class="file-size">{{ formatFileSize(file.size) }}</span>
+            </div>
+            <button class="remove-file" @click="removeFile(index)">×</button>
+          </div>
+        </div>
+
+        <!-- 버튼 그룹 -->
+        <div class="button-group">
+          <button
+            class="upload-button"
+            @click="handleUpload"
+            :disabled="selectedFiles.length === 0 || isUploading"
+          >
+            <span v-if="isUploading" class="loading"></span>
+            <span v-else>{{
+              selectedFiles.length === 0 ? "확인" : "업로드"
+            }}</span>
+          </button>
+          <button class="cancel-button" @click="$emit('close')">취소</button>
         </div>
       </div>
 
-      <!-- 버튼 그룹 -->
-      <div class="button-group">
-        <button
-          class="upload-button"
-          @click="handleUpload"
-          :disabled="selectedFiles.length === 0 || isUploading"
-        >
-          <span v-if="isUploading" class="loading"></span>
-          <span v-else>{{
-            selectedFiles.length === 0 ? "확인" : "업로드"
-          }}</span>
-        </button>
-        <button class="cancel-button" @click="$emit('close')">취소</button>
+      <!-- 로딩 상태일 때: 생성 중 UI -->
+      <div v-else class="loading-container">
+        <div class="loading-spinner">
+          <div class="dot dot1"></div>
+          <div class="dot dot2"></div>
+          <div class="dot dot3"></div>
+          <div class="dot dot4"></div>
+          <div class="dot dot5"></div>
+          <div class="dot dot6"></div>
+          <div class="dot dot7"></div>
+          <div class="dot dot8"></div>
+        </div>
+
+        <!-- 로딩 텍스트 -->
+        <h2 class="loading-text">요구사항 정의서 생성 중...</h2>
       </div>
     </div>
   </div>
@@ -94,9 +114,13 @@ const fileInput = ref(null);
 const selectedFiles = ref([]);
 const isDragOver = ref(false);
 const isUploading = ref(false);
+const isGenerating = ref(false);
 
 const handleOverlayClick = () => {
-  emit("close");
+  // 생성 중일 때는 모달을 닫지 않도록 함
+  if (!isGenerating.value) {
+    emit("close");
+  }
 };
 
 // 드래그 앤 드롭 핸들러
@@ -132,7 +156,7 @@ const handleFileSelect = (e) => {
 // 파일 추가
 const addFiles = (files) => {
   const validFiles = files.filter((file) => {
-    const validTypes = [".pdf", ".xlsx", ".xls", ".wav"];
+    const validTypes = [".pdf", ".xlsx", ".xls", ".wav", ".docx"];
     const fileExtension = "." + file.name.split(".").pop().toLowerCase();
     return validTypes.includes(fileExtension);
   });
@@ -165,15 +189,21 @@ const handleUpload = async () => {
 
   try {
     // 업로드 시뮬레이션
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 1500));
 
     emit("upload", selectedFiles.value);
     console.log("업로드 완료:", selectedFiles.value);
 
-    // 초기화
-    selectedFiles.value = [];
+    // 업로드 완료 후 생성 상태로 변경
     isUploading.value = false;
+    isGenerating.value = true;
 
+    // 요구사항 정의서 생성 시뮬레이션 (3초)
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+
+    // 생성 완료 후 모달 닫기
+    isGenerating.value = false;
+    selectedFiles.value = [];
     emit("close");
   } catch (error) {
     console.error("업로드 실패:", error);
@@ -182,13 +212,8 @@ const handleUpload = async () => {
 };
 
 // 업로드 영역 클릭 시 파일 선택
-const openFileDialog = () => {
+const handleUploadAreaClick = () => {
   fileInput.value?.click();
-};
-
-// 업로드 영역에 클릭 이벤트 추가
-const uploadAreaClick = () => {
-  openFileDialog();
 };
 </script>
 
@@ -444,6 +469,117 @@ const uploadAreaClick = () => {
   }
 }
 
+/* Loading Container */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 40px 20px;
+}
+
+/* Loading Spinner */
+.loading-spinner {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  margin-bottom: 32px;
+}
+
+.dot {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: #000000;
+  border-radius: 50%;
+  animation: loading 1.2s infinite ease-in-out;
+}
+
+.dot1 {
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  animation-delay: 0s;
+}
+
+.dot2 {
+  top: 15%;
+  right: 15%;
+  animation-delay: 0.15s;
+}
+
+.dot3 {
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+  animation-delay: 0.3s;
+}
+
+.dot4 {
+  bottom: 15%;
+  right: 15%;
+  animation-delay: 0.45s;
+}
+
+.dot5 {
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  animation-delay: 0.6s;
+}
+
+.dot6 {
+  bottom: 15%;
+  left: 15%;
+  animation-delay: 0.75s;
+}
+
+.dot7 {
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  animation-delay: 0.9s;
+}
+
+.dot8 {
+  top: 15%;
+  left: 15%;
+  animation-delay: 1.05s;
+}
+
+@keyframes loading {
+  0%,
+  80%,
+  100% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+}
+
+/* Loading Text */
+.loading-text {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+  animation: pulse 2s infinite ease-in-out;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .modal-container {
@@ -478,6 +614,21 @@ const uploadAreaClick = () => {
   .upload-button {
     width: 100%;
   }
+
+  .loading-spinner {
+    width: 64px;
+    height: 64px;
+    margin-bottom: 28px;
+  }
+
+  .dot {
+    width: 10px;
+    height: 10px;
+  }
+
+  .loading-text {
+    font-size: 20px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -497,6 +648,21 @@ const uploadAreaClick = () => {
     width: 28px;
     height: 28px;
     font-size: 12px;
+  }
+
+  .loading-spinner {
+    width: 56px;
+    height: 56px;
+    margin-bottom: 24px;
+  }
+
+  .dot {
+    width: 8px;
+    height: 8px;
+  }
+
+  .loading-text {
+    font-size: 18px;
   }
 }
 </style>
