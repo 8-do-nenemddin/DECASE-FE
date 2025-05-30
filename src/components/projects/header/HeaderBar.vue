@@ -2,7 +2,12 @@
   <!-- 헤더 -->
   <header class="header">
     <div class="header-left">
-      <img src="/DECASE-light.png" alt="DECASE Logo" class="logo-icon" />
+      <img
+        src="/DECASE-light.png"
+        alt="DECASE Logo"
+        class="logo-icon"
+        @click="handleGoMain"
+      />
       <div class="header-actions">
         <button class="icon-button" @click="toggleSidebar" title="검색">
           <svg
@@ -147,6 +152,10 @@ const handleUploadSource = (newSourceName) => {
   console.log(`요구사항 정의서 생성 중...`);
   closeModal();
   // router.push({ name: "", params: { sourceName: newSourceName } });
+};
+
+const handleGoMain = () => {
+  router.push({ name: "MainView" });
 };
 
 const handleGoSettings = (projectId) => {
