@@ -172,7 +172,8 @@ const handleGoSettings = (projectId) => {
   height: 64px;
   border-bottom: 1px solid #e5e7eb;
   background: white;
-  position: relative;
+  position: sticky;
+  top: 0rem;
   z-index: 10;
 }
 
