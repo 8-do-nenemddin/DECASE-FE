@@ -221,9 +221,6 @@ function downloadGeneratedFile(file) {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
-  z-index: 50;
   animation: overlayFadeIn 0.3s ease-out;
 }
 
