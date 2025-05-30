@@ -2,9 +2,9 @@
   <div class="modal-overlay" @click="handleOverlayClick">
     <div class="modal-container" @click.stop>
       <!-- 로딩 상태가 아닐 때: 업로드 UI -->
-      <div v-if="!isGenerating">
+      <div v-if="!isGenerating && !isCompleted">
         <!-- X 버튼 -->
-        <button class="close-button" @click="$emit('close')">X</button>
+        <button class="close-button" @click="closeModal">X</button>
 
         <!-- 업로드 영역 -->
         <div
@@ -48,7 +48,7 @@
             ref="fileInput"
             @change="handleFileSelect"
             multiple
-            accept=".pdf,.xlsx,.xls,.wav"
+            accept=".pdf,.xlsx,.xls,.wav,.docx"
             style="display: none"
           />
         </div>
@@ -81,12 +81,48 @@
               selectedFiles.length === 0 ? "확인" : "업로드"
             }}</span>
           </button>
-          <button class="cancel-button" @click="$emit('close')">취소</button>
+          <button class="cancel-button" @click="closeModal">취소</button>
+        </div>
+      </div>
+
+      <!-- 생성 완료 상태일 때: 완료 UI -->
+      <div v-if="isCompleted" class="completion-container">
+        <!-- X 버튼 -->
+        <button class="close-button" @click="closeModal">X</button>
+        <!-- 완료 아이콘 -->
+        <div class="completion-icon">
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none">
+            <circle
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              stroke-width="2"
+            />
+            <path
+              d="m9 12 2 2 4-4"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </div>
+
+        <!-- 완료 텍스트 -->
+        <h2 class="completion-text">생성 완료</h2>
+        <div class="button-group">
+          <button class="complete-confirm-button" @click="closeModal">
+            확인
+          </button>
         </div>
       </div>
 
       <!-- 로딩 상태일 때: 생성 중 UI -->
-      <div v-else class="loading-container">
+      <div v-else-if="isGenerating && !isCompleted" class="loading-container">
+        <!-- X 버튼 -->
+        <button class="close-button" @click="closeModal">X</button>
+
         <div class="loading-spinner">
           <div class="dot dot1"></div>
           <div class="dot dot2"></div>
@@ -100,6 +136,11 @@
 
         <!-- 로딩 텍스트 -->
         <h2 class="loading-text">요구사항 정의서 생성 중...</h2>
+
+        <!-- 안내 메시지 -->
+        <p class="loading-message">
+          창을 닫아도 요구사항 정의서 생성은 종료되지 않습니다.
+        </p>
       </div>
     </div>
   </div>
@@ -115,12 +156,29 @@ const selectedFiles = ref([]);
 const isDragOver = ref(false);
 const isUploading = ref(false);
 const isGenerating = ref(false);
+const isCompleted = ref(false);
 
 const handleOverlayClick = () => {
-  // 생성 중일 때는 모달을 닫지 않도록 함
-  if (!isGenerating.value) {
+  // 생성 중이거나 완료 상태일 때는 오버레이 클릭으로 닫지 않음
+  if (!isGenerating.value && !isCompleted.value) {
+    resetModal();
     emit("close");
   }
+};
+
+// 모달 상태 초기화 함수
+const resetModal = () => {
+  selectedFiles.value = [];
+  isDragOver.value = false;
+  isUploading.value = false;
+  isGenerating.value = false;
+  isCompleted.value = false;
+};
+
+// 모달 닫기 함수
+const closeModal = () => {
+  resetModal();
+  emit("close");
 };
 
 // 드래그 앤 드롭 핸들러
@@ -181,33 +239,33 @@ const formatFileSize = (bytes) => {
 // 업로드 처리
 const handleUpload = async () => {
   if (selectedFiles.value.length === 0) {
-    emit("close");
+    closeModal();
     return;
   }
 
   isUploading.value = true;
 
   try {
-    // 업로드 시뮬레이션
+    // 1단계: 파일 업로드 처리 (1.5초)
     await new Promise((resolve) => setTimeout(resolve, 1500));
 
     emit("upload", selectedFiles.value);
     console.log("업로드 완료:", selectedFiles.value);
 
-    // 업로드 완료 후 생성 상태로 변경
+    // 2단계: 업로드 완료 후 생성 상태로 변경
     isUploading.value = false;
     isGenerating.value = true;
 
-    // 요구사항 정의서 생성 시뮬레이션 (3초)
+    // 3단계: 요구사항 정의서 생성 처리 (3초)
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
-    // 생성 완료 후 모달 닫기
+    // 4단계: 생성 완료 상태로 변경
     isGenerating.value = false;
-    selectedFiles.value = [];
-    emit("close");
+    isCompleted.value = true;
   } catch (error) {
-    console.error("업로드 실패:", error);
+    console.error("처리 실패:", error);
     isUploading.value = false;
+    isGenerating.value = false;
   }
 };
 
@@ -422,6 +480,25 @@ const handleUploadAreaClick = () => {
   border-color: #9ca3af;
 }
 
+.complete-confirm-button {
+  background: transparent;
+  color: #000000;
+  border: 1px solid #d1d5db;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.complete-confirm-button:hover {
+  background: #f9fafb;
+  color: #374151;
+  border-color: #9ca3af;
+}
+
 .upload-button {
   background: #000000;
   color: white;
@@ -477,6 +554,67 @@ const handleUploadAreaClick = () => {
   justify-content: center;
   text-align: center;
   padding: 40px 20px;
+  position: relative;
+}
+
+/* Loading Message */
+.loading-message {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 24px 0 0 0;
+  line-height: 1.5;
+}
+
+/* Completion Container */
+.completion-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 60px 40px;
+  position: relative;
+}
+
+/* Completion Icon */
+.completion-icon {
+  width: 80px;
+  height: 80px;
+  background: #f3f4f6;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+  color: #000000;
+}
+
+/* Completion Text */
+.completion-text {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 16px 0;
+}
+
+/* Confirm Button */
+.confirm-button {
+  background: #000000;
+  color: white;
+  border: none;
+  padding: 12px 32px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.confirm-button:hover {
+  background: #1f2937;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 /* Loading Spinner */
@@ -629,6 +767,21 @@ const handleUploadAreaClick = () => {
   .loading-text {
     font-size: 20px;
   }
+
+  .completion-container {
+    padding: 48px 32px;
+  }
+
+  .completion-icon {
+    width: 64px;
+    height: 64px;
+    margin-bottom: 20px;
+  }
+
+  .completion-text {
+    font-size: 20px;
+    margin-bottom: 12px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -663,6 +816,21 @@ const handleUploadAreaClick = () => {
 
   .loading-text {
     font-size: 18px;
+  }
+
+  .completion-container {
+    padding: 40px 24px;
+  }
+
+  .completion-icon {
+    width: 56px;
+    height: 56px;
+    margin-bottom: 16px;
+  }
+
+  .completion-text {
+    font-size: 18px;
+    margin-bottom: 8px;
   }
 }
 </style>
