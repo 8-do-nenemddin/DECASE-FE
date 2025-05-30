@@ -18,7 +18,11 @@
               <path d="m21 21-4.35-4.35"></path>
             </svg>
           </button>
-          <button class="icon-button" title="메뉴">
+          <button
+            class="icon-button"
+            @click="toggleFileListSidebar"
+            title="메뉴"
+          >
             <svg
               width="20"
               height="20"
@@ -102,6 +106,12 @@
     <!-- 검색 사이드바 -->
     <SearchRequirementsSidebar v-if="showSidebar" @close="closeSidebar" />
 
+    <!-- 파일 관리 사이드 바 -->
+    <ManageFileSidebar
+      v-if="showFileListSidebar"
+      @close="closeFileListSidebar"
+    />
+
     <!-- 소스 업로드 모달 -->
     <UploadSourceModal
       v-if="showSourceUploadModal"
@@ -114,11 +124,14 @@
 <script setup>
 import { ref } from "vue";
 import SearchRequirementsSidebar from "./SearchRequirementsSidebar.vue";
+import ManageFileSidebar from "./ManageFileSidebar.vue";
 import UploadSourceModal from "./UploadSourceModal.vue";
 
 const showSidebar = ref(false);
+const showFileListSidebar = ref(false);
 const showSourceUploadModal = ref(false);
 
+// 검색 사이드바
 const toggleSidebar = () => {
   showSidebar.value = !showSidebar.value;
 };
@@ -127,6 +140,16 @@ const closeSidebar = () => {
   showSidebar.value = false;
 };
 
+// 파일 리스트 사이드 바
+const toggleFileListSidebar = () => {
+  showFileListSidebar.value = !showFileListSidebar.value;
+};
+
+const closeFileListSidebar = () => {
+  showFileListSidebar.value = false;
+};
+
+// 소스 업로드 모달
 const openSourceUploadModal = () => {
   showSourceUploadModal.value = true;
 };
