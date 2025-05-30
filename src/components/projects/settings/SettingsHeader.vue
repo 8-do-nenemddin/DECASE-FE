@@ -1,7 +1,7 @@
 <template>
   <!-- 헤더 -->
   <header class="header">
-    <div class="header-left" @click="handleGoHome">
+    <div class="header-left" @click="handleGoMain">
       <img src="/DECASE-light.png" alt="DECASE Logo" class="logo-icon" />
     </div>
 
@@ -40,9 +40,8 @@ defineProps({
   },
 });
 
-const handleGoHome = (projectId) => {
-  console.log(`'${projectId}' 홈으로`);
-  router.push({ name: "ProjectHome", params: { projectId: projectId } });
+const handleGoMain = () => {
+  router.push({ name: "MainView" });
 };
 </script>
 
