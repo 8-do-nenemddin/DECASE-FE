@@ -114,7 +114,7 @@ import { ref } from "vue";
 import { useRouter } from "vue-router";
 import SearchRequirementsSidebar from "./SearchRequirementsSidebar.vue";
 import ManageFileSidebar from "./ManageFileSidebar.vue";
-import UploadSourceModal from "./UploadSourceModal.vue";
+import UploadSourceModal from "./file_upload/UploadSourceModal.vue";
 
 const router = useRouter();
 

@@ -1,155 +1,111 @@
 <template>
-  <div class="modal-overlay" @click="handleOverlayClick">
-    <div class="modal-container" @click.stop>
-      <!-- 로딩 상태가 아닐 때: 업로드 UI -->
-      <div v-if="!isGenerating && !isCompleted">
-        <!-- X 버튼 -->
-        <button class="close-button" @click="closeModal">X</button>
-
-        <!-- 업로드 영역 -->
-        <div
-          class="upload-area"
-          @click="handleUploadAreaClick"
-          @drop="handleDrop"
-          @dragover="handleDragOver"
-          @dragenter="handleDragEnter"
-          @dragleave="handleDragLeave"
-          :class="{ 'drag-over': isDragOver }"
-        >
-          <!-- 업로드 아이콘 -->
-          <div class="upload-icon">
-            <svg
-              width="48"
-              height="48"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-              <polyline points="17,8 12,3 7,8"></polyline>
-              <line x1="12" y1="3" x2="12" y2="15"></line>
-            </svg>
-          </div>
-
-          <!-- 업로드 제목 -->
-          <h2 class="upload-title">소스 업로드</h2>
-
-          <!-- 업로드 설명 -->
-          <p class="upload-description">
-            업로드할 파일을 선택하거나 드래그 앤 드롭해주세요. (예: RFP, 회의록,
-            엑셀)<br />
-            지원 파일 형식 : pdf, .xlsx, .xls, .wav, .docx
-          </p>
-
-          <!-- 히든 파일 인풋 -->
-          <input
-            type="file"
-            ref="fileInput"
-            @change="handleFileSelect"
-            multiple
-            accept=".pdf,.xlsx,.xls,.wav,.docx"
-            style="display: none"
-          />
-        </div>
-
-        <!-- 선택된 파일 목록 -->
-        <div v-if="selectedFiles.length > 0" class="file-list">
-          <h3 class="file-list-title">선택된 파일</h3>
-          <div
-            v-for="(file, index) in selectedFiles"
-            :key="index"
-            class="file-item"
+  <CommonModal
+    :closeOnOverlayClick="!isGenerating && !isCompleted"
+    :modalClass="modalClass"
+    :closeButtonClass="closeButtonClass"
+    @close="handleClose"
+  >
+    <!-- 로딩 상태가 아닐 때: 업로드 UI -->
+    <div v-if="!isGenerating && !isCompleted">
+      <!-- 업로드 영역 -->
+      <div
+        class="upload-area"
+        @click="handleUploadAreaClick"
+        @drop="handleDrop"
+        @dragover="handleDragOver"
+        @dragenter="handleDragEnter"
+        @dragleave="handleDragLeave"
+        :class="{ 'drag-over': isDragOver }"
+      >
+        <!-- 업로드 아이콘 -->
+        <div class="upload-icon">
+          <svg
+            width="48"
+            height="48"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
           >
-            <div class="file-info">
-              <span class="file-name">{{ file.name }}</span>
-              <span class="file-size">{{ formatFileSize(file.size) }}</span>
-            </div>
-            <button class="remove-file" @click="removeFile(index)">×</button>
-          </div>
-        </div>
-
-        <!-- 버튼 그룹 -->
-        <div class="button-group">
-          <button
-            class="upload-button"
-            @click="handleUpload"
-            :disabled="selectedFiles.length === 0 || isUploading"
-          >
-            <span v-if="isUploading" class="loading"></span>
-            <span v-else>{{
-              selectedFiles.length === 0 ? "확인" : "업로드"
-            }}</span>
-          </button>
-          <button class="cancel-button" @click="closeModal">취소</button>
-        </div>
-      </div>
-
-      <!-- 생성 완료 상태일 때: 완료 UI -->
-      <div v-if="isCompleted" class="completion-container">
-        <!-- X 버튼 -->
-        <button class="close-button" @click="closeModal">X</button>
-        <!-- 완료 아이콘 -->
-        <div class="completion-icon">
-          <svg width="64" height="64" viewBox="0 0 24 24" fill="none">
-            <circle
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              stroke-width="2"
-            />
-            <path
-              d="m9 12 2 2 4-4"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17,8 12,3 7,8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
           </svg>
         </div>
 
-        <!-- 완료 텍스트 -->
-        <h2 class="completion-text">생성 완료</h2>
-        <div class="button-group">
-          <button class="complete-confirm-button" @click="closeModal">
-            확인
-          </button>
+        <!-- 업로드 제목 -->
+        <h2 class="upload-title">소스 업로드</h2>
+
+        <!-- 업로드 설명 -->
+        <p class="upload-description">
+          업로드할 파일을 선택하거나 드래그 앤 드롭해주세요. (예: RFP, 회의록,
+          엑셀)<br />
+          지원 파일 형식 : pdf, .xlsx, .xls, .wav, .docx
+        </p>
+
+        <!-- 히든 파일 인풋 -->
+        <input
+          type="file"
+          ref="fileInput"
+          @change="handleFileSelect"
+          multiple
+          accept=".pdf,.xlsx,.xls,.wav,.docx"
+          style="display: none"
+        />
+      </div>
+
+      <!-- 선택된 파일 목록 -->
+      <div v-if="selectedFiles.length > 0" class="file-list">
+        <h3 class="file-list-title">선택된 파일</h3>
+        <div
+          v-for="(file, index) in selectedFiles"
+          :key="index"
+          class="file-item"
+        >
+          <div class="file-info">
+            <span class="file-name">{{ file.name }}</span>
+            <span class="file-size">{{ formatFileSize(file.size) }}</span>
+          </div>
+          <button class="remove-file" @click="removeFile(index)">×</button>
         </div>
       </div>
 
-      <!-- 로딩 상태일 때: 생성 중 UI -->
-      <div v-else-if="isGenerating && !isCompleted" class="loading-container">
-        <!-- X 버튼 -->
-        <button class="close-button" @click="closeModal">X</button>
-
-        <div class="loading-spinner">
-          <div class="dot dot1"></div>
-          <div class="dot dot2"></div>
-          <div class="dot dot3"></div>
-          <div class="dot dot4"></div>
-          <div class="dot dot5"></div>
-          <div class="dot dot6"></div>
-          <div class="dot dot7"></div>
-          <div class="dot dot8"></div>
-        </div>
-
-        <!-- 로딩 텍스트 -->
-        <h2 class="loading-text">요구사항 정의서 생성 중...</h2>
-
-        <!-- 안내 메시지 -->
-        <p class="loading-message">
-          창을 닫아도 요구사항 정의서 생성은 종료되지 않습니다.
-        </p>
+      <!-- 버튼 그룹 -->
+      <div class="button-group">
+        <button
+          class="upload-button"
+          @click="handleUpload"
+          :disabled="selectedFiles.length === 0 || isUploading"
+        >
+          <span v-if="isUploading" class="loading"></span>
+          <span v-else>{{
+            selectedFiles.length === 0 ? "확인" : "업로드"
+          }}</span>
+        </button>
+        <button class="cancel-button" @click="closeModal">취소</button>
       </div>
     </div>
-  </div>
+
+    <!-- 생성 완료 상태일 때: 완료 UI -->
+    <div v-if="isCompleted" class="completion-container">
+      <SuccessUploadFileModal></SuccessUploadFileModal>
+    </div>
+
+    <!-- 로딩 상태일 때: 생성 중 UI -->
+    <div v-else-if="isGenerating && !isCompleted" class="loading-container">
+      <LoadingModal></LoadingModal>
+    </div>
+  </CommonModal>
 </template>
 
 <script setup>
 import { ref } from "vue";
+import CommonModal from "../../../util/CommonModal.vue";
+import LoadingModal from "./LoadingModal.vue";
+import SuccessUploadFileModal from "./SuccessUploadFileModal.vue";
+import { defineEmits } from "vue";
 
-const emit = defineEmits(["close", "upload"]);
+const emit = defineEmits(["close"]);
 
 const fileInput = ref(null);
 const selectedFiles = ref([]);
@@ -158,16 +114,20 @@ const isUploading = ref(false);
 const isGenerating = ref(false);
 const isCompleted = ref(false);
 
-const handleOverlayClick = () => {
-  // 생성 중이거나 완료 상태일 때는 오버레이 클릭으로 닫지 않음
-  if (!isGenerating.value && !isCompleted.value) {
-    resetModal();
-    emit("close");
-  }
+const handleClose = () => {
+  console.log("UploadSourceModal handleClose 호출됨");
+  console.log("현재 상태:", {
+    isGenerating: isGenerating.value,
+    isCompleted: isCompleted.value,
+  });
+  resetModal();
+  emit("close");
+  console.log("UploadSourceModal close emit 완료");
 };
 
 // 모달 상태 초기화 함수
 const resetModal = () => {
+  console.log("resetModal 호출됨");
   selectedFiles.value = [];
   isDragOver.value = false;
   isUploading.value = false;
@@ -177,6 +137,7 @@ const resetModal = () => {
 
 // 모달 닫기 함수
 const closeModal = () => {
+  console.log("closeModal 호출됨");
   resetModal();
   emit("close");
 };
@@ -276,73 +237,6 @@ const handleUploadAreaClick = () => {
 </script>
 
 <style scoped>
-/* Modal Styles */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 60;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(8px);
-  opacity: 0;
-  animation: fadeIn 0.3s ease forwards;
-}
-
-@keyframes fadeIn {
-  to {
-    opacity: 1;
-  }
-}
-
-.modal-container {
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-  width: 100%;
-  max-width: 600px;
-  margin: 1rem;
-  padding: 32px;
-  transform: scale(0.9) translateY(20px);
-  animation: slideUp 0.3s ease forwards;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  position: relative;
-}
-
-@keyframes slideUp {
-  to {
-    transform: scale(1) translateY(0);
-  }
-}
-
-/* Close Button */
-.close-button {
-  position: absolute;
-  top: 24px;
-  right: 24px;
-  width: 32px;
-  height: 32px;
-  border: none;
-  background: #f8fafc;
-  border-radius: 8px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-  color: #64748b;
-  font-size: 14px;
-  font-weight: 600;
-  font-family: inherit;
-}
-
-.close-button:hover {
-  background: #e2e8f0;
-  color: #475569;
-  transform: scale(1.05);
-}
-
 /* Upload Area */
 .upload-area {
   border: 2px dashed #d1d5db;
@@ -557,14 +451,6 @@ const handleUploadAreaClick = () => {
   position: relative;
 }
 
-/* Loading Message */
-.loading-message {
-  font-size: 14px;
-  color: #6b7280;
-  margin: 24px 0 0 0;
-  line-height: 1.5;
-}
-
 /* Completion Container */
 .completion-container {
   display: flex;
@@ -597,135 +483,8 @@ const handleUploadAreaClick = () => {
   margin: 0 0 16px 0;
 }
 
-/* Confirm Button */
-.confirm-button {
-  background: #000000;
-  color: white;
-  border: none;
-  padding: 12px 32px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-family: inherit;
-}
-
-.confirm-button:hover {
-  background: #1f2937;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-/* Loading Spinner */
-.loading-spinner {
-  position: relative;
-  width: 80px;
-  height: 80px;
-  margin-bottom: 32px;
-}
-
-.dot {
-  position: absolute;
-  width: 12px;
-  height: 12px;
-  background: #000000;
-  border-radius: 50%;
-  animation: loading 1.2s infinite ease-in-out;
-}
-
-.dot1 {
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  animation-delay: 0s;
-}
-
-.dot2 {
-  top: 15%;
-  right: 15%;
-  animation-delay: 0.15s;
-}
-
-.dot3 {
-  top: 50%;
-  right: 0;
-  transform: translateY(-50%);
-  animation-delay: 0.3s;
-}
-
-.dot4 {
-  bottom: 15%;
-  right: 15%;
-  animation-delay: 0.45s;
-}
-
-.dot5 {
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  animation-delay: 0.6s;
-}
-
-.dot6 {
-  bottom: 15%;
-  left: 15%;
-  animation-delay: 0.75s;
-}
-
-.dot7 {
-  top: 50%;
-  left: 0;
-  transform: translateY(-50%);
-  animation-delay: 0.9s;
-}
-
-.dot8 {
-  top: 15%;
-  left: 15%;
-  animation-delay: 1.05s;
-}
-
-@keyframes loading {
-  0%,
-  80%,
-  100% {
-    transform: scale(0.8);
-    opacity: 0.5;
-  }
-  40% {
-    transform: scale(1.2);
-    opacity: 1;
-  }
-}
-
-/* Loading Text */
-.loading-text {
-  font-size: 24px;
-  font-weight: 600;
-  color: #1f2937;
-  margin: 0;
-  animation: pulse 2s infinite ease-in-out;
-}
-
-@keyframes pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.7;
-  }
-}
-
 /* Responsive Design */
 @media (max-width: 768px) {
-  .modal-container {
-    margin: 16px;
-    max-width: calc(100vw - 32px);
-    padding: 24px;
-  }
-
   .upload-area {
     padding: 32px 24px;
   }
@@ -785,22 +544,8 @@ const handleUploadAreaClick = () => {
 }
 
 @media (max-width: 480px) {
-  .modal-container {
-    margin: 12px;
-    max-width: calc(100vw - 24px);
-    padding: 20px;
-  }
-
   .upload-area {
     padding: 24px 16px;
-  }
-
-  .close-button {
-    top: 16px;
-    right: 16px;
-    width: 28px;
-    height: 28px;
-    font-size: 12px;
   }
 
   .loading-spinner {
