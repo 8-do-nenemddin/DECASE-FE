@@ -14,11 +14,20 @@
 
   <h2 class="completion-text">생성 완료</h2>
   <div class="button-group">
-    <button class="complete-confirm-button" @click="$emit('close')">
-      확인
-    </button>
+    <button class="complete-confirm-button" @click="handleClose">확인</button>
   </div>
 </template>
+
+<script setup>
+import { defineEmits } from "vue";
+
+const emit = defineEmits(["close"]);
+// 확인 버튼 클릭 처리
+const handleClose = () => {
+  console.log("다운로드 완료 모달 - 확인 버튼 클릭, 모달 닫기");
+  emit("close");
+};
+</script>
 
 <style scoped>
 .completion-icon {
