@@ -90,10 +90,18 @@
       </button>
     </div>
   </div>
+
+  <EditSuccessModal
+    v-if="showSuccessSaveModal"
+    @close="closeSuccessSaveModal"
+  ></EditSuccessModal>
 </template>
 
 <script setup>
 import { ref, reactive } from "vue";
+import EditSuccessModal from "./EditSuccessModal.vue";
+
+const showSuccessSaveModal = ref(false);
 
 const projectData = reactive({
   startDate: "2025-05-29",
@@ -104,9 +112,14 @@ const projectData = reactive({
   scale: "",
 });
 
+// 프로젝트 내용 수정 저장 모달
 const saveProject = () => {
   console.log("프로젝트 저장:", projectData);
+  showSuccessSaveModal.value = true;
   // 실제 저장 로직 구현
+};
+const closeSuccessSaveModal = () => {
+  showSuccessSaveModal.value = false;
 };
 
 const deleteProject = () => {
