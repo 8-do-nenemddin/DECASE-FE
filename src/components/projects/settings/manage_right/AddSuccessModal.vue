@@ -24,7 +24,7 @@
           />
         </svg>
       </div>
-      <h2 class="completion-text">수정 완료</h2>
+      <h2 class="completion-text">초대 완료</h2>
       <div class="button-group">
         <button class="button confirm-button" @click="handleClose">확인</button>
       </div>
@@ -34,7 +34,7 @@
 
 <script setup>
 import { defineEmits } from "vue";
-import CommonModal from "../../util/CommonModal.vue";
+import CommonModal from "../../../util/CommonModal.vue";
 
 const emit = defineEmits(["close"]);
 // 확인 버튼 클릭 처리

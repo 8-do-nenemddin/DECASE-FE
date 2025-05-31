@@ -54,17 +54,22 @@
     <!-- 멤버 추가 모달 컴포넌트 -->
     <AddMemberModal
       :is-visible="showAddMemberModal"
-      @close="showAddMemberModal = false"
-      @add-member="handleAddMember"
+      @close="handleModalClose"
+      @send-invitations="handleSendInvitations"
     />
+
+    <!-- 성공 모달 (독립적으로 관리) -->
+    <AddSuccessModal v-if="showSuccessModal" @close="handleSuccessClose" />
   </div>
 </template>
 
 <script setup>
 import { ref } from "vue";
 import AddMemberModal from "./AddMemberModal.vue";
+import AddSuccessModal from "./AddSuccessModal.vue";
 
 const showAddMemberModal = ref(false);
+const showSuccessModal = ref(false);
 
 const members = ref([
   {
@@ -104,10 +109,30 @@ const deleteMember = (index) => {
   }
 };
 
-const handleAddMember = (newMember) => {
-  members.value.push(newMember);
-  console.log("새 멤버 추가:", newMember);
-  // 실제 멤버 추가 API 호출 로직
+// 모달 닫기 처리 (X버튼, 취소 버튼)
+const handleModalClose = () => {
+  console.log("AddMemberModal 닫기");
+  showAddMemberModal.value = false;
+};
+
+// 초대 전송 처리 (전송 버튼 클릭 시)
+const handleSendInvitations = (invitationData) => {
+  console.log("초대 전송 처리:", invitationData);
+
+  // 실제 초대 전송 API 호출 로직
+  // API 호출이 성공하면 멤버 목록 업데이트 등의 로직 수행
+
+  // AddMemberModal 닫기
+  showAddMemberModal.value = false;
+
+  // 성공 모달 표시
+  showSuccessModal.value = true;
+};
+
+// 성공 모달 닫기 처리
+const handleSuccessClose = () => {
+  console.log("AddSuccessModal 닫기");
+  showSuccessModal.value = false;
 };
 </script>
 
@@ -288,8 +313,6 @@ const handleAddMember = (newMember) => {
 .button-icon {
   font-size: 1rem;
 }
-
-/* 모달 관련 스타일은 AddMemberModal.vue로 이동 */
 
 /* 반응형 디자인 */
 @media (max-width: 768px) {
