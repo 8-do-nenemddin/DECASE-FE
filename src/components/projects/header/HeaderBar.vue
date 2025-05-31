@@ -63,7 +63,9 @@
     </div>
 
     <div class="header-right">
-      <button class="download-button">다운로드</button>
+      <button class="download-button" @click="openDownloadFileModal">
+        다운로드
+      </button>
       <button class="icon-button" title="사용자">
         <svg
           width="20"
@@ -107,6 +109,13 @@
     @close="closeSourceUploadModal"
     @createProject="handleUploadSource"
   />
+
+  <!--  요구사항 정의서 다운로드 모달 -->
+  <DownloadFileModal
+    v-if="showDownloadFileModal"
+    @close="closeDownloadFileModal"
+    @createProject="handleDownloadSource"
+  />
 </template>
 
 <script setup>
@@ -115,12 +124,14 @@ import { useRouter } from "vue-router";
 import SearchRequirementsSidebar from "./SearchRequirementsSidebar.vue";
 import ManageFileSidebar from "./ManageFileSidebar.vue";
 import UploadSourceModal from "./file_upload/UploadSourceModal.vue";
+import DownloadFileModal from "./download_rd/DownloadFileModal.vue";
 
 const router = useRouter();
 
 const showSidebar = ref(false);
 const showFileListSidebar = ref(false);
 const showSourceUploadModal = ref(false);
+const showDownloadFileModal = ref(false);
 
 // 검색 사이드바
 const toggleSidebar = () => {
@@ -148,10 +159,19 @@ const closeSourceUploadModal = () => {
   showSourceUploadModal.value = false;
 };
 
+// 요구사항 정의서 다운로드 모달
+const openDownloadFileModal = () => {
+  showDownloadFileModal.value = true;
+};
+const closeDownloadFileModal = () => {
+  showDownloadFileModal.value = false;
+};
+
 const handleUploadSource = (newSourceName) => {
-  console.log(`요구사항 정의서 생성 중...`);
   closeModal();
-  // router.push({ name: "", params: { sourceName: newSourceName } });
+};
+const handleDownloadSource = (newSourceName) => {
+  closeModal();
 };
 
 const handleGoMain = () => {
