@@ -29,9 +29,9 @@
 import { ref } from "vue";
 import SettingsHeader from "./SettingsHeader.vue";
 import SettingsSidebar from "./SettingsSidebar.vue";
-import EditProjectInfo from "./EditProjectInfo.vue";
-import ViewMatrix from "./ViewMatrix.vue";
-import ManageRight from "./ManageRight.vue";
+import EditProjectInfo from "./edit_project/EditProjectInfo.vue";
+import ViewMatrix from "./view_matrix/ViewMatrix.vue";
+import ManageRight from "./manage_right/ManageRight.vue";
 
 const currentComponent = ref("ProjectInfo"); // 기본 컴포넌트
 
