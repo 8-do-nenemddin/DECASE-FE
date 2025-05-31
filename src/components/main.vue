@@ -108,12 +108,6 @@
         </div>
       </div>
     </div>
-
-    <CreateProjectModal
-      v-if="showModal"
-      @close="closeModal"
-      @createProject="handleCreateProject"
-    />
   </div>
 </template>
 
