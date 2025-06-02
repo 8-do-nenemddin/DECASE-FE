@@ -138,9 +138,20 @@ html, body {
 	margin-bottom: 30px;
   }
   
+  .logo-container {
+	flex-shrink: 0;
+	animation: none !important;
+	transform: none !important;
+	transition: none !important;
+  }
+  
   .logo {
 	height: 100px;
 	width: 120px;
+	display: block;
+	animation: none !important;
+	transform: none !important;
+	transition: none !important;
   }
   
   .welcome-message h1 {
@@ -158,6 +169,7 @@ html, body {
 	justify-content: center;
 	align-items: center;
 	font-size: 1em;
+	flex-shrink: 0;
   }
   
   .toolbar {
