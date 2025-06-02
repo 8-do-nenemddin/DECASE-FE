@@ -280,6 +280,10 @@ const downloadGeneratedFile = (file) => {
 .logo {
 	height: 100px;
 	width: 120px;
+	display: block;
+	animation: none !important;
+	transform: none !important;
+	transition: none !important;
   }
 
 .project-title-container h1 {
