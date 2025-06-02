@@ -22,101 +22,99 @@
               {{ item.name }}
               <span class="arrow" :class="{ 'expanded': item.expanded }">∨</span>
             </div>
-			<div v-if="item.expanded" class="sidebar-item-content-integrated">
-				<p v-if="item.name === '업로드한 파일' && (!item.files || item.files.length === 0)" class="empty-message">
-					업로드된 파일 목록이 여기에 표시됩니다.
-				</p>
-				<ul v-if="item.name === '업로드한 파일' && item.files && item.files.length > 0" class="file-list file-list-scrollable">
-					<li
-					v-for="(file, fileIndex) in item.files"
-					:key="fileIndex"
-					class="file-item"
-					>
-					<div class="file-line">
-						<span
-						class="file-icon"
-						:class="'file-icon-' + getFileIcon(file.name).type"
-						>
-						{{ getFileIcon(file.name).type }}
-						</span>
-						<span class="file-name">{{ file.name }}</span>
+            <div v-if="item.expanded" class="sidebar-item-content-integrated">
+              <p v-if="item.name === '업로드한 파일' && (!item.files || item.files.length === 0)" class="empty-message">
+                업로드된 파일 목록이 여기에 표시됩니다.
+              </p>
+              <ul v-if="item.name === '업로드한 파일' && item.files && item.files.length > 0" class="file-list file-list-scrollable">
+                <li
+                v-for="(file, fileIndex) in item.files"
+                :key="fileIndex"
+                class="file-item"
+                >
+                <div class="file-line">
+                  <span
+                  class="file-icon"
+                  :class="'file-icon-' + getFileIcon(file.name).type"
+                  >
+                  {{ getFileIcon(file.name).type }}
+                  </span>
+                  <span class="file-name">{{ file.name }}</span>
 
-						<!-- ❌ 삭제 버튼: 파일명 오른쪽에 위치 -->
-						<button class="delete-button" @click.stop="deleteUploadedFile(fileIndex)">
-						✕
-						</button>
-					</div>
-					<div class="file-date">{{ file.date }}</div>
-					</li>
-				</ul>
+                  <!-- ❌ 삭제 버튼: 파일명 오른쪽에 위치 -->
+                  <button class="delete-button" @click.stop="deleteUploadedFile(fileIndex)">
+                  ✕
+                  </button>
+                </div>
+                <div class="file-date">{{ file.date }}</div>
+                </li>
+              </ul>
 
-				<p v-if="item.name === '생성된 파일' && (!item.files || item.files.length === 0)" class="empty-message">
-					생성된 파일 목록이 여기에 표시됩니다.
-				</p>
+              <p v-if="item.name === '생성된 파일' && (!item.files || item.files.length === 0)" class="empty-message">
+                생성된 파일 목록이 여기에 표시됩니다.
+              </p>
 
-				<ul v-if="item.name === '생성된 파일' && item.files && item.files.length > 0" class="file-list file-list-scrollable">
-					<li v-for="(file, fileIndex) in item.files" :key="fileIndex" class="file-item">
-						<div class="file-line">
-						<span class="file-icon" :class="'file-icon-' + getFileIcon(file.name).type">
-							{{ getFileIcon(file.name).type }}
-						</span>
-						<span class="file-name">{{ file.name }}</span>
+              <ul v-if="item.name === '생성된 파일' && item.files && item.files.length > 0" class="file-list file-list-scrollable">
+                <li v-for="(file, fileIndex) in item.files" :key="fileIndex" class="file-item">
+                  <div class="file-line">
+                  <span class="file-icon" :class="'file-icon-' + getFileIcon(file.name).type">
+                    {{ getFileIcon(file.name).type }}
+                  </span>
+                  <span class="file-name">{{ file.name }}</span>
 
-						<!-- ⬇️ 다운로드 버튼 -->
-						<button class="download-button" @click.stop="downloadGeneratedFile(file)">
-							⬇︎
-						</button>
-						</div>
-						<div class="file-date">{{ file.date }}</div>
-					</li>
-				</ul>
+                  <!-- ⬇️ 다운로드 버튼 -->
+                  <button class="download-button" @click.stop="downloadGeneratedFile(file)">
+                    ⬇︎
+                  </button>
+                  </div>
+                  <div class="file-date">{{ file.date }}</div>
+                </li>
+              </ul>
 
-				<p v-if="item.name === '요구사항 Diff 창'" class="empty-message">
-					요구사항 Diff 내용이 여기에 표시됩니다.
-				</p>
-			</div>
-			</div>
+              <p v-if="item.name === '요구사항 Diff 창'" class="empty-message">
+                요구사항 Diff 내용이 여기에 표시됩니다.
+              </p>
+            </div>
+          </div>
         </div>
       </aside>
-	  <section class="main-panel">
-		<div class="panel-header"></div>
+      <section class="main-panel">
+        <div class="panel-header"></div>
 
-		<!-- 🔹 엑셀 미리보기 영역 (API로 받은 파일) -->
-		<div v-if="excelPreviewData.length > 0" class="excel-preview">
-			<div v-if="excelPreviewData.length > 0" class="excel-preview">
-			<h3>📊 Excel Preview</h3>
-				<div class="table-scroll-container">
-					<table>
-					<tr v-for="(row, rowIndex) in excelPreviewData.slice(0, 10)" :key="rowIndex">
-						<td v-for="(cell, colIndex) in row" :key="colIndex">{{ cell }}</td>
-					</tr>
-					</table>
-				</div>
-			</div>
-		</div>
+        <!-- 🔹 엑셀 미리보기 영역 (API로 받은 파일) -->
+        <div v-if="excelPreviewData.length > 0" class="excel-preview">
+          <h3>📊 Excel Preview</h3>
+          <div class="table-scroll-container">
+            <table>
+            <tr v-for="(row, rowIndex) in excelPreviewData.slice(0, 10)" :key="rowIndex">
+              <td v-for="(cell, colIndex) in row" :key="colIndex">{{ cell }}</td>
+            </tr>
+            </table>
+          </div>
+        </div>
 
-		<!-- 📦 파일 업로드 영역 -->
-		<div class="file-upload-area">
-			<div class="upload-controls">
-			<button class="add-file-button" @click="showOptions = !showOptions">
-				<span>+</span>
-				<transition name="fade">
-				<div v-if="showOptions" class="file-options">
-					<div @click="openFilePicker('meeting')">회의록</div>
-					<div @click="openFilePicker('excel')">Excel</div>
-					<div @click="openFilePicker('requirement')">요구사항 정의서</div>
-				</div>
-				</transition>
-			</button>
-			<div class="upload-placeholder">
-				<p>{{ placeholderText }}</p>
-			</div>
-			<button class="upload-button" @click="uploadFiles">
-				<span>↑</span>
-			</button>
-			</div>
-		</div>
-		</section>
+        <!-- 📦 파일 업로드 영역 -->
+        <div class="file-upload-area">
+          <div class="upload-controls">
+          <button class="add-file-button" @click="showOptions = !showOptions">
+            <span>+</span>
+            <transition name="fade">
+            <div v-if="showOptions" class="file-options">
+              <div @click="openFilePicker('meeting')">회의록</div>
+              <div @click="openFilePicker('excel')">Excel</div>
+              <div @click="openFilePicker('requirement')">요구사항 정의서</div>
+            </div>
+            </transition>
+          </button>
+          <div class="upload-placeholder">
+            <p>{{ placeholderText }}</p>
+          </div>
+          <button class="upload-button" @click="uploadFiles">
+            <span>↑</span>
+          </button>
+          </div>
+        </div>
+      </section>
     </main>
   </div>
 </template>
@@ -161,7 +159,7 @@ const sidebarItems = ref([
       { name: '제주도 관광 요구사항 정의서_v1.xls', date: '2025-05-22' },
       { name: '제주도 관광 조견표_v1.xls', date: '2025-05-22' },
       { name: '제주도 관광 보고서_v1.docx', date: '2025-05-22' },
-	  { name: '제주도 관광 보고서_v2.docx', date: '2025-05-24' },
+      { name: '제주도 관광 보고서_v2.docx', date: '2025-05-24' },
     ]
   },
   { name: '요구사항 Diff 창', expanded: false, files: [] }, 
@@ -260,109 +258,138 @@ const downloadGeneratedFile = (file) => {
 </script>
 
 <style scoped>
+/* 전체 컨테이너 */
 .project-home-container {
   display: flex;
   flex-direction: column;
-  height: 100vh; /* Ensure container takes full viewport height */
+  height: 100vh;
   padding: 20px;
   box-sizing: border-box;
-  overflow: hidden; /* Prevent overall page scroll, children will handle their own scroll if needed */
+  background-color: #f8f9fa;
 }
 
+/* 헤더 */
 .project-header-main-vue-style {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 30px;
-  flex-shrink: 0; /* Prevent header from shrinking */
+  margin-bottom: 20px;
+  flex-shrink: 0;
+  background-color: white;
+  padding: 15px 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
 }
 
 .logo {
-	height: 100px;
-	width: 120px;
-	display: block;
-	animation: none !important;
-	transform: none !important;
-	transition: none !important;
-  }
+  height: 60px;
+  width: auto;
+  display: block;
+}
+
+.project-title-container {
+  flex: 1;
+  text-align: center;
+}
 
 .project-title-container h1 {
-  font-size: 2em;
+  font-size: 1.8em;
   font-weight: bold;
   margin: 0;
+  color: #333;
 }
 
 .header-actions-main-vue-style {
   display: flex;
   align-items: center;
+  gap: 15px;
 }
 
 .header-actions-main-vue-style .action-button {
-  background-color: #fff;
-  border: 1px solid #ccc;
-  padding: 8px 15px;
-  border-radius: 5px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
   cursor: pointer;
   font-size: 0.9em;
-  margin-right: 20px;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.header-actions-main-vue-style .action-button:hover {
+  background-color: #0056b3;
 }
 
 .profile-icon-main-vue-style {
-  width: 80px;
-  height: 80px;
+  width: 50px;
+  height: 50px;
   border-radius: 50%;
-  background-color: #e0e0e0;
+  background-color: #e9ecef;
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 1em;
+  font-size: 0.8em;
+  color: #6c757d;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
 }
 
+.profile-icon-main-vue-style:hover {
+  background-color: #dee2e6;
+}
+
+/* 메인 콘텐츠 */
 .project-main-content {
   display: flex;
-  flex-grow: 1; /* Allow main content to fill available vertical space */
+  flex: 1;
   gap: 20px;
-  overflow: hidden; /* Prevent this container from scrolling, children will handle their own */
-  min-height: 0; /* Important for flex children to allow shrinking and scrolling */
+  min-height: 0;
 }
 
+/* 사이드바 */
 .sidebar {
-  width: 25%;
+  width: 300px;
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  flex-shrink: 0; /* Prevent sidebar from shrinking horizontally */
-  overflow-y: auto; /* Allow sidebar to scroll vertically if content exceeds its height */
-  padding-bottom: 10px; /* Add some padding at the bottom if it scrolls */
-}
-
-.sidebar-item-container { 
-  /* This container is mostly for margin/spacing if needed, 
-     the .sidebar-item will handle the visual appearance */
+  gap: 12px;
+  overflow-y: auto;
+  max-height: calc(100vh - 140px);
 }
 
 .sidebar-item {
-  padding: 15px;
-  border: 1px solid #ccc;
-  border-radius: 25px;
+  background-color: white;
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
   cursor: pointer;
-  font-size: 0.95em;
-  background-color: #fff;
-  display: flex;
-  flex-direction: column; /* Allow content to flow vertically */
-  transition: all 0.3s ease; /* Smooth transition for height changes */
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.sidebar-item:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-color: #007bff;
 }
 
 .sidebar-item-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  width: 100%; /* Ensure header takes full width */
+  padding: 16px;
+  font-weight: 500;
+  color: #333;
 }
 
 .sidebar-item .arrow {
   font-weight: bold;
   transition: transform 0.3s ease;
+  color: #6c757d;
 }
 
 .sidebar-item .arrow.expanded {
@@ -370,48 +397,98 @@ const downloadGeneratedFile = (file) => {
 }
 
 .sidebar-item-content-integrated {
-  margin-top: 10px; /* Space between header and content */
-  width: 100%;
-  /* No border or background here, it's part of the .sidebar-item */
+  padding: 0 16px 16px;
+  border-top: 1px solid #f1f3f4;
+  margin-top: 0;
 }
 
 .empty-message {
-    color: #777;
-    font-size: 0.9em;
-    padding: 5px 0;
+  color: #6c757d;
+  font-size: 0.85em;
+  padding: 12px 0;
+  text-align: center;
+  font-style: italic;
 }
 
 .file-list {
   list-style: none;
   padding: 0;
-  margin: 0;
+  margin: 8px 0 0 0;
 }
 
-.file-item {
-  position: relative;
-  padding-bottom: 22px; /* 날짜 들어갈 공간 확보 */
-  overflow: hidden;
+.file-list-scrollable {
+  max-height: 200px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.file-list-scrollable::-webkit-scrollbar {
+  width: 6px;
+}
+
+.file-list-scrollable::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+.file-list-scrollable::-webkit-scrollbar-track {
+  background-color: transparent;
 }
 
 .file-item {
   padding: 8px 0;
-  border-bottom: 1px dashed #eee;
-  display: flex;
-  flex-direction: column;
-  position: relative;
+  border-bottom: 1px solid #f1f3f4;
+}
+
+.file-item:last-child {
+  border-bottom: none;
 }
 
 .file-line {
   display: flex;
   align-items: center;
   gap: 8px;
-  justify-content: space-between; /* 아이콘+이름 왼쪽, 삭제 버튼 오른쪽 */
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
+}
+
+.file-icon {
+  flex-shrink: 0;
+  border: 1px solid;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.7em;
+  font-weight: 500;
+  text-align: center;
+  min-width: 35px;
+}
+
+.file-icon-pdf {
+  border-color: #FF5252;
+  color: #FF5252;
+  background-color: rgba(255, 82, 82, 0.1);
+}
+
+.file-icon-xlsx {
+  border-color: #4CAF50;
+  color: #4CAF50;
+  background-color: rgba(76, 175, 80, 0.1);
+}
+
+.file-icon-docx {
+  border-color: #2196F3;
+  color: #2196F3;
+  background-color: rgba(33, 150, 243, 0.1);
+}
+
+.file-icon-file {
+  border-color: #9E9E9E;
+  color: #9E9E9E;
+  background-color: rgba(158, 158, 158, 0.1);
 }
 
 .file-name {
+  flex: 1;
+  font-size: 0.85em;
+  color: #333;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -419,222 +496,191 @@ const downloadGeneratedFile = (file) => {
 
 .file-date {
   font-size: 0.7em;
-  color: #888;
-  text-align: right;
+  color: #6c757d;
   margin-top: 4px;
-  padding-right: 4px;
+  text-align: right;
 }
 
-.file-icon {
-  background-color: transparent !important;
-  border: 1px solid;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 0.8em;
-  margin-right: 8px;
-  min-width: 30px;
-  text-align: center;
-}
-
-.file-icon-pdf {
-  border-color: #FF5252;
-  color: #FF5252;
-}
-
-.file-icon-xlsx {
-  border-color: #4CAF50;
-  color: #4CAF50;
-}
-
-.file-icon-docx {
-  border-color: #2196F3;
-  color: #2196F3;
-}
-
-.file-icon-file {
-  border-color: #9E9E9E;
-  color: #9E9E9E;
-}
-
-.welcome-text {
-  margin-top: auto;
-  padding: 10px;
+.delete-button,
+.download-button {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: #6c757d;
   font-size: 0.9em;
-  color: #555;
-  flex-shrink: 0; /* Prevent welcome text from shrinking */
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
 }
 
+.delete-button:hover {
+  color: #dc3545;
+  background-color: rgba(220, 53, 69, 0.1);
+}
+
+.download-button:hover {
+  color: #007bff;
+  background-color: rgba(0, 123, 255, 0.1);
+}
+
+/* 메인 패널 */
 .main-panel {
-  flex-grow: 1;
-  border: 1px solid #ccc;
-  border-radius: 15px;
+  flex: 1;
+  background-color: white;
+  border-radius: 12px;
   padding: 20px;
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
-  min-height: 0;
-  max-height: 70vh;
+  gap: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
 }
 
-.file-upload-area {
-  flex-grow: 1; /* 📦 상대적으로 작게 */
-  border: 2px dashed #ccc;
-  border-radius: 10px;
-  padding: 20px;
-  text-align: center;
-  color: #777;
+/* 엑셀 미리보기 */
+.excel-preview {
+  flex: 1;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  background-color: #f8f9fa;
+  padding: 16px;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  min-height: 70px; /* 원래 200px → 줄이기 */
+}
+
+.excel-preview h3 {
+  margin: 0 0 12px 0;
+  color: #333;
+  font-size: 1.1em;
+}
+
+.table-scroll-container {
+  flex: 1;
+  overflow: auto;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  background-color: white;
+}
+
+.table-scroll-container table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: max-content;
+}
+
+.table-scroll-container td {
+  border: 1px solid #dee2e6;
+  padding: 8px 12px;
+  white-space: nowrap;
+  font-size: 0.85em;
+  color: #495057;
+}
+
+.table-scroll-container tr:nth-child(even) {
+  background-color: #f8f9fa;
+}
+
+/* 파일 업로드 영역 */
+.file-upload-area {
+  flex-shrink: 0;
+  border: 2px dashed #dee2e6;
+  border-radius: 8px;
+  padding: 20px;
+  background-color: #f8f9fa;
+  min-height: 80px;
 }
 
 .upload-controls {
   display: flex;
   align-items: center;
-  width: 100%;
-  gap: 10px;
+  gap: 12px;
+  height: 100%;
 }
 
-  .add-file-button {
-    position: relative;
-    width: 80px;
-    height: 40px;
-    border-radius: 5px 5px 0 0; /* Rounded corners only on top */
-    background-color: #777;
-    color: white;
-    border: none;
-    font-size: 1.5em;
-    cursor: pointer;
-  }
-
-  .file-options {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    background-color: #777;
-    border: 1px solid #ccc;
-    border-radius: 0 0 5px 5px; /* Rounded corners only on bottom */
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    z-index: 10;
-    width: 80px; /* Match the width of the add-file-button */
-    transition: all 0.3s ease;
-  }
-
-  .file-options div {
-    font-size: 0.5em;
-    padding: 10px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-  }
-
-  .file-options div:hover {
-    background-color: #f0f0f0;
-  }
-
-.fade-enter-active, .fade-leave-active {
-  transition: opacity 0.5s;
-}
-
-.fade-enter, .fade-leave-to /* .fade-leave-active in <2.1.8 */ {
-  opacity: 0;
-}
-
-.upload-button {
-  width: 40px;
+.add-file-button {
+  position: relative;
+  width: 50px;
   height: 40px;
-  border-radius: 50%;
-  background-color: #777;
+  border-radius: 8px;
+  background-color: #6c757d;
   color: white;
   border: none;
   font-size: 1.2em;
   cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.add-file-button:hover {
+  background-color: #5a6268;
+}
+
+.file-options {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  background-color: white;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 10;
+  min-width: 120px;
+  overflow: hidden;
+}
+
+.file-options div {
+  font-size: 0.85em;
+  padding: 12px 16px;
+  cursor: pointer;
+  color: #333;
+  transition: background-color 0.2s ease;
+  border-bottom: 1px solid #f1f3f4;
+}
+
+.file-options div:last-child {
+  border-bottom: none;
+}
+
+.file-options div:hover {
+  background-color: #f8f9fa;
 }
 
 .upload-placeholder {
-  flex-grow: 1;
+  flex: 1;
   height: 40px;
-  border: 1px dashed #ccc;
-  border-radius: 20px;
+  border: 1px dashed #ced4da;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #777;
-}
-
-.excel-preview {
-  flex-grow: 4; /* 🧱 공간 더 크게 */
-  margin-bottom: 20px;
-  border: 1px solid #ccc;
-  background: #f9f9f9;
-  padding: 10px;
-  max-height: 100%; /* 제한 없이 꽉 채우기 */
-  overflow: auto;
-  display: flex;
-  flex-direction: column;
-}
-
-.table-scroll-container {
-  overflow-x: auto;        /* 👈 가로 스크롤 */
-  width: 100%;
-}
-
-.table-scroll-container table {
-  width: max-content;      /* 👈 내용에 맞춰 넓이 설정 */
-  border-collapse: collapse;
-}
-
-.table-scroll-container td {
-  border: 1px solid #ddd;
-  padding: 4px 8px;
-  white-space: nowrap;     /* 👈 셀 안에서 줄바꿈 방지 */
-  font-size: 14px;
-}
-
-.file-list-scrollable {
-  max-height: 180px; /* 대략 4~5줄 */
-  overflow-y: auto;
-  padding-right: 4px; /* 스크롤바 공간 확보 */
-}
-
-/* 스크롤바 예쁘게 (크롬 기준) */
-.file-list-scrollable::-webkit-scrollbar {
-  width: 6px;
-}
-.file-list-scrollable::-webkit-scrollbar-thumb {
-  background-color: rgba(0, 0, 0, 0.1);
-  border-radius: 3px;
-}
-.file-list-scrollable::-webkit-scrollbar-track {
-  background-color: transparent;
-}
-
-.delete-button {
-  margin-left: auto;
-  background: none;
-  border: none;
-  color: #ccc;
+  color: #6c757d;
+  background-color: white;
   font-size: 0.9em;
-  cursor: pointer;
-  transition: color 0.2s ease;
 }
 
-.delete-button:hover {
-  color: #ff4d4f;
-}
-
-.download-button {
-  background: none;
+.upload-button {
+  width: 50px;
+  height: 40px;
+  border-radius: 8px;
+  background-color: #28a745;
+  color: white;
   border: none;
-  color: #aaa;
-  font-size: 0.9em;
+  font-size: 1.2em;
   cursor: pointer;
-  padding: 2px 6px;
-  transition: color 0.2s ease;
+  transition: background-color 0.2s ease;
 }
 
-.download-button:hover {
-  color: #007bff;
+.upload-button:hover {
+  background-color: #218838;
+}
+
+/* 애니메이션 */
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
 }
 </style>
