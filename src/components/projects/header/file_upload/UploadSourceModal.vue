@@ -13,65 +13,86 @@
       <LoadingModal />
     </template>
     <template v-else>
-      <!-- 업로드 영역 -->
-      <div
-        class="upload-area"
-        @click="handleUploadAreaClick"
-        @drop.prevent="handleDrop"
-        @dragover.prevent
-        @dragenter.prevent="isDragOver = true"
-        @dragleave="handleDragLeave"
-        :class="{ 'drag-over': isDragOver }"
-      >
-        <div class="upload-icon">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="17,8 12,3 7,8"></polyline>
-            <line x1="12" y1="3" x2="12" y2="15"></line>
-          </svg>
-        </div>
-        <h2 class="upload-title">소스 업로드</h2>
-        <p class="upload-description">
-          업로드할 파일을 선택하거나 드래그 앤 드롭해주세요. (예: RFP, 회의록, 엑셀)<br />
-          지원 파일 형식 : pdf, .xlsx, .xls, .wav, .docx
-        </p>
-        <input
-          type="file"
-          ref="fileInput"
-          @change="handleFileSelect"
-          multiple
-          accept=".pdf,.xlsx,.xls,.wav,.docx"
-          style="display: none"
-        />
-      </div>
-
-      <!-- 파일 목록 -->
-      <div v-if="selectedFiles.length" class="file-list">
-        <h3 class="file-list-title">선택된 파일</h3>
+      <div class="modal">
+        <!-- Upload Area -->
         <div
-          v-for="(file, index) in selectedFiles"
-          :key="index"
-          class="file-item"
+          class="upload-area"
+          @click="handleUploadAreaClick"
+          @drop.prevent="handleDrop"
+          @dragover.prevent
+          @dragenter.prevent="isDragOver = true"
+          @dragleave="handleDragLeave"
+          :class="{ 'drag-over': isDragOver }"
         >
-          <div class="file-info">
-            <span class="file-name">{{ file.name }}</span>
-            <span class="file-size">{{ formatFileSize(file.size) }}</span>
+          <div class="upload-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17,8 12,3 7,8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
           </div>
-          <button class="remove-file" @click="removeFile(index)">×</button>
+          <h2 class="modal-title">소스 업로드</h2>
+          <p class="modal-description">
+            업로드할 파일을 선택하거나 드래그 앤 드롭해주세요.<br />
+            지원 파일 형식: PDF, Excel, Word, WAV
+          </p>
+          <input
+            type="file"
+            ref="fileInput"
+            @change="handleFileSelect"
+            multiple
+            accept=".pdf,.xlsx,.xls,.wav,.docx"
+            style="display: none"
+          />
         </div>
-      </div>
 
-      <!-- 버튼 -->
-      <div class="button-group">
-        <button
-          class="upload-button"
-          @click="handleUpload"
-          :disabled="!selectedFiles.length || isUploading"
-        >
-          <span v-if="isUploading" class="loading"></span>
-          <span v-else>{{ selectedFiles.length ? '업로드' : '확인' }}</span>
-        </button>
-        <button class="cancel-button" @click="closeModal">취소</button>
+        <!-- File List -->
+        <div v-if="selectedFiles.length" class="file-list">
+          <h3 class="file-list-title">선택된 파일</h3>
+          <div
+            v-for="(file, index) in selectedFiles"
+            :key="index"
+            class="file-item"
+          >
+            <div class="file-info">
+              <div class="file-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14,2 14,8 20,8"></polyline>
+                  <line x1="16" y1="13" x2="8" y2="13"></line>
+                  <line x1="16" y1="17" x2="8" y2="17"></line>
+                </svg>
+              </div>
+              <div class="file-details">
+                <span class="file-name">{{ file.name }}</span>
+                <span class="file-size">{{ formatFileSize(file.size) }}</span>
+              </div>
+            </div>
+            <button class="remove-file" @click="removeFile(index)">×</button>
+          </div>
+        </div>
+
+        <!-- Button Group -->
+        <div class="button-group">
+          <button
+            class="upload-button"
+            @click="handleUpload"
+            :disabled="!selectedFiles.length || isUploading"
+          >
+            <span v-if="isUploading" class="loading"></span>
+            <span v-else class="upload-text">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17,8 12,3 7,8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+              {{ isUploading ? '업로드 중...' : (selectedFiles.length ? '업로드' : '확인') }}
+            </span>
+          </button>
+          <button class="cancel-button" @click="closeModal" :disabled="isUploading">
+            취소
+          </button>
+        </div>
       </div>
     </template>
   </CommonModal>
@@ -86,7 +107,6 @@ import SuccessUploadFileModal from './SuccessUploadFileModal.vue';
 
 const emit = defineEmits(['close', 'upload']);
 
-// 여기에 modalClass, closeButtonClass 추가 (필요시 클래스명 변경 가능)
 const modalClass = computed(() => '');
 const closeButtonClass = computed(() => '');
 
@@ -152,7 +172,7 @@ const formatFileSize = (bytes) => {
   const units = ['Bytes', 'KB', 'MB', 'GB'];
   if (bytes === 0) return '0 Bytes';
   const i = Math.floor(Math.log(bytes) / Math.log(1024));
-  return (bytes / Math.pow(1024, i)).toFixed(2) + ' ' + units[i];
+  return (bytes / Math.pow(1024, i)).toFixed(1) + ' ' + units[i];
 };
 
 const handleUpload = async () => {
@@ -184,139 +204,127 @@ const handleUploadAreaClick = () => {
 </script>
 
 <style scoped>
-/* Upload Area */
-.upload-area {
-  border: 2px dashed #e2e8f0;
-  border-radius: 16px;
-  padding: 48px 32px;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  margin-bottom: 32px;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-  position: relative;
-  overflow: hidden;
+.modal {
+  padding: 32px;
+  max-width: 480px;
+  margin: 0 auto;
 }
 
-.upload-area::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.02), rgba(139, 92, 246, 0.02));
-  opacity: 0;
-  transition: opacity 0.4s ease;
+/* Upload Area */
+.upload-area {
+  border: 2px dashed #e0e0e0;
+  border-radius: 4px;
+  padding: 32px 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 24px;
+  background: #fafafa;
 }
 
 .upload-area:hover,
 .upload-area.drag-over {
-  border-color: #6366f1;
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 20px 40px -12px rgba(99, 102, 241, 0.25);
-}
-
-.upload-area:hover::before,
-.upload-area.drag-over::before {
-  opacity: 1;
+  border-color: #999;
+  background: #f5f5f5;
 }
 
 .upload-icon {
-  width: 88px;
-  height: 88px;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  width: 48px;
+  height: 48px;
+  background: black;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 28px;
+  margin: 0 auto 16px;
   color: white;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 8px 32px rgba(99, 102, 241, 0.3);
 }
 
-.upload-area:hover .upload-icon,
-.upload-area.drag-over .upload-icon {
-  transform: scale(1.1) rotate(5deg);
-  box-shadow: 0 12px 40px rgba(99, 102, 241, 0.4);
+.modal-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: black;
+  margin: 0 0 8px 0;
 }
 
-.upload-title {
-  font-size: 28px;
-  font-weight: 700;
-  background: linear-gradient(135deg, #1e293b, #475569);
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  margin: 0 0 20px 0;
-  letter-spacing: -0.025em;
-}
-
-.upload-description {
-  font-size: 15px;
-  color: #64748b;
-  line-height: 1.7;
+.modal-description {
+  font-size: 14px;
+  color: #666;
   margin: 0;
-  font-weight: 400;
 }
 
 /* File List */
 .file-list {
-  margin-bottom: 32px;
+  margin-bottom: 24px;
 }
 
 .file-list-title {
-  font-size: 18px;
-  font-weight: 700;
-  color: #1e293b;
+  font-size: 14px;
+  font-weight: 600;
+  color: black;
   margin: 0 0 16px 0;
-  letter-spacing: -0.025em;
 }
 
 .file-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px;
-  background: linear-gradient(135deg, #ffffff, #f8fafc);
-  border-radius: 12px;
-  margin-bottom: 12px;
-  border: 1px solid #e2e8f0;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  padding: 12px;
+  background: #f9f9f9;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  transition: background-color 0.2s ease;
 }
 
 .file-item:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-  border-color: #cbd5e1;
+  background: #f0f0f0;
+}
+
+.file-item:last-child {
+  margin-bottom: 0;
 }
 
 .file-info {
   display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.file-icon {
+  width: 32px;
+  height: 32px;
+  background: black;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.file-details {
+  display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 2px;
 }
 
 .file-name {
-  font-size: 15px;
-  font-weight: 600;
-  color: #1e293b;
+  font-size: 13px;
+  font-weight: 500;
+  color: black;
 }
 
 .file-size {
-  font-size: 13px;
-  color: #64748b;
-  font-weight: 500;
+  font-size: 12px;
+  color: #666;
 }
 
 .remove-file {
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   border: none;
-  background: linear-gradient(135deg, #ef4444, #dc2626);
+  background: #ff4444;
   color: white;
   border-radius: 50%;
   cursor: pointer;
@@ -325,90 +333,84 @@ const handleUploadAreaClick = () => {
   justify-content: center;
   font-size: 16px;
   font-weight: 600;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+  transition: background-color 0.2s ease;
 }
 
 .remove-file:hover {
-  background: linear-gradient(135deg, #dc2626, #b91c1c);
-  transform: scale(1.15) rotate(90deg);
-  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4);
+  background: #cc3333;
 }
 
 /* Button Group */
 .button-group {
   display: flex;
-  gap: 16px;
+  gap: 12px;
   justify-content: flex-end;
 }
 
 .cancel-button {
-  background: linear-gradient(135deg, #ffffff, #f8fafc);
-  color: #64748b;
-  border: 2px solid #e2e8f0;
-  padding: 14px 28px;
-  border-radius: 12px;
-  font-size: 15px;
-  font-weight: 600;
+  background: white;
+  color: black;
+  border: 1px solid #ccc;
+  padding: 10px 20px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.2s ease;
   font-family: inherit;
-  letter-spacing: -0.025em;
 }
 
-.cancel-button:hover {
-  background: linear-gradient(135deg, #f8fafc, #f1f5f9);
-  color: #475569;
-  border-color: #cbd5e1;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+.cancel-button:hover:not(:disabled) {
+  background: #f5f5f5;
+  border-color: #999;
+}
+
+.cancel-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .upload-button {
-  background: linear-gradient(135deg, black, black);
+  background: black;
   color: white;
-  border: none;
-  padding: 14px 32px;
-  border-radius: 12px;
-  font-size: 15px;
-  font-weight: 700;
+  border: 1px solid black;
+  padding: 10px 24px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.2s ease;
   font-family: inherit;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 6px;
   min-width: 120px;
-  letter-spacing: -0.025em;
-  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.3);
 }
 
 .upload-button:hover:not(:disabled) {
-  background: linear-gradient(135deg, #5855f7, #7c3aed);
-  transform: translateY(-3px);
-  box-shadow: 0 12px 32px rgba(99, 102, 241, 0.4);
-}
-
-.upload-button:active:not(:disabled) {
-  transform: translateY(-1px);
+  background: #333;
 }
 
 .upload-button:disabled {
-  opacity: 0.6;
+  opacity: 0.7;
   cursor: not-allowed;
-  transform: none;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+}
+
+.upload-text {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .loading {
   display: inline-block;
-  width: 18px;
-  height: 18px;
-  border: 2.5px solid rgba(255, 255, 255, 0.3);
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
   border-radius: 50%;
   border-top-color: white;
-  animation: spin 1s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
+  animation: spin 1s linear infinite;
 }
 
 @keyframes spin {
@@ -417,168 +419,45 @@ const handleUploadAreaClick = () => {
   }
 }
 
-/* Loading Container */
-.loading-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 60px 40px;
-  position: relative;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-  border-radius: 16px;
-}
-
-/* Completion Container */
-.completion-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 80px 40px;
-  position: relative;
-  border-radius: 16px;
-}
-
-/* Completion Icon */
-.completion-icon {
-  width: 96px;
-  height: 96px;
-  background: linear-gradient(135deg, #10b981, #059669);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 32px;
-  color: white;
-  box-shadow: 0 12px 40px rgba(16, 185, 129, 0.3);
-  animation: completionPulse 2s ease-in-out infinite;
-}
-
-@keyframes completionPulse {
-  0%, 100% {
-    transform: scale(1);
-    box-shadow: 0 12px 40px rgba(16, 185, 129, 0.3);
-  }
-  50% {
-    transform: scale(1.05);
-    box-shadow: 0 16px 48px rgba(16, 185, 129, 0.4);
-  }
-}
-
-/* Completion Text */
-.completion-text {
-  font-size: 28px;
-  font-weight: 700;
-  background: linear-gradient(135deg, #1e293b, #475569);
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  margin: 0 0 20px 0;
-  letter-spacing: -0.025em;
-}
-
 /* Responsive Design */
 @media (max-width: 768px) {
-  .upload-area {
-    padding: 40px 24px;
-    margin-bottom: 24px;
+  .modal {
+    padding: 24px;
+    max-width: calc(100vw - 2rem);
+    margin: 1rem;
+  }
+
+  .modal-title {
+    font-size: 18px;
   }
 
   .upload-icon {
-    width: 72px;
-    height: 72px;
-    margin-bottom: 24px;
+    width: 40px;
+    height: 40px;
   }
 
-  .upload-title {
-    font-size: 24px;
+  .upload-area {
+    padding: 20px;
   }
 
-  .upload-description {
-    font-size: 14px;
+  .file-item {
+    padding: 10px;
+  }
+
+  .file-icon {
+    width: 28px;
+    height: 28px;
   }
 
   .button-group {
     flex-direction: column;
-    gap: 12px;
+    gap: 8px;
   }
 
   .cancel-button,
   .upload-button {
     width: 100%;
-    padding: 16px 24px;
-  }
-
-  .file-list-title {
-    font-size: 16px;
-  }
-
-  .loading-container {
-    padding: 48px 32px;
-  }
-
-  .completion-container {
-    padding: 64px 32px;
-  }
-
-  .completion-icon {
-    width: 80px;
-    height: 80px;
-    margin-bottom: 24px;
-  }
-
-  .completion-text {
-    font-size: 24px;
-    margin-bottom: 16px;
-  }
-}
-
-@media (max-width: 480px) {
-  .upload-area {
-    padding: 32px 20px;
-  }
-
-  .upload-icon {
-    width: 64px;
-    height: 64px;
-  }
-
-  .upload-title {
-    font-size: 22px;
-  }
-
-  .upload-description {
-    font-size: 13px;
-  }
-
-  .loading-container {
-    padding: 40px 24px;
-  }
-
-  .completion-container {
-    padding: 56px 24px;
-  }
-
-  .completion-icon {
-    width: 72px;
-    height: 72px;
-    margin-bottom: 20px;
-  }
-
-  .completion-text {
-    font-size: 22px;
-    margin-bottom: 12px;
-  }
-
-  .file-item {
-    padding: 14px 16px;
-  }
-
-  .button-group {
-    gap: 10px;
+    padding: 12px 20px;
   }
 }
 </style>
