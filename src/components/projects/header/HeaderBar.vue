@@ -43,19 +43,19 @@
           title="파일 업로드"
         >
           <svg
-  xmlns="http://www.w3.org/2000/svg"
-  width="20"
-  height="20"
-  viewBox="0 0 24 24"
-  fill="none"
-  stroke="currentColor"
-  stroke-width="2"
-  stroke-linecap="round"
-  stroke-linejoin="round"
->
-  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-  <polyline points="17 8 12 3 7 8" />
-  <line x1="12" y1="3" x2="12" y2="15" />
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="17 8 12 3 7 8" />
+            <line x1="12" y1="3" x2="12" y2="15" />
           </svg>
         </button>
       </div>
@@ -64,12 +64,12 @@
     <div class="header-center">
       <h1 class="project-title">Project 1</h1>
     </div>
-
     <div class="header-right">
       <button class="download-button" @click="openDownloadFileModal">
         다운로드
       </button>
-      <button class="icon-button" title="사용자">
+      <!-- 사용자 버튼에 프로필 바 토글 기능 추가 -->
+      <button class="icon-button" @click="toggleProfileSidebar" title="사용자">
         <svg
           width="20"
           height="20"
@@ -83,20 +83,33 @@
         </svg>
       </button>
       <button class="icon-button" @click="handleGoSettings" title="설정">
-        <svg
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-        >
-          <circle cx="12" cy="12" r="3"></circle>
-          <path
-            d="M12 1v6m0 6v6m11-7h-6m-6 0H1m17-4a4 4 0 1 1-8 0 4 4 0 0 1 8 0zM7 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0z"
-          ></path>
-        </svg>
-      </button>
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />
+    <path
+      d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 
+         2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 
+         1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 
+         1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 
+         1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 
+         0-4h.09c.7 0 1.3-.4 1.51-1a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 
+         2 0 1 1 2.83-2.83l.06.06c.46.46 1.12.61 1.82.33.61-.26 1-.86 
+         1-1.51V3a2 2 0 1 1 4 0v.09c0 .7.4 1.3 1 1.51.7.28 1.36.13 
+         1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 
+         1.82c.26.61.86 1 1.51 1H21a2 2 0 1 1 0 4h-.09c-.7 0-1.3.4-1.51 
+         1z"
+    />
+  </svg>
+</button>
+
     </div>
   </header>
 
@@ -119,6 +132,14 @@
     @close="closeDownloadFileModal"
     @createProject="handleDownloadSource"
   />
+
+  <!-- 프로필 바 -->
+  <ProfileBar
+    :isVisible="showProfileSidebar"
+    @close="closeProfileSidebar"
+    @logout="handleLogout"
+    @withdraw="handleWithdraw"
+  />
 </template>
 
 <script setup>
@@ -128,6 +149,7 @@ import SearchRequirementsSidebar from "./search_rd/SearchRequirementsSidebar.vue
 import ManageFileSidebar from "./files_rd/ManageFileSidebar.vue";
 import UploadSourceModal from "./file_upload/UploadSourceModal.vue"
 import DownloadFileModal from "./download_rd/DownloadFileModal.vue";
+import ProfileBar from "../../ProfileBar.vue";
 
 const router = useRouter();
 
@@ -135,11 +157,43 @@ const showSidebar = ref(false);
 const showFileListSidebar = ref(false);
 const showSourceUploadModal = ref(false);
 const showDownloadFileModal = ref(false);
+const showProfileSidebar = ref(false);
 
 // 모든 사이드바 닫기 헬퍼 함수
 const closeAllSidebars = () => {
   showSidebar.value = false;
   showFileListSidebar.value = false;
+  showProfileSidebar.value = false; // 프로필 바도 포함
+};
+
+// 프로필 사이드바 관련 메서드
+const toggleProfileSidebar = () => {
+  // 다른 사이드바가 열려있으면 닫기
+  if (showSidebar.value) {
+    showSidebar.value = false;
+  }
+  if (showFileListSidebar.value) {
+    showFileListSidebar.value = false;
+  }
+  // 프로필 사이드바 토글
+  showProfileSidebar.value = !showProfileSidebar.value;
+};
+
+const closeProfileSidebar = () => {
+  showProfileSidebar.value = false;
+};
+
+const handleLogout = () => {
+  console.log("로그아웃");
+  closeProfileSidebar();
+  // 로그아웃 로직 구현
+  // 예: router.push({ name: "Login" });
+};
+
+const handleWithdraw = () => {
+  console.log("탈퇴하기");
+  closeProfileSidebar();
+  // 탈퇴 로직 구현
 };
 
 // 검색 사이드바
@@ -147,6 +201,9 @@ const toggleSidebar = () => {
   // 다른 사이드바가 열려있으면 닫기
   if (showFileListSidebar.value) {
     showFileListSidebar.value = false;
+  }
+  if (showProfileSidebar.value) {
+    showProfileSidebar.value = false;
   }
   // 검색 사이드바 토글
   showSidebar.value = !showSidebar.value;
@@ -161,6 +218,9 @@ const toggleFileListSidebar = () => {
   // 다른 사이드바가 열려있으면 닫기
   if (showSidebar.value) {
     showSidebar.value = false;
+  }
+  if (showProfileSidebar.value) {
+    showProfileSidebar.value = false;
   }
   // 파일 리스트 사이드바 토글
   showFileListSidebar.value = !showFileListSidebar.value;
@@ -259,6 +319,7 @@ const handleGoSettings = (projectId) => {
   color: white;
   font-weight: 700;
   font-size: 16px;
+  cursor: pointer;
 }
 
 .header-actions {
@@ -282,6 +343,12 @@ const handleGoSettings = (projectId) => {
 }
 
 .icon-button:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+/* 활성 상태 표시 (사이드바가 열려있을 때) */
+.icon-button.active {
   background: #f3f4f6;
   color: #374151;
 }

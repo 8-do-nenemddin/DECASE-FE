@@ -215,7 +215,6 @@ onUnmounted(() => {
 /* Modal Content */
 .modal-content {
   position: relative;
-  padding: 40px;
   min-height: 100%;
   z-index: 1;
 }
