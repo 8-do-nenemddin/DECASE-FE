@@ -1,96 +1,137 @@
 <template>
   <div class="project-info-container">
-    <div class="form-card">
-      <!-- 프로젝트 기간 -->
-      <div class="form-section">
-        <label class="form-label">프로젝트 기간</label>
-        <div class="date-range-container">
-          <div class="date-input-wrapper">
+    <Transition name="slide-up" appear>
+      <div class="form-card">
+        <!-- 프로젝트 기간 -->
+        <div class="form-section">
+          <label class="form-label">프로젝트 기간</label>
+          <div class="date-range-container">
+            <div class="date-input-wrapper">
+              <input
+                type="date"
+                v-model="projectData.startDate"
+                class="date-input"
+              />
+            </div>
+            <span class="date-separator">~</span>
+            <div class="date-input-wrapper">
+              <input
+                type="date"
+                v-model="projectData.endDate"
+                class="date-input"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- 프로젝트 이름과 담당 PM -->
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="project-name">프로젝트 이름</label>
             <input
-              type="date"
-              v-model="projectData.startDate"
-              class="date-input"
+              id="project-name"
+              type="text"
+              v-model="projectData.name"
+              class="form-input"
+              placeholder="프로젝트 이름을 입력하세요"
             />
           </div>
-          <span class="date-separator">~</span>
-          <div class="date-input-wrapper">
+
+          <div class="form-group">
+            <label class="form-label" for="project-pm">제안 PM</label>
             <input
-              type="date"
-              v-model="projectData.endDate"
-              class="date-input"
+              id="project-pm"
+              type="text"
+              v-model="projectData.pm"
+              class="form-input"
+              placeholder="담당 PM을 입력하세요"
             />
           </div>
         </div>
-      </div>
 
-      <!-- 프로젝트 이름과 담당 PM -->
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label" for="project-name">프로젝트 이름</label>
+        <!-- 프로젝트 설명 -->
+        <div class="form-section">
+          <label class="form-label" for="project-description"
+            >프로젝트 설명</label
+          >
+          <textarea
+            id="project-description"
+            v-model="projectData.description"
+            rows="6"
+            class="form-textarea"
+            placeholder="프로젝트에 대한 상세한 설명을 입력하세요..."
+          ></textarea>
+        </div>
+
+        <!-- 프로젝트 규모 -->
+        <div class="form-section">
+          <label class="form-label" for="project-scale">프로젝트 규모</label>
           <input
-            id="project-name"
+            id="project-scale"
             type="text"
-            v-model="projectData.name"
+            v-model="projectData.scale"
             class="form-input"
-            placeholder="프로젝트 이름을 입력하세요"
+            placeholder="프로젝트 규모를 입력하세요"
           />
         </div>
 
-        <div class="form-group">
-          <label class="form-label" for="project-pm">제안 PM</label>
-          <input
-            id="project-pm"
-            type="text"
-            v-model="projectData.pm"
-            class="form-input"
-            placeholder="담당 PM을 입력하세요"
-          />
+        <!-- 저장 버튼 -->
+        <div class="form-actions">
+          <button @click="saveProject" class="save-button">
+            <span class="save-icon">💾</span>
+            저장
+          </button>
         </div>
       </div>
-
-      <!-- 프로젝트 설명 -->
-      <div class="form-section">
-        <label class="form-label" for="project-description"
-          >프로젝트 설명</label
-        >
-        <textarea
-          id="project-description"
-          v-model="projectData.description"
-          rows="6"
-          class="form-textarea"
-          placeholder="프로젝트에 대한 상세한 설명을 입력하세요..."
-        ></textarea>
-      </div>
-
-      <!-- 프로젝트 규모 -->
-      <div class="form-section">
-        <label class="form-label" for="project-scale">프로젝트 규모</label>
-        <input
-          id="project-scale"
-          type="text"
-          v-model="projectData.scale"
-          class="form-input"
-          placeholder="프로젝트 규모를 입력하세요"
-        />
-      </div>
-
-      <!-- 저장 버튼 -->
-      <div class="form-actions">
-        <button @click="saveProject" class="save-button">
-          <span class="save-icon">💾</span>
-          저장
-        </button>
-      </div>
-    </div>
+    </Transition>
 
     <!-- 프로젝트 삭제 -->
-    <div class="delete-section">
-      <button @click="deleteProject" class="delete-button">
-        프로젝트 삭제
-      </button>
-    </div>
+    <Transition name="slide-up" appear>
+      <div class="delete-section">
+        <button @click="showDeleteModal = true" class="delete-button">
+          프로젝트 삭제
+        </button>
+      </div>
+    </Transition>
   </div>
 
+  <!-- 삭제 확인 모달 -->
+  <Transition name="modal-fade">
+    <div v-if="showDeleteModal" class="modal-overlay" @click="closeDeleteModal">
+      <div class="modal-container" @click.stop>
+        <div class="modal-header">
+          <div class="modal-icon">
+            <span class="warning-icon">⚠️</span>
+          </div>
+          <h3 class="modal-title">프로젝트 삭제</h3>
+          <button @click="closeDeleteModal" class="modal-close-button">
+            <span class="close-icon">✕</span>
+          </button>
+        </div>
+        
+        <div class="modal-body">
+          <p class="modal-message">
+            정말로 이 프로젝트를 삭제하시겠습니까?
+          </p>
+          <p class="modal-warning">
+            삭제된 프로젝트는 복구할 수 없습니다.
+          </p>
+        </div>
+        
+        <div class="modal-actions">
+          <button @click="confirmDelete" class="confirm-delete-button">
+            <span class="delete-icon">🗑️</span>
+            삭제
+          </button>
+          <button @click="closeDeleteModal" class="cancel-button">
+            취소
+          </button>
+        </div>
+      </div>
+    </div>
+  </Transition>
+
+  <!-- 저장 성공 모달 -->
   <EditSuccessModal
     v-if="showSuccessSaveModal"
     @close="closeSuccessSaveModal"
@@ -100,8 +141,10 @@
 <script setup>
 import { ref, reactive } from "vue";
 import EditSuccessModal from "./EditSuccessModal.vue";
+import router from "../../../../router";
 
 const showSuccessSaveModal = ref(false);
+const showDeleteModal = ref(false);
 
 const projectData = reactive({
   startDate: "2025-05-29",
@@ -118,15 +161,22 @@ const saveProject = () => {
   showSuccessSaveModal.value = true;
   // 실제 저장 로직 구현
 };
+
 const closeSuccessSaveModal = () => {
   showSuccessSaveModal.value = false;
 };
 
-const deleteProject = () => {
-  if (confirm("정말로 프로젝트를 삭제하시겠습니까?")) {
-    console.log("프로젝트 삭제");
-    // 실제 삭제 로직 구현
-  }
+// 삭제 모달 관련 함수들
+const closeDeleteModal = () => {
+  showDeleteModal.value = false;
+};
+
+const confirmDelete = () => {
+  console.log("프로젝트 삭제 확인");
+  showDeleteModal.value = false;
+  // 실제 삭제 로직 구현
+  // 삭제 후 페이지 이동이나 알림 처리
+  router.push({ name: "MainView" });
 };
 </script>
 
@@ -134,7 +184,37 @@ const deleteProject = () => {
 .project-info-container {
   max-width: 800px;
   margin: 0 auto;
-  padding: 2rem;
+}
+
+/* 슬라이드 업 애니메이션 */
+.slide-up-enter-active {
+  transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.slide-up-enter-from {
+  opacity: 0;
+  transform: translateY(50px);
+}
+
+.slide-up-enter-to {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* 모달 애니메이션 */
+.modal-fade-enter-active,
+.modal-fade-leave-active {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modal-fade-enter-from,
+.modal-fade-leave-to {
+  opacity: 0;
+}
+
+.modal-fade-enter-from .modal-container,
+.modal-fade-leave-to .modal-container {
+  transform: scale(0.9) translateY(-20px);
 }
 
 .form-card {
@@ -303,6 +383,154 @@ const deleteProject = () => {
   transform: translateY(-1px);
 }
 
+/* 모달 스타일 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.modal-container {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  max-width: 400px;
+  width: 100%;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem 1.5rem 1rem 1.5rem;
+  position: relative;
+}
+
+.modal-icon {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.warning-icon {
+  font-size: 1.5rem;
+}
+
+.modal-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+  flex: 1;
+}
+
+.modal-close-button {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: transparent;
+  border: none;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  transition: all 0.2s ease;
+}
+
+.modal-close-button:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.close-icon {
+  font-size: 1.25rem;
+  font-weight: bold;
+}
+
+.modal-body {
+  padding: 0 1.5rem 1.5rem 1.5rem;
+}
+
+.modal-message {
+  font-size: 0.875rem;
+  color: #374151;
+  margin: 0 0 0.5rem 0;
+  font-weight: 500;
+}
+
+.modal-warning {
+  font-size: 0.8125rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem 1.5rem 1.5rem;
+  border-top: 1px solid #f3f4f6;
+}
+
+.cancel-button {
+  flex: 1;
+  background: #f9fafb;
+  color: #374151;
+  border: 1px solid #e5e7eb;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancel-button:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+}
+
+.confirm-delete-button {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  border: none;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.confirm-delete-button:hover {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+}
+
+.delete-icon {
+  font-size: 0.875rem;
+}
+
 /* 반응형 디자인 */
 @media (max-width: 768px) {
   .project-info-container {
@@ -336,6 +564,20 @@ const deleteProject = () => {
     width: 100%;
     justify-content: center;
   }
+
+  .modal-container {
+    margin: 1rem;
+    max-width: calc(100% - 2rem);
+  }
+
+  .modal-actions {
+    flex-direction: column;
+  }
+
+  /* 모바일에서 애니메이션 조정 */
+  .slide-up-enter-from {
+    transform: translateY(30px);
+  }
 }
 
 @media (max-width: 480px) {
@@ -362,6 +604,18 @@ const deleteProject = () => {
     padding: 0.75rem 1.5rem;
     font-size: 0.8125rem;
   }
+
+  .modal-header {
+    padding: 1rem;
+  }
+
+  .modal-body {
+    padding: 0 1rem 1rem 1rem;
+  }
+
+  .modal-actions {
+    padding: 1rem;
+  }
 }
 
 /* 포커스 가능한 요소들의 접근성 개선 */
@@ -369,7 +623,10 @@ const deleteProject = () => {
 .form-textarea:focus-visible,
 .date-input:focus-visible,
 .save-button:focus-visible,
-.delete-button:focus-visible {
+.delete-button:focus-visible,
+.cancel-button:focus-visible,
+.confirm-delete-button:focus-visible,
+.modal-close-button:focus-visible {
   outline: 2px solid #4f46e5;
   outline-offset: 2px;
 }
