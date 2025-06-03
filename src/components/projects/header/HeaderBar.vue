@@ -58,6 +58,28 @@
             <line x1="12" y1="3" x2="12" y2="15" />
           </svg>
         </button>
+        <!-- 목업 뷰어 버튼 추가 -->
+        <button
+          class="icon-button"
+          @click="toggleMockupViewer"
+          title="목업 뷰어"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+            <line x1="8" y1="21" x2="16" y2="21"/>
+            <line x1="12" y1="17" x2="12" y2="21"/>
+          </svg>
+        </button>
       </div>
     </div>
 
@@ -113,6 +135,8 @@
     </div>
   </header>
 
+  <MockupViewer v-if="showMockupViewer" @close="closeMockupViewer" />
+
   <!-- 검색 사이드바 -->
   <SearchRequirementsSidebar v-if="showSidebar" @close="closeSidebar" />
 
@@ -151,6 +175,7 @@ import ManageFileSidebar from "./files_rd/ManageFileSidebar.vue";
 import UploadSourceModal from "./file_upload/UploadSourceModal.vue"
 import DownloadFileModal from "./download_rd/DownloadFileModal.vue";
 import ProfileBar from "../../main/ProfileBar.vue";
+import MockupViewer from "./mockup/MockupViewer.vue";
 
 const router = useRouter();
 
@@ -159,6 +184,7 @@ const showFileListSidebar = ref(false);
 const showSourceUploadModal = ref(false);
 const showDownloadFileModal = ref(false);
 const showProfileSidebar = ref(false);
+const showMockupViewer = ref(false); // 목업 뷰어 표시 상태
 
 const props = defineProps({
   projectName: {
@@ -180,6 +206,7 @@ const closeAllSidebars = () => {
   showSidebar.value = false;
   showFileListSidebar.value = false;
   showProfileSidebar.value = false; // 프로필 바도 포함
+  showMockupViewer.value = false; // 목업 뷰어도 포함
 };
 
 // 프로필 사이드바 관련 메서드
@@ -191,12 +218,25 @@ const toggleProfileSidebar = () => {
   if (showFileListSidebar.value) {
     showFileListSidebar.value = false;
   }
+  if (showMockupViewer.value) {
+    showMockupViewer.value = false;
+  }
   // 프로필 사이드바 토글
   showProfileSidebar.value = !showProfileSidebar.value;
 };
 
 const closeProfileSidebar = () => {
   showProfileSidebar.value = false;
+};
+
+// 목업 뷰어 관련 메서드
+const toggleMockupViewer = () => {
+  closeAllSidebars(); // 다른 모든 사이드바 닫기
+  showMockupViewer.value = true;
+};
+
+const closeMockupViewer = () => {
+  showMockupViewer.value = false;
 };
 
 const handleLogout = () => {
@@ -221,6 +261,9 @@ const toggleSidebar = () => {
   if (showProfileSidebar.value) {
     showProfileSidebar.value = false;
   }
+  if (showMockupViewer.value) {
+    showMockupViewer.value = false;
+  }
   // 검색 사이드바 토글
   showSidebar.value = !showSidebar.value;
 };
@@ -237,6 +280,9 @@ const toggleFileListSidebar = () => {
   }
   if (showProfileSidebar.value) {
     showProfileSidebar.value = false;
+  }
+  if (showMockupViewer.value) {
+    showMockupViewer.value = false;
   }
   // 파일 리스트 사이드바 토글
   showFileListSidebar.value = !showFileListSidebar.value;
