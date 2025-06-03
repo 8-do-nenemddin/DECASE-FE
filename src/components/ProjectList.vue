@@ -84,7 +84,7 @@ const changeStatus = (project, status) => {
 };
 
 const navigateToProject = (projectName) => {
-  router.push({ name: 'ProjectHome', params: { projectName } });
+  router.push({ name: 'ProjectMain', params: { projectName } });
 };
 </script>
 
