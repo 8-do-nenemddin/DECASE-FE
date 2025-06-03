@@ -11,7 +11,7 @@
     </div>
 
     <div class="header-center">
-      <h1 class="project-title">Project 1</h1>
+      <h1 class="project-title" @click="goToMain">{{ decodedProjectName }}</h1>
     </div>
     <div class="header-right">
       <!-- 사용자 버튼에 프로필 바 토글 기능 추가 -->
@@ -31,26 +31,6 @@
     </div>
   </header>
 
-  <!-- 검색 사이드바 -->
-  <SearchRequirementsSidebar v-if="showSidebar" @close="closeSidebar" />
-
-  <!-- 파일 관리 사이드 바 -->
-  <ManageFileSidebar v-if="showFileListSidebar" @close="closeFileListSidebar" />
-
-  <!-- 소스 업로드 모달 -->
-  <UploadSourceModal
-    v-if="showSourceUploadModal"
-    @close="closeSourceUploadModal"
-    @createProject="handleUploadSource"
-  />
-
-  <!--  요구사항 정의서 다운로드 모달 -->
-  <DownloadFileModal
-    v-if="showDownloadFileModal"
-    @close="closeDownloadFileModal"
-    @createProject="handleDownloadSource"
-  />
-
   <!-- 프로필 바 -->
   <ProfileBar
     :isVisible="showProfileSidebar"
@@ -62,32 +42,34 @@
 
 <script setup>
 import { ref } from "vue";
+import { computed } from 'vue';
 import { useRouter } from "vue-router";
 import ProfileBar from "../../main/ProfileBar.vue";
 
 const router = useRouter();
-
 const showSidebar = ref(false);
-const showFileListSidebar = ref(false);
-const showSourceUploadModal = ref(false);
-const showDownloadFileModal = ref(false);
 const showProfileSidebar = ref(false);
 
-// 모든 사이드바 닫기 헬퍼 함수
-const closeAllSidebars = () => {
-  showSidebar.value = false;
-  showFileListSidebar.value = false;
-  showProfileSidebar.value = false; // 프로필 바도 포함
-};
+const props = defineProps({
+  projectName: {
+    type: String,
+    required: true
+  }
+});
+
+const decodedProjectName = computed(() => decodeURIComponent(props.projectName));
+
+const goToMain = () => {
+  if (props.projectName) {
+    router.push(`/projects/${props.projectName}`);
+  }
+}
 
 // 프로필 사이드바 관련 메서드
 const toggleProfileSidebar = () => {
   // 다른 사이드바가 열려있으면 닫기
   if (showSidebar.value) {
     showSidebar.value = false;
-  }
-  if (showFileListSidebar.value) {
-    showFileListSidebar.value = false;
   }
   // 프로필 사이드바 토글
   showProfileSidebar.value = !showProfileSidebar.value;
@@ -110,72 +92,8 @@ const handleWithdraw = () => {
   // 탈퇴 로직 구현
 };
 
-// 검색 사이드바
-const toggleSidebar = () => {
-  // 다른 사이드바가 열려있으면 닫기
-  if (showFileListSidebar.value) {
-    showFileListSidebar.value = false;
-  }
-  if (showProfileSidebar.value) {
-    showProfileSidebar.value = false;
-  }
-  // 검색 사이드바 토글
-  showSidebar.value = !showSidebar.value;
-};
-
-const closeSidebar = () => {
-  showSidebar.value = false;
-};
-
-// 파일 리스트 사이드 바
-const toggleFileListSidebar = () => {
-  // 다른 사이드바가 열려있으면 닫기
-  if (showSidebar.value) {
-    showSidebar.value = false;
-  }
-  if (showProfileSidebar.value) {
-    showProfileSidebar.value = false;
-  }
-  // 파일 리스트 사이드바 토글
-  showFileListSidebar.value = !showFileListSidebar.value;
-};
-
-const closeFileListSidebar = () => {
-  showFileListSidebar.value = false;
-};
-
-// 소스 업로드 모달
-const openSourceUploadModal = () => {
-  closeAllSidebars();
-  showSourceUploadModal.value = true;
-};
-const closeSourceUploadModal = () => {
-  showSourceUploadModal.value = false;
-};
-
-// 요구사항 정의서 다운로드 모달
-const openDownloadFileModal = () => {
-  closeAllSidebars();
-  showDownloadFileModal.value = true;
-};
-const closeDownloadFileModal = () => {
-  showDownloadFileModal.value = false;
-};
-
-const handleUploadSource = (newSourceName) => {
-  closeSourceUploadModal();
-};
-const handleDownloadSource = (newSourceName) => {
-  closeDownloadFileModal();
-};
-
 const handleGoMain = () => {
   router.push({ name: "MainView" });
-};
-
-const handleGoSettings = (projectId) => {
-  console.log(`'${projectId}' 세팅`);
-  router.push({ name: "ProjectSetting", params: { projectId: projectId } });
 };
 </script>
 

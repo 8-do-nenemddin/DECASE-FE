@@ -1,7 +1,7 @@
 <template>
   <div class="app-container">
     <!-- 헤더 컴포넌트 -->
-    <SettingsHeader :project-title="'Project 1'" />
+    <SettingsHeader :project-name="projectName" />
 
     <div class="main-layout">
       <!-- 사이드바 컴포넌트 -->
@@ -33,15 +33,19 @@ import EditProjectInfo from "./edit_project/EditProjectInfo.vue";
 import ViewMatrix from "./view_matrix/ViewMatrix.vue";
 import ManageRight from "./manage_right/ManageRight.vue";
 
+const props = defineProps({
+  projectName: {
+    type: String,
+    required: true
+  }
+});
+
+console.log(props.projectName)
+
 const currentComponent = ref("ProjectInfo"); // 기본 컴포넌트
 
 const handleChangeComponent = (componentName) => {
   currentComponent.value = componentName;
-};
-
-const addRequirement = () => {
-  console.log("요구사항 추가 클릭");
-  // 요구사항 추가 로직 구현
 };
 </script>
 

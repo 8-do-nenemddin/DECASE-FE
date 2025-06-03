@@ -22,10 +22,10 @@ const routes = [
     props: true, // 라우트 파라미터를 props로 전달
   },
   {
-    path: "/settings",
+    path: "/settings/:projectName",
     name: "ProjectSetting",
     component: ProjectSetting,
-    // props: true, // 라우트 파라미터를 props로 전달
+    props: true, // 라우트 파라미터를 props로 전달
   },
   {
     path: "/settings/info",

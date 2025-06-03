@@ -62,7 +62,7 @@
     </div>
 
     <div class="header-center">
-      <h1 class="project-title">Project 1</h1>
+      <h1 class="project-title" @click="goToMain">{{ decodedProjectName }}</h1>
     </div>
     <div class="header-right">
       <button class="download-button" @click="openDownloadFileModal">
@@ -82,7 +82,7 @@
           <circle cx="12" cy="7" r="4"></circle>
         </svg>
       </button>
-      <button class="icon-button" @click="handleGoSettings" title="설정">
+      <button class="icon-button" @click="handleGoSettings(projectName)" title="설정">
   <svg
     width="20"
     height="20"
@@ -144,6 +144,7 @@
 
 <script setup>
 import { ref } from "vue";
+import { computed } from 'vue';
 import { useRouter } from "vue-router";
 import SearchRequirementsSidebar from "./search_rd/SearchRequirementsSidebar.vue";
 import ManageFileSidebar from "./files_rd/ManageFileSidebar.vue";
@@ -158,6 +159,21 @@ const showFileListSidebar = ref(false);
 const showSourceUploadModal = ref(false);
 const showDownloadFileModal = ref(false);
 const showProfileSidebar = ref(false);
+
+const props = defineProps({
+  projectName: {
+    type: String,
+    required: true
+  }
+});
+const decodedProjectName = computed(() => decodeURIComponent(props.projectName));
+
+const goToMain = () => {
+  if (props.projectName) {
+    router.push(`/projects/${props.projectName}`);
+    console.log("다시 프로젝트");
+  }
+}
 
 // 모든 사이드바 닫기 헬퍼 함수
 const closeAllSidebars = () => {
@@ -259,9 +275,9 @@ const handleGoMain = () => {
   router.push({ name: "MainView" });
 };
 
-const handleGoSettings = (projectId) => {
-  console.log(`'${projectId}' 세팅`);
-  router.push({ name: "ProjectSetting", params: { projectId: projectId } });
+const handleGoSettings = (projectName) => {
+  console.log(`'${projectName}' 세팅`);
+  router.push({ name: "ProjectSetting", params: { projectName: projectName } });
 };
 </script>
 
