@@ -5,45 +5,36 @@
     :closeButtonClass="closeButtonClass"
     @close="handleClose"
   >
-    <!-- 로딩 상태가 아닐 때: 업로드 UI -->
-    <div v-if="!isGenerating && !isCompleted">
+    <!-- 상태에 따른 UI -->
+    <template v-if="isCompleted">
+      <SuccessUploadFileModal />
+    </template>
+    <template v-else-if="isGenerating">
+      <LoadingModal />
+    </template>
+    <template v-else>
       <!-- 업로드 영역 -->
       <div
         class="upload-area"
         @click="handleUploadAreaClick"
-        @drop="handleDrop"
-        @dragover="handleDragOver"
-        @dragenter="handleDragEnter"
+        @drop.prevent="handleDrop"
+        @dragover.prevent
+        @dragenter.prevent="isDragOver = true"
         @dragleave="handleDragLeave"
         :class="{ 'drag-over': isDragOver }"
       >
-        <!-- 업로드 아이콘 -->
         <div class="upload-icon">
-          <svg
-            width="48"
-            height="48"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
             <polyline points="17,8 12,3 7,8"></polyline>
             <line x1="12" y1="3" x2="12" y2="15"></line>
           </svg>
         </div>
-
-        <!-- 업로드 제목 -->
         <h2 class="upload-title">소스 업로드</h2>
-
-        <!-- 업로드 설명 -->
         <p class="upload-description">
-          업로드할 파일을 선택하거나 드래그 앤 드롭해주세요. (예: RFP, 회의록,
-          엑셀)<br />
+          업로드할 파일을 선택하거나 드래그 앤 드롭해주세요. (예: RFP, 회의록, 엑셀)<br />
           지원 파일 형식 : pdf, .xlsx, .xls, .wav, .docx
         </p>
-
-        <!-- 히든 파일 인풋 -->
         <input
           type="file"
           ref="fileInput"
@@ -54,8 +45,8 @@
         />
       </div>
 
-      <!-- 선택된 파일 목록 -->
-      <div v-if="selectedFiles.length > 0" class="file-list">
+      <!-- 파일 목록 -->
+      <div v-if="selectedFiles.length" class="file-list">
         <h3 class="file-list-title">선택된 파일</h3>
         <div
           v-for="(file, index) in selectedFiles"
@@ -70,42 +61,34 @@
         </div>
       </div>
 
-      <!-- 버튼 그룹 -->
+      <!-- 버튼 -->
       <div class="button-group">
         <button
           class="upload-button"
           @click="handleUpload"
-          :disabled="selectedFiles.length === 0 || isUploading"
+          :disabled="!selectedFiles.length || isUploading"
         >
           <span v-if="isUploading" class="loading"></span>
-          <span v-else>{{
-            selectedFiles.length === 0 ? "확인" : "업로드"
-          }}</span>
+          <span v-else>{{ selectedFiles.length ? '업로드' : '확인' }}</span>
         </button>
         <button class="cancel-button" @click="closeModal">취소</button>
       </div>
-    </div>
-
-    <!-- 생성 완료 상태일 때: 완료 UI -->
-    <div v-if="isCompleted" class="completion-container">
-      <SuccessUploadFileModal></SuccessUploadFileModal>
-    </div>
-
-    <!-- 로딩 상태일 때: 생성 중 UI -->
-    <div v-else-if="isGenerating && !isCompleted" class="loading-container">
-      <LoadingModal></LoadingModal>
-    </div>
+    </template>
   </CommonModal>
 </template>
 
 <script setup>
-import { ref } from "vue";
-import CommonModal from "../../../util/CommonModal.vue";
-import LoadingModal from "./LoadingModal.vue";
-import SuccessUploadFileModal from "./SuccessUploadFileModal.vue";
-import { defineEmits } from "vue";
+import { ref, computed } from 'vue';
+import { defineEmits } from 'vue';
+import CommonModal from '../../../util/CommonModal.vue';
+import LoadingModal from './LoadingModal.vue';
+import SuccessUploadFileModal from './SuccessUploadFileModal.vue';
 
-const emit = defineEmits(["close"]);
+const emit = defineEmits(['close', 'upload']);
+
+// 여기에 modalClass, closeButtonClass 추가 (필요시 클래스명 변경 가능)
+const modalClass = computed(() => '');
+const closeButtonClass = computed(() => '');
 
 const fileInput = ref(null);
 const selectedFiles = ref([]);
@@ -115,19 +98,11 @@ const isGenerating = ref(false);
 const isCompleted = ref(false);
 
 const handleClose = () => {
-  console.log("UploadSourceModal handleClose 호출됨");
-  console.log("현재 상태:", {
-    isGenerating: isGenerating.value,
-    isCompleted: isCompleted.value,
-  });
   resetModal();
-  emit("close");
-  console.log("UploadSourceModal close emit 완료");
+  emit('close');
 };
 
-// 모달 상태 초기화 함수
 const resetModal = () => {
-  console.log("resetModal 호출됨");
   selectedFiles.value = [];
   isDragOver.value = false;
   isUploading.value = false;
@@ -135,21 +110,9 @@ const resetModal = () => {
   isCompleted.value = false;
 };
 
-// 모달 닫기 함수
 const closeModal = () => {
-  console.log("closeModal 호출됨");
   resetModal();
-  emit("close");
-};
-
-// 드래그 앤 드롭 핸들러
-const handleDragOver = (e) => {
-  e.preventDefault();
-};
-
-const handleDragEnter = (e) => {
-  e.preventDefault();
-  isDragOver.value = true;
+  emit('close');
 };
 
 const handleDragLeave = (e) => {
@@ -159,47 +122,36 @@ const handleDragLeave = (e) => {
 };
 
 const handleDrop = (e) => {
-  e.preventDefault();
-  isDragOver.value = false;
-
   const files = Array.from(e.dataTransfer.files);
+  isDragOver.value = false;
   addFiles(files);
 };
 
-// 파일 선택 핸들러
 const handleFileSelect = (e) => {
-  const files = Array.from(e.target.files);
-  addFiles(files);
+  addFiles(Array.from(e.target.files));
 };
 
-// 파일 추가
 const addFiles = (files) => {
-  const validFiles = files.filter((file) => {
-    const validTypes = [".pdf", ".xlsx", ".xls", ".wav", ".docx"];
-    const fileExtension = "." + file.name.split(".").pop().toLowerCase();
-    return validTypes.includes(fileExtension);
-  });
-
-  selectedFiles.value = [...selectedFiles.value, ...validFiles];
+  const allowed = ['.pdf', '.xlsx', '.xls', '.wav', '.docx'];
+  const validFiles = files.filter((file) =>
+    allowed.includes('.' + file.name.split('.').pop().toLowerCase())
+  );
+  selectedFiles.value.push(...validFiles);
 };
 
-// 파일 제거
 const removeFile = (index) => {
   selectedFiles.value.splice(index, 1);
 };
 
-// 파일 크기 포맷팅
 const formatFileSize = (bytes) => {
-  if (bytes === 0) return "0 Bytes";
-  const k = 1024;
-  const sizes = ["Bytes", "KB", "MB", "GB"];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+  const units = ['Bytes', 'KB', 'MB', 'GB'];
+  if (bytes === 0) return '0 Bytes';
+  const i = Math.floor(Math.log(bytes) / Math.log(1024));
+  return (bytes / Math.pow(1024, i)).toFixed(2) + ' ' + units[i];
 };
 
-// 업로드 처리
 const handleUpload = async () => {
-  if (selectedFiles.value.length === 0) {
+  if (!selectedFiles.value.length) {
     closeModal();
     return;
   }
@@ -207,30 +159,20 @@ const handleUpload = async () => {
   isUploading.value = true;
 
   try {
-    // 1단계: 파일 업로드 처리 (1.5초)
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
-    emit("upload", selectedFiles.value);
-    console.log("업로드 완료:", selectedFiles.value);
-
-    // 2단계: 업로드 완료 후 생성 상태로 변경
+    await new Promise((res) => setTimeout(res, 1500));
+    emit('upload', selectedFiles.value);
     isUploading.value = false;
     isGenerating.value = true;
-
-    // 3단계: 요구사항 정의서 생성 처리 (3초)
-    await new Promise((resolve) => setTimeout(resolve, 3000));
-
-    // 4단계: 생성 완료 상태로 변경
+    await new Promise((res) => setTimeout(res, 3000));
     isGenerating.value = false;
     isCompleted.value = true;
-  } catch (error) {
-    console.error("처리 실패:", error);
+  } catch (err) {
+    console.error('업로드 실패:', err);
     isUploading.value = false;
     isGenerating.value = false;
   }
 };
 
-// 업로드 영역 클릭 시 파일 선택
 const handleUploadAreaClick = () => {
   fileInput.value?.click();
 };

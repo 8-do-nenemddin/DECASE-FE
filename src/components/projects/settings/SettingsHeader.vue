@@ -65,6 +65,9 @@ const handleGoMain = () => {
   position: sticky;
   top: 0rem;
   z-index: 10;
+  animation: none !important;
+  transition: none !important;
+  transform: none !important;
 }
 
 .header-left {
