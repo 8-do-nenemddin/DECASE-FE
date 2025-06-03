@@ -93,8 +93,9 @@ const handleWithdraw = () => {
 
 .logo {
   height: 50px;
-  width: auto;
+  width: 60px;
   display: block;
+  margin-top: 30px;
   /* 로고 애니메이션 완전 제거 */
   animation: none !important;
   transform: none !important;
