@@ -40,19 +40,22 @@
         <button
           class="icon-button"
           @click="openSourceUploadModal"
-          title="내보내기"
+          title="파일 업로드"
         >
           <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="7,10 12,15 17,10"></polyline>
-            <line x1="12" y1="15" x2="12" y2="3"></line>
+  xmlns="http://www.w3.org/2000/svg"
+  width="20"
+  height="20"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+  <polyline points="17 8 12 3 7 8" />
+  <line x1="12" y1="3" x2="12" y2="15" />
           </svg>
         </button>
       </div>
@@ -123,7 +126,7 @@ import { ref } from "vue";
 import { useRouter } from "vue-router";
 import SearchRequirementsSidebar from "./SearchRequirementsSidebar.vue";
 import ManageFileSidebar from "./ManageFileSidebar.vue";
-import UploadSourceModal from "./file_upload/UploadSourceModal.vue";
+import UploadSourceModal from "./file_upload/UploadSourceModal.vue"
 import DownloadFileModal from "./download_rd/DownloadFileModal.vue";
 
 const router = useRouter();
@@ -185,11 +188,6 @@ const handleGoSettings = (projectId) => {
 </script>
 
 <style scoped>
-* {
-  animation: none !important;
-  transform: none !important;
-}
-
 .project-main {
   min-height: 100vh;
   background-color: #ffffff;
@@ -209,6 +207,10 @@ const handleGoSettings = (projectId) => {
   position: relative;
   z-index: 10;
   gap: 40px; /* 좌우 간격 */
+  isolation: isolate;
+  animation: none !important;
+  transition: none !important;
+  transform: none !important;
 }
 
 .header-left,
@@ -217,6 +219,7 @@ const handleGoSettings = (projectId) => {
   display: flex;
   align-items: center;
   gap: 16px;
+  transform: none !important;
 }
 
 .header-center {
@@ -224,6 +227,7 @@ const handleGoSettings = (projectId) => {
   text-align: center;
   position: static; /* 절대 위치 제거 */
   transform: none;
+  transform: none !important;
 }
 
 .logo-icon {

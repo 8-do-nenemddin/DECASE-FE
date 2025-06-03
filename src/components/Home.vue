@@ -1,71 +1,58 @@
 <template>
-	<div class="background">
-	  <div class="header">
-		<button class="nav-button" @click="goToSignup">회원가입</button>
-		<button class="nav-button" @click="goToSignIn">로그인</button>
-	  </div>
-	  <div class="content">
-		<img src="/DECASE-dark.png" alt="Logo" class="logo" />
-		<p class="subtitle">정의서를 쉽게, 프로젝트를 빠르게.</p>
-	  </div>
-	</div>
-  </template>
-  
-  <script setup>
-	import { useRouter } from 'vue-router';
-	const router = useRouter();
+  <div class="background">
+    <div class="header">
+      <button class="nav-button" @click="goToSignup">회원가입</button>
+      <button class="nav-button" @click="goToSignIn">로그인</button>
+    </div>
+    <div class="content">
+      <img src="/DECASE-dark.png" alt="Logo" class="logo" />
+      <p class="subtitle">정의서를 쉽게, 프로젝트를 빠르게.</p>
+    </div>
+  </div>
+</template>
 
-	const goToSignup= () => {
-	router.push('/signup');
-	};
+<script setup>
+import { useRouter } from 'vue-router';
+const router = useRouter();
 
-	const goToSignIn = () => {
-	router.push('/signin');
-	};
+const goToSignup= () => {
+  router.push('/signup');
+};
+
+const goToSignIn = () => {
+  router.push('/signin');
+};
 </script>
-  
+
 <style>
-/* 글로벌 리셋 - 강력한 전체 화면 설정 */
+/* 글로벌 리셋 */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-html {
-  height: 100%;
-  width: 100%;
-}
-
-body {
+html, body, #app, .vue-component-root {
   height: 100%;
   width: 100%;
   overflow-x: hidden;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-#app, .vue-component-root {
-  height: 100%;
-  width: 100%;
-}
-
-/* 배경 컨테이너 - 강력한 전체 화면 설정 */
+/* 배경 - 애니메이션 없이 배경색 고정 */
 .background {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  top: 0; left: 0; right: 0; bottom: 0;
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  width: 100vw;
   background-color: #000;
   color: #fff;
+  height: 100vh;
+  width: 100vw;
   overflow: hidden;
 }
 
-/* 헤더 - 반응형 개선 */
+/* 헤더 - 애니메이션 적용 */
 .header {
   position: absolute;
   top: 0;
@@ -79,7 +66,7 @@ body {
   animation: slideInFromTop 1.8s ease-out 1.2s both;
 }
 
-/* 메인 콘텐츠 - 중앙 정렬 개선 */
+/* 메인 콘텐츠 - 중앙 정렬 */
 .content {
   display: flex;
   flex-direction: column;
@@ -91,7 +78,25 @@ body {
   padding: 2rem;
 }
 
-/* 버튼 스타일 - 반응형 개선 + 애니메이션 */
+/* 로고 - 애니메이션 적용 */
+.logo {
+  width: min(300px, 80vw);
+  height: auto;
+  margin-bottom: 1.5rem;
+  animation: slideInFromTop 1.8s ease-out both;
+}
+
+/* 부제목 - 애니메이션 적용 */
+.subtitle {
+  font-size: clamp(1rem, 3vw, 1.6rem);
+  font-weight: 300;
+  margin: 0;
+  line-height: 1.2;
+  opacity: 0;
+  animation: slideInFromTop 1.8s ease-out 0.5s both;
+}
+
+/* 버튼 스타일 */
 .nav-button {
   background-color: #fff;
   color: #000;
@@ -117,25 +122,7 @@ body {
   box-shadow: 0 2px 10px rgba(255, 255, 255, 0.1);
 }
 
-/* 로고 - 반응형 크기 조정 + 애니메이션 */
-.logo {
-  width: min(300px, 80vw);
-  height: auto;
-  margin-bottom: 1.5rem;
-  animation: slideInFromTop 1.8s ease-out both;
-}
-
-/* 부제목 - 반응형 텍스트 크기 + 애니메이션 */
-.subtitle {
-  font-size: clamp(1rem, 3vw, 1.6rem);
-  font-weight: 300;
-  margin: 0;
-  line-height: 1.2;
-  opacity: 0;
-  animation: slideInFromTop 1.8s ease-out 0.5s both;
-}
-
-/* 웅장한 애니메이션 효과 */
+/* 애니메이션 키프레임 */
 @keyframes slideInFromTop {
   0% {
     transform: translateY(-100px);
@@ -151,16 +138,7 @@ body {
   }
 }
 
-@keyframes fadeInScale {
-  0% {
-    transform: scale(0.8);
-    opacity: 0;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
+/* 반응형 */
 
 /* 태블릿 크기 */
 @media (max-width: 768px) {
