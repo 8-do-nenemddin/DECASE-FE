@@ -1,31 +1,35 @@
 <template>
-  <div class="loading-spinner">
-    <div class="dot dot1"></div>
-    <div class="dot dot2"></div>
-    <div class="dot dot3"></div>
-    <div class="dot dot4"></div>
-    <div class="dot dot5"></div>
-    <div class="dot dot6"></div>
-    <div class="dot dot7"></div>
-    <div class="dot dot8"></div>
+  <div class="loading-container">
+    <div class="loading-spinner">
+      <div class="dot dot1"></div>
+      <div class="dot dot2"></div>
+      <div class="dot dot3"></div>
+      <div class="dot dot4"></div>
+      <div class="dot dot5"></div>
+      <div class="dot dot6"></div>
+      <div class="dot dot7"></div>
+      <div class="dot dot8"></div>
+    </div>
+
+    <!-- 로딩 텍스트 -->
+    <h2 class="loading-text">요구사항 정의서 생성 중...</h2>
+
+    <!-- 안내 메시지 -->
+    <p class="loading-message">
+      창을 닫아도 요구사항 정의서 생성은 종료되지 않습니다.
+    </p>
   </div>
-
-  <!-- 로딩 텍스트 -->
-  <h2 class="loading-text">요구사항 정의서 생성 중...</h2>
-
-  <!-- 안내 메시지 -->
-  <p class="loading-message">
-    창을 닫아도 요구사항 정의서 생성은 종료되지 않습니다.
-  </p>
 </template>
 
 <style scoped>
-/* Loading Message */
-.loading-message {
-  font-size: 14px;
-  color: #6b7280;
-  margin: 24px 0 0 0;
-  line-height: 1.5;
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 40px 20px;
+  min-height: 300px;
 }
 
 /* Loading Spinner */
@@ -115,7 +119,7 @@
   font-size: 24px;
   font-weight: 600;
   color: #1f2937;
-  margin: 0;
+  margin: 0 0 24px 0;
   animation: pulse 2s infinite ease-in-out;
 }
 
@@ -129,33 +133,20 @@
   }
 }
 
+/* Loading Message */
+.loading-message {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.5;
+  max-width: 400px;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
-  .upload-area {
-    padding: 32px 24px;
-  }
-
-  .upload-icon {
-    width: 64px;
-    height: 64px;
-    margin-bottom: 20px;
-  }
-
-  .upload-title {
-    font-size: 20px;
-  }
-
-  .upload-description {
-    font-size: 13px;
-  }
-
-  .button-group {
-    flex-direction: column;
-  }
-
-  .cancel-button,
-  .upload-button {
-    width: 100%;
+  .loading-container {
+    padding: 32px 16px;
+    min-height: 250px;
   }
 
   .loading-spinner {
@@ -171,27 +162,18 @@
 
   .loading-text {
     font-size: 20px;
-  }
-
-  .completion-container {
-    padding: 48px 32px;
-  }
-
-  .completion-icon {
-    width: 64px;
-    height: 64px;
     margin-bottom: 20px;
   }
 
-  .completion-text {
-    font-size: 20px;
-    margin-bottom: 12px;
+  .loading-message {
+    font-size: 13px;
   }
 }
 
 @media (max-width: 480px) {
-  .upload-area {
-    padding: 24px 16px;
+  .loading-container {
+    padding: 24px 12px;
+    min-height: 220px;
   }
 
   .loading-spinner {
@@ -207,21 +189,11 @@
 
   .loading-text {
     font-size: 18px;
-  }
-
-  .completion-container {
-    padding: 40px 24px;
-  }
-
-  .completion-icon {
-    width: 56px;
-    height: 56px;
     margin-bottom: 16px;
   }
 
-  .completion-text {
-    font-size: 18px;
-    margin-bottom: 8px;
+  .loading-message {
+    font-size: 12px;
   }
 }
 </style>
