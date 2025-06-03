@@ -62,7 +62,7 @@
             </select>
           </div>
 
-          <!-- 중요도 -->
+          <!-- 중요도 & 난이도 -->
           <div class="filter-section">
             <label class="filter-label">중요도</label>
             <select v-model="filters.priority" class="filter-select">
@@ -71,9 +71,11 @@
               <option value="medium">보통</option>
               <option value="low">낮음</option>
             </select>
+          </div>
 
+          <div class="filter-section">
             <label class="filter-label">난이도</label>
-            <select v-model="filters.priority" class="filter-select">
+            <select v-model="filters.difficulty" class="filter-select">
               <option value="">선택</option>
               <option value="high">높음</option>
               <option value="medium">보통</option>
@@ -129,6 +131,7 @@ const filters = reactive({
   detailCategory: "",
   type: "",
   priority: "",
+  difficulty: "",
 });
 
 const options = reactive({
@@ -158,6 +161,7 @@ const performSearch = () => {
   left: 0;
   width: 100vw;
   height: 100vh;
+  background: rgba(0, 0, 0, 0.4);
   animation: overlayFadeIn 0.3s ease-out;
 }
 
@@ -175,10 +179,10 @@ const performSearch = () => {
   position: fixed;
   top: 0;
   left: 0;
-  width: 280px;
+  width: 320px;
   height: 100vh;
-  background: white;
-  box-shadow: 4px 0 25px rgba(0, 0, 0, 0.15);
+  background: #ffffff;
+  box-shadow: 4px 0 30px rgba(0, 0, 0, 0.12);
   z-index: 51;
   animation: sidebarSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   overflow-y: auto;
@@ -195,144 +199,172 @@ const performSearch = () => {
 
 .sidebar-content {
   margin-top: 70px;
-  padding: 24px 20px;
+  padding: 28px 24px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 28px;
 }
 
 /* 검색 섹션 */
 .search-section {
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 
 .search-input {
-  width: 85%;
-  padding: 12px 16px;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  font-size: 14px;
-  transition: all 0.2s ease;
-  background: #ffffff;
+  width: 100%;
+  padding: 14px 16px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 10px;
+  font-size: 15px;
+  transition: all 0.3s ease;
+  background: #fafafa;
   font-family: inherit;
+  line-height: 1.4;
 }
 
 .search-input:focus {
   outline: none;
   border-color: #e53e3e;
-  box-shadow: 0 0 0 3px rgba(229, 62, 62, 0.1);
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(229, 62, 62, 0.08);
 }
 
 .search-input::placeholder {
   color: #9ca3af;
+  font-weight: 400;
 }
 
 /* 필터 섹션들 */
 .filter-sections {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 20px;
 }
 
 .filter-section {
   display: flex;
-  /* flex-direction: column; */
-  gap: 6px;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .filter-label {
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: 600;
   color: #374151;
+  margin-bottom: 2px;
+  letter-spacing: -0.02em;
 }
 
 .filter-select {
   width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
+  padding: 12px 14px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 8px;
   font-size: 14px;
-  background: white;
+  background: #fafafa;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   font-family: inherit;
+  line-height: 1.4;
+  color: #374151;
 }
 
 .filter-select:focus {
   outline: none;
   border-color: #e53e3e;
-  box-shadow: 0 0 0 3px rgba(229, 62, 62, 0.1);
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(229, 62, 62, 0.08);
 }
 
 .filter-select:hover {
-  border-color: #9ca3af;
+  border-color: #d1d5db;
+  background: #ffffff;
+}
+
+.filter-select option {
+  padding: 8px;
+  font-size: 14px;
 }
 
 /* 체크박스 섹션 */
 .checkbox-section {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
+  padding: 4px 0;
 }
 
 .checkbox-group {
   display: flex;
-  /* flex-direction: column; */
-  gap: 8px;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .checkbox-item {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   cursor: pointer;
   transition: all 0.2s ease;
+  padding: 4px 0;
 }
 
 .checkbox-item:hover {
   color: #e53e3e;
 }
 
+.checkbox-item:hover .checkbox-label {
+  color: #e53e3e;
+}
+
 .checkbox-item input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   cursor: pointer;
   accent-color: #e53e3e;
+  margin: 0;
 }
 
 .checkbox-label {
   font-size: 14px;
-  color: #374151;
+  color: #4b5563;
   user-select: none;
+  font-weight: 500;
+  line-height: 1.4;
+  transition: color 0.2s ease;
 }
 
 /* 액션 섹션 */
 .action-section {
   margin-top: 8px;
+  padding-top: 4px;
 }
 
 .search-button {
   width: 100%;
-  background: #000000;
+  background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
   color: white;
   border: none;
-  padding: 12px 16px;
-  border-radius: 8px;
-  font-size: 14px;
+  padding: 14px 20px;
+  border-radius: 10px;
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   font-family: inherit;
+  letter-spacing: -0.02em;
+  box-shadow: 0 2px 8px rgba(31, 41, 55, 0.15);
 }
 
 .search-button:hover {
-  background: #1f2937;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  background: linear-gradient(135deg, #374151 0%, #4b5563 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(31, 41, 55, 0.25);
 }
 
 .search-button:active {
-  transform: translateY(0);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(31, 41, 55, 0.2);
 }
 
 /* 반응형 디자인 */
@@ -342,32 +374,51 @@ const performSearch = () => {
   }
 
   .sidebar-content {
-    padding: 20px 16px;
+    padding: 24px 20px;
+    gap: 24px;
   }
 }
 
 @media (max-width: 480px) {
   .sidebar-content {
-    padding: 16px 12px;
+    padding: 20px 16px;
     gap: 20px;
   }
 
   .filter-sections {
-    gap: 14px;
+    gap: 18px;
   }
 
   .checkbox-section {
+    gap: 14px;
+  }
+
+  .checkbox-group {
     gap: 10px;
   }
 }
 
-/* 스크롤바 숨김 */
+/* 스크롤바 커스터마이징 */
 .sidebar::-webkit-scrollbar {
-  display: none;
+  width: 6px;
 }
 
+.sidebar::-webkit-scrollbar-track {
+  background: #f9fafb;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* Firefox 스크롤바 */
 .sidebar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db #f9fafb;
 }
 </style>
