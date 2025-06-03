@@ -17,7 +17,6 @@ import HeaderBar from "./header/HeaderBar.vue";
 </script>
 
 <style scoped>
-
 .project-main {
   min-height: 100vh;
   background-color: #ffffff;
