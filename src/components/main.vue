@@ -1,6 +1,6 @@
 <template>
   <div id="app-container">
-    <MainHeader></MainHeader>
+    <MainHeader @toggleProfile="toggleProfileSidebar"></MainHeader>
 
     <main class="main-content">
       <div class="toolbar">
@@ -69,48 +69,29 @@
     />
 
     <!-- 프로필 사이드바 -->
-    <div
-      v-if="showProfileSidebar"
-      class="profile-sidebar-overlay"
-      @click="closeProfileSidebar"
-    >
-      <div class="profile-sidebar" @click.stop>
-        <div class="sidebar-content">
-          <div class="profile-info">
-            <div class="sidebar-profile-icon">
-              <span>프로필</span>
-            </div>
-            <div class="profile-name">김민주</div>
-            <div class="profile-company">SK AX</div>
-            <div class="profile-role">미래혁신부</div>
-          </div>
-
-          <div class="sidebar-divider"></div>
-
-          <button class="logout-button" @click="logout">로그아웃</button>
-          <div class="sidebar-footer">
-            <button class="withdraw-button" @click="withdraw">탈퇴하기</button>
-          </div>
-        </div>
-      </div>
-    </div>
+    <ProfileBar
+      :isVisible="showProfileSidebar"
+      @close="closeProfileSidebar"
+      @logout="handleLogout"
+      @withdraw="handleWithdraw"
+    />
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed } from "vue";
 import { useRouter } from "vue-router";
 import CreateProjectModal from "./CreateProjectModal.vue";
 import ProjectGallery from "./ProjectGallery.vue";
 import ProjectList from "./ProjectList.vue";
 import MainHeader from "./MainHeader.vue";
+import ProfileBar from "./ProfileBar.vue";
 
 const showModal = ref(false);
 const router = useRouter();
 const showProfileSidebar = ref(false);
 
-// 환영 메시지 관련 제거
-
+// 프로필 사이드바 관련 메서드
 const toggleProfileSidebar = () => {
   showProfileSidebar.value = !showProfileSidebar.value;
 };
@@ -119,18 +100,19 @@ const closeProfileSidebar = () => {
   showProfileSidebar.value = false;
 };
 
-const logout = () => {
+const handleLogout = () => {
   console.log("로그아웃");
-  showProfileSidebar.value = false;
+  closeProfileSidebar();
   // 로그아웃 로직 구현
 };
 
-const withdraw = () => {
+const handleWithdraw = () => {
   console.log("탈퇴하기");
-  showProfileSidebar.value = false;
+  closeProfileSidebar();
   // 탈퇴 로직 구현
 };
 
+// 모달 관련 메서드
 const openModal = () => {
   showModal.value = true;
 };
@@ -156,6 +138,7 @@ const handleCreateProject = (newProjectName) => {
   // router.push({ name: "ProjectMain", params: { projectName: newProjectName } });
 };
 
+// 프로젝트 데이터
 const projects = ref([
   {
     id: 1,
@@ -201,6 +184,7 @@ const projects = ref([
   },
 ]);
 
+// 뷰 및 필터 관련
 const selectedView = ref("gallery");
 const searchQuery = ref("");
 const sortOption = ref("date,desc");
@@ -540,168 +524,6 @@ const sortedProjects = computed(() => {
   min-height: 400px;
 }
 
-/* 프로필 사이드바 */
-.profile-sidebar-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
-  z-index: 9999;
-  /* 사이드바 오버레이 애니메이션 완전 제거 */
-  animation: none !important;
-  opacity: 1 !important;
-}
-
-.profile-sidebar {
-  position: fixed;
-  top: 0;
-  right: 0;
-  width: 350px;
-  height: 100vh;
-  background: white;
-  box-shadow: -4px 0 25px rgba(0, 0, 0, 0.15);
-  z-index: 10000;
-  /* 사이드바 슬라이드 애니메이션 완전 제거 */
-  animation: none !important;
-  transform: translateX(0) !important;
-}
-
-.sidebar-content {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  padding: 40px 35px;
-  /* 사이드바 콘텐츠 애니메이션 완전 제거 */
-  animation: none !important;
-  opacity: 1 !important;
-  transform: none !important;
-}
-
-.sidebar-profile-icon {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  background: #f7fafc;
-  border: 2px solid #e2e8f0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  color: #718096;
-  font-size: 14px;
-  font-weight: 500;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  /* 사이드바 프로필 아이콘 애니메이션 완전 제거 */
-  animation: none !important;
-  transform: none !important;
-}
-
-.profile-name {
-  font-size: 20px;
-  font-weight: 700;
-  color: #1a202c;
-  margin: 0;
-  /* 프로필 이름 애니메이션 완전 제거 */
-  animation: none !important;
-  opacity: 1 !important;
-  transform: none !important;
-}
-
-.profile-company {
-  font-size: 17px;
-  font-weight: 600;
-  color: #2d3748;
-  margin: 0;
-  /* 회사명 애니메이션 완전 제거 */
-  animation: none !important;
-  opacity: 1 !important;
-  transform: none !important;
-}
-
-.profile-role {
-  font-size: 15px;
-  color: #718096;
-  margin: 0;
-  /* 역할 애니메이션 완전 제거 */
-  animation: none !important;
-  opacity: 1 !important;
-  transform: none !important;
-}
-
-.sidebar-divider {
-  width: 100%;
-  height: 1px;
-  background: #e2e8f0;
-  margin: 25px 0;
-  /* 구분선 애니메이션 완전 제거 */
-  animation: none !important;
-  transform: none !important;
-}
-
-.logout-button,
-.withdraw-button {
-  /* 버튼 애니메이션 완전 제거 */
-  animation: none !important;
-  opacity: 1 !important;
-  transform: none !important;
-}
-
-.profile-info {
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 18px;
-  margin-bottom: 35px;
-}
-
-.sidebar-footer {
-  margin-top: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.logout-button {
-  width: 100%;
-  padding: 16px;
-  background: white;
-  color: #2d3748;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 15px;
-  font-weight: 500;
-  /* 로그아웃 버튼만 호버 효과 허용 */
-}
-
-.logout-button:hover {
-  background: #f7fafc;
-  border-color: #4a5568;
-  transition: all 0.2s ease !important;
-}
-
-.withdraw-button {
-  width: 100%;
-  background: white;
-  color: #e53e3e;
-  border: 1px solid #e53e3e;
-  border-radius: 8px;
-  padding: 16px;
-  cursor: pointer;
-  font-size: 15px;
-  font-weight: 500;
-  /* 탈퇴 버튼만 호버 효과 허용 */
-}
-
-.withdraw-button:hover {
-  background: #e53e3e;
-  color: white;
-  transition: all 0.2s ease !important;
-}
-
 /* 반응형 디자인 */
 @media (max-width: 1200px) {
   .header {
@@ -775,10 +597,6 @@ const sortedProjects = computed(() => {
   
   .search-input {
     width: 180px;
-  }
-  
-  .profile-sidebar {
-    width: 100vw;
   }
 }
 

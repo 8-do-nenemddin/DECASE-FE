@@ -258,6 +258,26 @@ const downloadGeneratedFile = (file) => {
 </script>
 
 <style scoped>
+/* 전역 애니메이션 제거 */
+* {
+  box-sizing: border-box;
+  animation: none !important;
+  transition: none !important;
+  transform: none !important;
+}
+
+/* 필요한 호버 효과만 허용 */
+.sidebar-item:hover,
+.action-button:hover,
+.profile-icon-main-vue-style:hover,
+.add-file-button:hover,
+.upload-button:hover,
+.delete-button:hover,
+.download-button:hover,
+.file-options div:hover {
+  transition: all 0s !important;
+}
+
 /* 전체 컨테이너 */
 .project-home-container {
   display: flex;
@@ -268,7 +288,7 @@ const downloadGeneratedFile = (file) => {
   background-color: #f8f9fa;
 }
 
-/* 헤더 */
+/* 헤더 - 애니메이션 완전 제거 */
 .project-header-main-vue-style {
   display: flex;
   justify-content: space-between;
@@ -279,6 +299,10 @@ const downloadGeneratedFile = (file) => {
   padding: 15px 20px;
   border-radius: 10px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  /* 헤더 애니메이션 제거 */
+  animation: none !important;
+  transition: none !important;
+  transform: none !important;
 }
 
 .logo-container {
@@ -290,6 +314,10 @@ const downloadGeneratedFile = (file) => {
   height: 60px;
   width: auto;
   display: block;
+  /* 로고 애니메이션 제거 */
+  animation: none !important;
+  transition: none !important;
+  transform: none !important;
 }
 
 .project-title-container {
@@ -302,12 +330,20 @@ const downloadGeneratedFile = (file) => {
   font-weight: bold;
   margin: 0;
   color: #333;
+  /* 제목 애니메이션 제거 */
+  animation: none !important;
+  transition: none !important;
+  transform: none !important;
 }
 
 .header-actions-main-vue-style {
   display: flex;
   align-items: center;
   gap: 15px;
+  /* 헤더 액션 애니메이션 제거 */
+  animation: none !important;
+  transition: none !important;
+  transform: none !important;
 }
 
 .header-actions-main-vue-style .action-button {
@@ -319,7 +355,10 @@ const downloadGeneratedFile = (file) => {
   cursor: pointer;
   font-size: 0.9em;
   font-weight: 500;
-  transition: background-color 0.2s ease;
+  /* 버튼 애니메이션 제거하되 호버 시에만 즉시 변경 */
+  animation: none !important;
+  transition: none !important;
+  transform: none !important;
 }
 
 .header-actions-main-vue-style .action-button:hover {
@@ -337,7 +376,10 @@ const downloadGeneratedFile = (file) => {
   font-size: 0.8em;
   color: #6c757d;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  /* 프로필 아이콘 애니메이션 제거 */
+  animation: none !important;
+  transition: none !important;
+  transform: none !important;
 }
 
 .profile-icon-main-vue-style:hover {
@@ -368,8 +410,11 @@ const downloadGeneratedFile = (file) => {
   border: 1px solid #e9ecef;
   border-radius: 12px;
   cursor: pointer;
-  transition: all 0.3s ease;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  /* 사이드바 아이템 애니메이션 제거 */
+  animation: none !important;
+  transition: none !important;
+  transform: none !important;
 }
 
 .sidebar-item:hover {
@@ -388,12 +433,15 @@ const downloadGeneratedFile = (file) => {
 
 .sidebar-item .arrow {
   font-weight: bold;
-  transition: transform 0.3s ease;
   color: #6c757d;
+  /* 화살표 애니메이션 제거 */
+  animation: none !important;
+  transition: none !important;
+  transform: none !important;
 }
 
 .sidebar-item .arrow.expanded {
-  transform: rotate(180deg);
+  transform: rotate(180deg) !important;
 }
 
 .sidebar-item-content-integrated {
@@ -511,7 +559,10 @@ const downloadGeneratedFile = (file) => {
   cursor: pointer;
   padding: 4px 8px;
   border-radius: 4px;
-  transition: all 0.2s ease;
+  /* 버튼 애니메이션 제거 */
+  animation: none !important;
+  transition: none !important;
+  transform: none !important;
 }
 
 .delete-button:hover {
@@ -608,7 +659,10 @@ const downloadGeneratedFile = (file) => {
   border: none;
   font-size: 1.2em;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  /* 버튼 애니메이션 제거 */
+  animation: none !important;
+  transition: none !important;
+  transform: none !important;
 }
 
 .add-file-button:hover {
@@ -634,8 +688,11 @@ const downloadGeneratedFile = (file) => {
   padding: 12px 16px;
   cursor: pointer;
   color: #333;
-  transition: background-color 0.2s ease;
   border-bottom: 1px solid #f1f3f4;
+  /* 옵션 애니메이션 제거 */
+  animation: none !important;
+  transition: none !important;
+  transform: none !important;
 }
 
 .file-options div:last-child {
@@ -668,19 +725,23 @@ const downloadGeneratedFile = (file) => {
   border: none;
   font-size: 1.2em;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  /* 업로드 버튼 애니메이션 제거 */
+  animation: none !important;
+  transition: none !important;
+  transform: none !important;
 }
 
 .upload-button:hover {
   background-color: #218838;
 }
 
-/* 애니메이션 */
+/* 애니메이션 완전 제거 */
 .fade-enter-active, .fade-leave-active {
-  transition: opacity 0.3s ease;
+  transition: none !important;
+  animation: none !important;
 }
 
 .fade-enter-from, .fade-leave-to {
-  opacity: 0;
+  opacity: 1 !important;
 }
 </style>
