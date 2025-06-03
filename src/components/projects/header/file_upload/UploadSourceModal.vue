@@ -7,7 +7,7 @@
   >
     <!-- 상태에 따른 UI -->
     <template v-if="isCompleted">
-      <SuccessUploadFileModal />
+      <SuccessUploadFileModal @close="handleSuccessClose" />
     </template>
     <template v-else-if="isGenerating">
       <LoadingModal />
@@ -102,6 +102,11 @@ const handleClose = () => {
   emit('close');
 };
 
+const handleSuccessClose = () => {
+  resetModal();
+  emit('close');
+};
+
 const resetModal = () => {
   selectedFiles.value = [];
   isDragOver.value = false;
@@ -181,100 +186,137 @@ const handleUploadAreaClick = () => {
 <style scoped>
 /* Upload Area */
 .upload-area {
-  border: 2px dashed #d1d5db;
-  border-radius: 12px;
+  border: 2px dashed #e2e8f0;
+  border-radius: 16px;
   padding: 48px 32px;
   text-align: center;
   cursor: pointer;
-  transition: all 0.3s ease;
-  margin-bottom: 24px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-bottom: 32px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.upload-area::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.02), rgba(139, 92, 246, 0.02));
+  opacity: 0;
+  transition: opacity 0.4s ease;
 }
 
 .upload-area:hover,
 .upload-area.drag-over {
-  border-color: #e53e3e;
-  background: rgba(229, 62, 62, 0.05);
+  border-color: #6366f1;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 20px 40px -12px rgba(99, 102, 241, 0.25);
+}
+
+.upload-area:hover::before,
+.upload-area.drag-over::before {
+  opacity: 1;
 }
 
 .upload-icon {
-  width: 80px;
-  height: 80px;
-  background: #f3f4f6;
+  width: 88px;
+  height: 88px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 24px;
-  color: #6b7280;
-  transition: all 0.3s ease;
+  margin: 0 auto 28px;
+  color: white;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 8px 32px rgba(99, 102, 241, 0.3);
 }
 
 .upload-area:hover .upload-icon,
 .upload-area.drag-over .upload-icon {
-  background: rgba(229, 62, 62, 0.1);
-  color: #e53e3e;
-  transform: scale(1.05);
+  transform: scale(1.1) rotate(5deg);
+  box-shadow: 0 12px 40px rgba(99, 102, 241, 0.4);
 }
 
 .upload-title {
-  font-size: 24px;
-  font-weight: 600;
-  color: #1f2937;
-  margin: 0 0 16px 0;
+  font-size: 28px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #1e293b, #475569);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin: 0 0 20px 0;
+  letter-spacing: -0.025em;
 }
 
 .upload-description {
-  font-size: 14px;
-  color: #6b7280;
-  line-height: 1.6;
+  font-size: 15px;
+  color: #64748b;
+  line-height: 1.7;
   margin: 0;
+  font-weight: 400;
 }
 
 /* File List */
 .file-list {
-  margin-bottom: 24px;
+  margin-bottom: 32px;
 }
 
 .file-list-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: #1f2937;
-  margin: 0 0 12px 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 16px 0;
+  letter-spacing: -0.025em;
 }
 
 .file-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 16px;
-  background: #f9fafb;
-  border-radius: 8px;
-  margin-bottom: 8px;
-  border: 1px solid #f3f4f6;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #ffffff, #f8fafc);
+  border-radius: 12px;
+  margin-bottom: 12px;
+  border: 1px solid #e2e8f0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.file-item:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  border-color: #cbd5e1;
 }
 
 .file-info {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 
 .file-name {
-  font-size: 14px;
-  font-weight: 500;
-  color: #1f2937;
+  font-size: 15px;
+  font-weight: 600;
+  color: #1e293b;
 }
 
 .file-size {
-  font-size: 12px;
-  color: #6b7280;
+  font-size: 13px;
+  color: #64748b;
+  font-weight: 500;
 }
 
 .remove-file {
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   border: none;
-  background: #ef4444;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
   color: white;
   border-radius: 50%;
   cursor: pointer;
@@ -282,98 +324,91 @@ const handleUploadAreaClick = () => {
   align-items: center;
   justify-content: center;
   font-size: 16px;
-  transition: all 0.2s ease;
+  font-weight: 600;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
 }
 
 .remove-file:hover {
-  background: #dc2626;
-  transform: scale(1.1);
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  transform: scale(1.15) rotate(90deg);
+  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4);
 }
 
 /* Button Group */
 .button-group {
   display: flex;
-  gap: 12px;
+  gap: 16px;
   justify-content: flex-end;
 }
 
 .cancel-button {
-  background: transparent;
-  color: #6b7280;
-  border: 1px solid #d1d5db;
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
+  background: linear-gradient(135deg, #ffffff, #f8fafc);
+  color: #64748b;
+  border: 2px solid #e2e8f0;
+  padding: 14px 28px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   font-family: inherit;
+  letter-spacing: -0.025em;
 }
 
 .cancel-button:hover {
-  background: #f9fafb;
-  color: #374151;
-  border-color: #9ca3af;
-}
-
-.complete-confirm-button {
-  background: transparent;
-  color: #000000;
-  border: 1px solid #d1d5db;
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-family: inherit;
-}
-
-.complete-confirm-button:hover {
-  background: #f9fafb;
-  color: #374151;
-  border-color: #9ca3af;
+  background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+  color: #475569;
+  border-color: #cbd5e1;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
 .upload-button {
-  background: #000000;
+  background: linear-gradient(135deg, black, black);
   color: white;
   border: none;
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
+  padding: 14px 32px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   font-family: inherit;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  min-width: 100px;
+  gap: 10px;
+  min-width: 120px;
+  letter-spacing: -0.025em;
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.3);
 }
 
 .upload-button:hover:not(:disabled) {
-  background: #1f2937;
+  background: linear-gradient(135deg, #5855f7, #7c3aed);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 32px rgba(99, 102, 241, 0.4);
+}
+
+.upload-button:active:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .upload-button:disabled {
-  opacity: 0.5;
+  opacity: 0.6;
   cursor: not-allowed;
   transform: none;
-  box-shadow: none;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
 }
 
 .loading {
   display: inline-block;
-  width: 16px;
-  height: 16px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  width: 18px;
+  height: 18px;
+  border: 2.5px solid rgba(255, 255, 255, 0.3);
   border-radius: 50%;
   border-top-color: white;
-  animation: spin 1s ease-in-out infinite;
+  animation: spin 1s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
 }
 
 @keyframes spin {
@@ -389,8 +424,10 @@ const handleUploadAreaClick = () => {
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 40px 20px;
+  padding: 60px 40px;
   position: relative;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 16px;
 }
 
 /* Completion Container */
@@ -400,124 +437,149 @@ const handleUploadAreaClick = () => {
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 60px 40px;
+  padding: 80px 40px;
   position: relative;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border-radius: 16px;
 }
 
 /* Completion Icon */
 .completion-icon {
-  width: 80px;
-  height: 80px;
-  background: #f3f4f6;
+  width: 96px;
+  height: 96px;
+  background: linear-gradient(135deg, #10b981, #059669);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 24px;
-  color: #000000;
+  margin-bottom: 32px;
+  color: white;
+  box-shadow: 0 12px 40px rgba(16, 185, 129, 0.3);
+  animation: completionPulse 2s ease-in-out infinite;
+}
+
+@keyframes completionPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 12px 40px rgba(16, 185, 129, 0.3);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 16px 48px rgba(16, 185, 129, 0.4);
+  }
 }
 
 /* Completion Text */
 .completion-text {
-  font-size: 24px;
-  font-weight: 600;
-  color: #1f2937;
-  margin: 0 0 16px 0;
+  font-size: 28px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #1e293b, #475569);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin: 0 0 20px 0;
+  letter-spacing: -0.025em;
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
   .upload-area {
-    padding: 32px 24px;
+    padding: 40px 24px;
+    margin-bottom: 24px;
+  }
+
+  .upload-icon {
+    width: 72px;
+    height: 72px;
+    margin-bottom: 24px;
+  }
+
+  .upload-title {
+    font-size: 24px;
+  }
+
+  .upload-description {
+    font-size: 14px;
+  }
+
+  .button-group {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .cancel-button,
+  .upload-button {
+    width: 100%;
+    padding: 16px 24px;
+  }
+
+  .file-list-title {
+    font-size: 16px;
+  }
+
+  .loading-container {
+    padding: 48px 32px;
+  }
+
+  .completion-container {
+    padding: 64px 32px;
+  }
+
+  .completion-icon {
+    width: 80px;
+    height: 80px;
+    margin-bottom: 24px;
+  }
+
+  .completion-text {
+    font-size: 24px;
+    margin-bottom: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .upload-area {
+    padding: 32px 20px;
   }
 
   .upload-icon {
     width: 64px;
     height: 64px;
-    margin-bottom: 20px;
   }
 
   .upload-title {
-    font-size: 20px;
+    font-size: 22px;
   }
 
   .upload-description {
     font-size: 13px;
   }
 
-  .button-group {
-    flex-direction: column;
-  }
-
-  .cancel-button,
-  .upload-button {
-    width: 100%;
-  }
-
-  .loading-spinner {
-    width: 64px;
-    height: 64px;
-    margin-bottom: 28px;
-  }
-
-  .dot {
-    width: 10px;
-    height: 10px;
-  }
-
-  .loading-text {
-    font-size: 20px;
+  .loading-container {
+    padding: 40px 24px;
   }
 
   .completion-container {
-    padding: 48px 32px;
+    padding: 56px 24px;
   }
 
   .completion-icon {
-    width: 64px;
-    height: 64px;
+    width: 72px;
+    height: 72px;
     margin-bottom: 20px;
   }
 
   .completion-text {
-    font-size: 20px;
+    font-size: 22px;
     margin-bottom: 12px;
   }
-}
 
-@media (max-width: 480px) {
-  .upload-area {
-    padding: 24px 16px;
+  .file-item {
+    padding: 14px 16px;
   }
 
-  .loading-spinner {
-    width: 56px;
-    height: 56px;
-    margin-bottom: 24px;
-  }
-
-  .dot {
-    width: 8px;
-    height: 8px;
-  }
-
-  .loading-text {
-    font-size: 18px;
-  }
-
-  .completion-container {
-    padding: 40px 24px;
-  }
-
-  .completion-icon {
-    width: 56px;
-    height: 56px;
-    margin-bottom: 16px;
-  }
-
-  .completion-text {
-    font-size: 18px;
-    margin-bottom: 8px;
+  .button-group {
+    gap: 10px;
   }
 }
 </style>
