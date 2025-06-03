@@ -439,7 +439,6 @@ const handleUploadAreaClick = () => {
   text-align: center;
   padding: 80px 40px;
   position: relative;
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
   border-radius: 16px;
 }
 
