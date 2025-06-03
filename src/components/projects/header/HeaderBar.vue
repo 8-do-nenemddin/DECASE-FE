@@ -125,7 +125,7 @@
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import SearchRequirementsSidebar from "./search_rd/SearchRequirementsSidebar.vue";
-import ManageFileSidebar from "./ManageFileSidebar.vue";
+import ManageFileSidebar from "./files_rd/ManageFileSidebar.vue";
 import UploadSourceModal from "./file_upload/UploadSourceModal.vue"
 import DownloadFileModal from "./download_rd/DownloadFileModal.vue";
 
@@ -136,8 +136,19 @@ const showFileListSidebar = ref(false);
 const showSourceUploadModal = ref(false);
 const showDownloadFileModal = ref(false);
 
+// 모든 사이드바 닫기 헬퍼 함수
+const closeAllSidebars = () => {
+  showSidebar.value = false;
+  showFileListSidebar.value = false;
+};
+
 // 검색 사이드바
 const toggleSidebar = () => {
+  // 다른 사이드바가 열려있으면 닫기
+  if (showFileListSidebar.value) {
+    showFileListSidebar.value = false;
+  }
+  // 검색 사이드바 토글
   showSidebar.value = !showSidebar.value;
 };
 
@@ -147,6 +158,11 @@ const closeSidebar = () => {
 
 // 파일 리스트 사이드 바
 const toggleFileListSidebar = () => {
+  // 다른 사이드바가 열려있으면 닫기
+  if (showSidebar.value) {
+    showSidebar.value = false;
+  }
+  // 파일 리스트 사이드바 토글
   showFileListSidebar.value = !showFileListSidebar.value;
 };
 
@@ -156,6 +172,7 @@ const closeFileListSidebar = () => {
 
 // 소스 업로드 모달
 const openSourceUploadModal = () => {
+  closeAllSidebars();
   showSourceUploadModal.value = true;
 };
 const closeSourceUploadModal = () => {
@@ -164,6 +181,7 @@ const closeSourceUploadModal = () => {
 
 // 요구사항 정의서 다운로드 모달
 const openDownloadFileModal = () => {
+  closeAllSidebars();
   showDownloadFileModal.value = true;
 };
 const closeDownloadFileModal = () => {
