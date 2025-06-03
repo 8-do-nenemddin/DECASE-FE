@@ -1,13 +1,13 @@
 import { createRouter, createWebHistory } from "vue-router";
-import MainView from "../components/main.vue";
+import MainView from "../components/main/main.vue";
 import ProjectMain from "../components/projects/ProjectMain.vue";
 import ProjectSetting from "../components/projects/settings/SettingMain.vue";
 import ProjectInfo from "../components/projects/settings/edit_project/EditProjectInfo.vue";
 import ProjectMatrix from "../components/projects/settings/view_matrix/ViewMatrix.vue";
 import ProjectRight from "../components/projects/settings/manage_right/ManageRight.vue";
-import Home from "../components/Home.vue";
-import SignIn from "../components/Signin.vue";
-import Signup from "../components/Signup.vue";
+import Home from "../components/home/Home.vue";
+import SignIn from "../components/home/Signin.vue";
+import Signup from "../components/home/SignUp.vue";
 
 const routes = [
   {

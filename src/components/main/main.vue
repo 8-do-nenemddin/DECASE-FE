@@ -81,10 +81,10 @@
 <script setup>
 import { ref, computed } from "vue";
 import { useRouter } from "vue-router";
-import CreateProjectModal from "./CreateProjectModal.vue";
+import CreateProjectModal from "../main/CreateProjectModal.vue";
 import ProjectGallery from "./ProjectGallery.vue";
 import ProjectList from "./ProjectList.vue";
-import MainHeader from "./MainHeader.vue";
+import MainHeader from "../main/MainHeader.vue";
 import ProfileBar from "./ProfileBar.vue";
 
 const showModal = ref(false);
