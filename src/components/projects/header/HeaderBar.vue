@@ -124,7 +124,7 @@
 <script setup>
 import { ref } from "vue";
 import { useRouter } from "vue-router";
-import SearchRequirementsSidebar from "./SearchRequirementsSidebar.vue";
+import SearchRequirementsSidebar from "./search_rd/SearchRequirementsSidebar.vue";
 import ManageFileSidebar from "./ManageFileSidebar.vue";
 import UploadSourceModal from "./file_upload/UploadSourceModal.vue"
 import DownloadFileModal from "./download_rd/DownloadFileModal.vue";
