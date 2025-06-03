@@ -40,33 +40,58 @@
         <button
           class="icon-button"
           @click="openSourceUploadModal"
-          title="내보내기"
+          title="파일 업로드"
         >
           <svg
+            xmlns="http://www.w3.org/2000/svg"
             width="20"
             height="20"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
             stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
           >
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="7,10 12,15 17,10"></polyline>
-            <line x1="12" y1="15" x2="12" y2="3"></line>
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="17 8 12 3 7 8" />
+            <line x1="12" y1="3" x2="12" y2="15" />
+          </svg>
+        </button>
+        <!-- 목업 뷰어 버튼 추가 -->
+        <button
+          class="icon-button"
+          @click="toggleMockupViewer"
+          title="목업 뷰어"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+            <line x1="8" y1="21" x2="16" y2="21"/>
+            <line x1="12" y1="17" x2="12" y2="21"/>
           </svg>
         </button>
       </div>
     </div>
 
     <div class="header-center">
-      <h1 class="project-title">Project 1</h1>
+      <h1 class="project-title" @click="goToMain">{{ decodedProjectName }}</h1>
     </div>
-
     <div class="header-right">
       <button class="download-button" @click="openDownloadFileModal">
         다운로드
       </button>
-      <button class="icon-button" title="사용자">
+      <!-- 사용자 버튼에 프로필 바 토글 기능 추가 -->
+      <button class="icon-button" @click="toggleProfileSidebar" title="사용자">
         <svg
           width="20"
           height="20"
@@ -79,23 +104,38 @@
           <circle cx="12" cy="7" r="4"></circle>
         </svg>
       </button>
-      <button class="icon-button" @click="handleGoSettings" title="설정">
-        <svg
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-        >
-          <circle cx="12" cy="12" r="3"></circle>
-          <path
-            d="M12 1v6m0 6v6m11-7h-6m-6 0H1m17-4a4 4 0 1 1-8 0 4 4 0 0 1 8 0zM7 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0z"
-          ></path>
-        </svg>
-      </button>
+      <button class="icon-button" @click="handleGoSettings(projectName)" title="설정">
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />
+    <path
+      d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 
+         2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 
+         1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 
+         1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 
+         1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 
+         0-4h.09c.7 0 1.3-.4 1.51-1a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 
+         2 0 1 1 2.83-2.83l.06.06c.46.46 1.12.61 1.82.33.61-.26 1-.86 
+         1-1.51V3a2 2 0 1 1 4 0v.09c0 .7.4 1.3 1 1.51.7.28 1.36.13 
+         1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 
+         1.82c.26.61.86 1 1.51 1H21a2 2 0 1 1 0 4h-.09c-.7 0-1.3.4-1.51 
+         1z"
+    />
+  </svg>
+</button>
+
     </div>
   </header>
+
+  <MockupViewer v-if="showMockupViewer" @close="closeMockupViewer" />
 
   <!-- 검색 사이드바 -->
   <SearchRequirementsSidebar v-if="showSidebar" @close="closeSidebar" />
@@ -116,15 +156,26 @@
     @close="closeDownloadFileModal"
     @createProject="handleDownloadSource"
   />
+
+  <!-- 프로필 바 -->
+  <ProfileBar
+    :isVisible="showProfileSidebar"
+    @close="closeProfileSidebar"
+    @logout="handleLogout"
+    @withdraw="handleWithdraw"
+  />
 </template>
 
 <script setup>
 import { ref } from "vue";
+import { computed } from 'vue';
 import { useRouter } from "vue-router";
-import SearchRequirementsSidebar from "./SearchRequirementsSidebar.vue";
-import ManageFileSidebar from "./ManageFileSidebar.vue";
-import UploadSourceModal from "./file_upload/UploadSourceModal.vue";
+import SearchRequirementsSidebar from "./search_rd/SearchRequirementsSidebar.vue";
+import ManageFileSidebar from "./files_rd/ManageFileSidebar.vue";
+import UploadSourceModal from "./file_upload/UploadSourceModal.vue"
 import DownloadFileModal from "./download_rd/DownloadFileModal.vue";
+import ProfileBar from "../../main/ProfileBar.vue";
+import MockupViewer from "./mockup/MockupViewer.vue";
 
 const router = useRouter();
 
@@ -132,9 +183,88 @@ const showSidebar = ref(false);
 const showFileListSidebar = ref(false);
 const showSourceUploadModal = ref(false);
 const showDownloadFileModal = ref(false);
+const showProfileSidebar = ref(false);
+const showMockupViewer = ref(false); // 목업 뷰어 표시 상태
+
+const props = defineProps({
+  projectName: {
+    type: String,
+    required: true
+  }
+});
+const decodedProjectName = computed(() => decodeURIComponent(props.projectName));
+
+const goToMain = () => {
+  if (props.projectName) {
+    router.push(`/projects/${props.projectName}`);
+    console.log("다시 프로젝트");
+  }
+}
+
+// 모든 사이드바 닫기 헬퍼 함수
+const closeAllSidebars = () => {
+  showSidebar.value = false;
+  showFileListSidebar.value = false;
+  showProfileSidebar.value = false; // 프로필 바도 포함
+  showMockupViewer.value = false; // 목업 뷰어도 포함
+};
+
+// 프로필 사이드바 관련 메서드
+const toggleProfileSidebar = () => {
+  // 다른 사이드바가 열려있으면 닫기
+  if (showSidebar.value) {
+    showSidebar.value = false;
+  }
+  if (showFileListSidebar.value) {
+    showFileListSidebar.value = false;
+  }
+  if (showMockupViewer.value) {
+    showMockupViewer.value = false;
+  }
+  // 프로필 사이드바 토글
+  showProfileSidebar.value = !showProfileSidebar.value;
+};
+
+const closeProfileSidebar = () => {
+  showProfileSidebar.value = false;
+};
+
+// 목업 뷰어 관련 메서드
+const toggleMockupViewer = () => {
+  closeAllSidebars(); // 다른 모든 사이드바 닫기
+  showMockupViewer.value = true;
+};
+
+const closeMockupViewer = () => {
+  showMockupViewer.value = false;
+};
+
+const handleLogout = () => {
+  console.log("로그아웃");
+  closeProfileSidebar();
+  // 로그아웃 로직 구현
+  // 예: router.push({ name: "Login" });
+};
+
+const handleWithdraw = () => {
+  console.log("탈퇴하기");
+  closeProfileSidebar();
+  // 탈퇴 로직 구현
+};
 
 // 검색 사이드바
 const toggleSidebar = () => {
+  // 다른 사이드바가 열려있으면 닫기
+  if (showFileListSidebar.value) {
+    showFileListSidebar.value = false;
+  }
+  if (showProfileSidebar.value) {
+    showProfileSidebar.value = false;
+  }
+  if (showMockupViewer.value) {
+    showMockupViewer.value = false;
+  }
+  // 검색 사이드바 토글
   showSidebar.value = !showSidebar.value;
 };
 
@@ -144,6 +274,17 @@ const closeSidebar = () => {
 
 // 파일 리스트 사이드 바
 const toggleFileListSidebar = () => {
+  // 다른 사이드바가 열려있으면 닫기
+  if (showSidebar.value) {
+    showSidebar.value = false;
+  }
+  if (showProfileSidebar.value) {
+    showProfileSidebar.value = false;
+  }
+  if (showMockupViewer.value) {
+    showMockupViewer.value = false;
+  }
+  // 파일 리스트 사이드바 토글
   showFileListSidebar.value = !showFileListSidebar.value;
 };
 
@@ -153,6 +294,7 @@ const closeFileListSidebar = () => {
 
 // 소스 업로드 모달
 const openSourceUploadModal = () => {
+  closeAllSidebars();
   showSourceUploadModal.value = true;
 };
 const closeSourceUploadModal = () => {
@@ -161,6 +303,7 @@ const closeSourceUploadModal = () => {
 
 // 요구사항 정의서 다운로드 모달
 const openDownloadFileModal = () => {
+  closeAllSidebars();
   showDownloadFileModal.value = true;
 };
 const closeDownloadFileModal = () => {
@@ -168,19 +311,19 @@ const closeDownloadFileModal = () => {
 };
 
 const handleUploadSource = (newSourceName) => {
-  closeModal();
+  closeSourceUploadModal();
 };
 const handleDownloadSource = (newSourceName) => {
-  closeModal();
+  closeDownloadFileModal();
 };
 
 const handleGoMain = () => {
   router.push({ name: "MainView" });
 };
 
-const handleGoSettings = (projectId) => {
-  console.log(`'${projectId}' 세팅`);
-  router.push({ name: "ProjectSetting", params: { projectId: projectId } });
+const handleGoSettings = (projectName) => {
+  console.log(`'${projectName}' 세팅`);
+  router.push({ name: "ProjectSetting", params: { projectName: projectName } });
 };
 </script>
 
@@ -196,30 +339,40 @@ const handleGoSettings = (projectId) => {
 .header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center; /* 중앙 정렬 */
   padding: 0 40px;
   height: 64px;
   border-bottom: 1px solid #e5e7eb;
   background: white;
-  position: sticky;
-  top: 0rem;
+  position: relative;
   z-index: 10;
+  gap: 40px; /* 좌우 간격 */
+  isolation: isolate;
+  animation: none !important;
+  transition: none !important;
+  transform: none !important;
 }
 
-.header-left {
+.header-left,
+.header-right {
+  flex: 0 0 auto; /* 고정 크기 */
   display: flex;
   align-items: center;
   gap: 16px;
+  transform: none !important;
 }
 
-.logo {
-  display: flex;
-  align-items: center;
+.header-center {
+  flex: 1 1 auto; /* 공간 채움 */
+  text-align: center;
+  position: static; /* 절대 위치 제거 */
+  transform: none;
+  transform: none !important;
 }
 
 .logo-icon {
-  width: 75px;
-  height: 55px;
+  width: auto;
+  height: 45px;
   background: linear-gradient(135deg, #e53e3e 0%, #ff6b35 100%);
   border-radius: 6px;
   display: flex;
@@ -228,6 +381,7 @@ const handleGoSettings = (projectId) => {
   color: white;
   font-weight: 700;
   font-size: 16px;
+  cursor: pointer;
 }
 
 .header-actions {
@@ -255,17 +409,16 @@ const handleGoSettings = (projectId) => {
   color: #374151;
 }
 
-.header-center {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
+/* 활성 상태 표시 (사이드바가 열려있을 때) */
+.icon-button.active {
+  background: #f3f4f6;
+  color: #374151;
 }
 
 .project-title {
   font-size: 30px;
   font-weight: 700;
   color: #111827;
-  margin: 0;
 }
 
 .header-right {
@@ -291,48 +444,24 @@ const handleGoSettings = (projectId) => {
   transform: translateY(-1px);
 }
 
-/* 메인 컨텐츠 */
-.main-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: calc(80vh);
-  padding: 40px;
-  text-align: center;
-}
-
-.welcome-title {
-  font-size: 35px;
-  font-weight: 700;
-  color: #111827;
-  margin: 0 0 0 0;
-  line-height: 1.2;
-}
-
-.welcome-subtitle {
-  font-size: 20px;
-  color: #6b7280;
-  margin: 0;
-  line-height: 1.5;
-}
-
 /* 반응형 디자인 */
 @media (max-width: 768px) {
   .header {
     padding: 0 16px;
-  }
-
-  .header-center {
-    position: static;
-    transform: none;
-    order: 2;
-    flex: 1;
-    text-align: center;
+    justify-content: space-between; /* 좌우 분리 */
   }
 
   .header-left {
     order: 1;
+  }
+
+  .header-center {
+    flex: none;
+    order: 2;
+    position: static;
+    transform: none;
+    text-align: center;
+    margin: 0 auto;
   }
 
   .header-right {
@@ -343,16 +472,9 @@ const handleGoSettings = (projectId) => {
     font-size: 18px;
   }
 
-  .welcome-title {
-    font-size: 36px;
-  }
-
-  .welcome-subtitle {
-    font-size: 18px;
-  }
-
-  .main-content {
-    padding: 24px;
+  .download-button {
+    padding: 6px 12px;
+    font-size: 13px;
   }
 }
 
@@ -375,11 +497,7 @@ const handleGoSettings = (projectId) => {
     font-size: 13px;
   }
 
-  .welcome-title {
-    font-size: 28px;
-  }
-
-  .welcome-subtitle {
+  .project-title {
     font-size: 16px;
   }
 }

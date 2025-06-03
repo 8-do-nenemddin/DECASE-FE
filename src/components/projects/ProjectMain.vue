@@ -1,6 +1,6 @@
 <template>
   <div class="project-main">
-    <HeaderBar></HeaderBar>
+    <HeaderBar :project-name="projectName" />
     <!-- 메인 컨텐츠 -->
     <main class="main-content">
       <div class="welcome-section">
@@ -12,8 +12,15 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
 import HeaderBar from "./header/HeaderBar.vue";
+
+const props = defineProps({
+  projectName: {
+    type: String,
+    required: true
+  }
+});
+
 </script>
 
 <style scoped>

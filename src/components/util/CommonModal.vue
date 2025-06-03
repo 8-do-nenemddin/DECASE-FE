@@ -1,13 +1,13 @@
 <template>
   <div class="modal-overlay" @click="handleOverlayClick">
     <div class="modal-container" :class="modalClass" @click.stop>
-      <button
+      <!-- <button
         class="close-button"
         :class="closeButtonClass"
         @click.stop="closeModal"
       >
         X
-      </button>
+      </button> -->
       <slot></slot>
     </div>
   </div>
