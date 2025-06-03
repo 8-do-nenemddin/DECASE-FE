@@ -66,7 +66,7 @@ watch(
 const router = useRouter();
 
 const navigateToProject = (projectName) => {
-  router.push({ name: "ProjectMain", params: { projectName } });
+  router.push({ name: "ProjectMain", params: { projectName: projectName } });
 };
 
 const statusOptions = ["NOT_STARTED", "IN_PROGRESS", "DONE"];
