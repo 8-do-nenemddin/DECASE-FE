@@ -5,7 +5,7 @@
 		  <th>제목</th>
 		  <th>소스</th>
 		  <th>상태</th>
-		  <th>생성됨</th>
+		  <th>생성일</th>
 		</tr>
 	  </thead>
 	  <tbody>
@@ -42,58 +42,58 @@
 		</tr>
 	  </tbody>
 	</table>
-  </template>
-  
-  <script setup>
-  import { ref, watch } from 'vue';
-  import { useRouter } from 'vue-router';
-  
-  const props = defineProps({
-	projects: {
-	  type: Array,
-	  required: true,
-	},
+</template>
+
+<script setup>
+import { ref, watch } from 'vue';
+import { useRouter } from 'vue-router';
+
+const props = defineProps({
+  projects: {
+    type: Array,
+    required: true,
+  },
+});
+
+const localProjects = ref([]);
+
+watch(
+  () => props.projects,
+  (newVal) => {
+    localProjects.value = newVal.map((p) => ({
+      ...p,
+      showDropdown: false,
+    }));
+  },
+  { immediate: true, deep: true }
+);
+
+const router = useRouter();
+const statusOptions = ['NOT_STARTED', 'IN_PROGRESS', 'DONE'];
+
+const toggleDropdown = (project) => {
+  localProjects.value.forEach((p) => {
+    if (p !== project) p.showDropdown = false;
   });
-  
-  const localProjects = ref([]);
-  
-  watch(
-	() => props.projects,
-	(newVal) => {
-	  localProjects.value = newVal.map((p) => ({
-		...p,
-		showDropdown: false,
-	  }));
-	},
-	{ immediate: true, deep: true }
-  );
-  
-  const router = useRouter();
-  const statusOptions = ['NOT_STARTED', 'IN_PROGRESS', 'DONE'];
-  
-  const toggleDropdown = (project) => {
-	localProjects.value.forEach((p) => {
-	  if (p !== project) p.showDropdown = false;
-	});
-	project.showDropdown = !project.showDropdown;
-  };
-  
-  const changeStatus = (project, status) => {
-	project.status = status;
-	project.showDropdown = false;
-  };
-  
-  const navigateToProject = (projectName) => {
-	router.push({ name: 'ProjectHome', params: { projectName } });
-  };
-  </script>
-  
-  <style scoped>
- .project-table {
+  project.showDropdown = !project.showDropdown;
+};
+
+const changeStatus = (project, status) => {
+  project.status = status;
+  project.showDropdown = false;
+};
+
+const navigateToProject = (projectName) => {
+  router.push({ name: 'ProjectHome', params: { projectName } });
+};
+</script>
+
+<style scoped>
+.project-table {
   width: 100%;
   border-collapse: collapse;
   color: #333;
-  background-color: white; /* 테이블 전체 배경 */
+  background-color: white;
 }
 
 .project-table th,
@@ -101,7 +101,7 @@
   padding: 16px;
   text-align: left;
   border-bottom: 1px solid #ccc;
-  background-color: transparent; /* 셀 배경 제거: 호버 덮지 않도록 */
+  background-color: transparent;
   transition: background-color 0.2s ease;
 }
 
@@ -111,67 +111,94 @@
 }
 
 .project-row:hover td {
-  background-color: #f1f1f1; /* 행 호버 시 셀 배경에 색상 적용 */
+  background-color: #f1f1f1;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
 }
-  .status-wrapper {
-	position: relative;
-	display: inline-block;
-  }
-  
-  .status-badge {
-	padding: 4px 8px;
-	border-radius: 12px;
-	font-size: 0.75em;
-	font-weight: 500;
-	min-width: 90px;
-	text-align: center;
-	display: inline-block;
-	cursor: pointer;
-	white-space: nowrap;
-  }
-  
-  .status-dropdown {
-	position: absolute;
-	top: 110%;
-	left: 0;
-	background: white;
-	border: 1px solid #ccc;
-	border-radius: 6px;
-	list-style: none;
-	padding: 4px 0;
-	margin: 4px 0 0;
-	z-index: 100;
-	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-	width: max-content;
-	min-width: 120px;
-  }
-  
-  .status-dropdown li {
-	padding: 6px 12px;
-	cursor: pointer;
-	font-size: 0.75em;
-	transition: background-color 0.2s ease;
-	white-space: nowrap;
-  }
-  
-  .status-dropdown li:hover {
-	background-color: #f0f0f0;
-  }
-  
-  /* 상태별 스타일 */
-  .status-done {
-	background-color: #ede7f6;
-	color: #512da8;
-  }
-  
-  .status-in_progress {
-	background-color: #e8f5e9;
-	color: #2e7d32;
-  }
-  
-  .status-not_started {
-	background-color: #f5f5f5;
-	color: #616161;
-  }
-  </style>
+
+.status-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.status-badge {
+  padding: 6px 12px;
+  border-radius: 12px;
+  font-size: 0.7em;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 90px;
+  height: 28px;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.status-dropdown {
+  position: absolute;
+  top: 110%;
+  right: 0;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  list-style: none;
+  padding: 8px 0;
+  margin: 8px 0 0;
+  z-index: 1000;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  width: max-content;
+  min-width: 150px;
+  pointer-events: auto;
+}
+
+.status-dropdown li {
+  padding: 10px 16px;
+  cursor: pointer;
+  font-size: 0.75em;
+  transition: background-color 0.2s ease;
+  white-space: nowrap;
+  margin: 2px 6px;
+  border-radius: 6px;
+}
+
+.status-dropdown .status-badge {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 8px 12px;
+  font-size: 0.7em;
+  text-align: center;
+  cursor: pointer;
+  border-radius: 8px;
+  margin: 2px 4px;
+  transition: background-color 0.2s ease;
+  white-space: nowrap;
+  box-sizing: border-box;
+  min-width: 110px;
+  max-width: none;
+}
+
+/* 상태별 스타일 - 첨부 파일과 동일하게 */
+.status-done {
+  background-color: #f0fff4;
+  color: #22543d;
+  border-color: #9ae6b4;
+}
+
+.status-in_progress {
+  background-color: #fef5e7;
+  color: #744210;
+  border-color: #f6e05e;
+}
+
+.status-not_started {
+  background-color: #f7fafc;
+  color: #4a5568;
+  border-color: #cbd5e0;
+}
+</style>
