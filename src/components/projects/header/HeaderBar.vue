@@ -168,10 +168,10 @@ const closeDownloadFileModal = () => {
 };
 
 const handleUploadSource = (newSourceName) => {
-  closeModal();
+  closeSourceUploadModal();
 };
 const handleDownloadSource = (newSourceName) => {
-  closeModal();
+  closeDownloadFileModal();
 };
 
 const handleGoMain = () => {
@@ -185,6 +185,11 @@ const handleGoSettings = (projectId) => {
 </script>
 
 <style scoped>
+* {
+  animation: none !important;
+  transform: none !important;
+}
+
 .project-main {
   min-height: 100vh;
   background-color: #ffffff;
@@ -196,30 +201,34 @@ const handleGoSettings = (projectId) => {
 .header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center; /* 중앙 정렬 */
   padding: 0 40px;
   height: 64px;
   border-bottom: 1px solid #e5e7eb;
   background: white;
-  position: sticky;
-  top: 0rem;
+  position: relative;
   z-index: 10;
+  gap: 40px; /* 좌우 간격 */
 }
 
-.header-left {
+.header-left,
+.header-right {
+  flex: 0 0 auto; /* 고정 크기 */
   display: flex;
   align-items: center;
   gap: 16px;
 }
 
-.logo {
-  display: flex;
-  align-items: center;
+.header-center {
+  flex: 1 1 auto; /* 공간 채움 */
+  text-align: center;
+  position: static; /* 절대 위치 제거 */
+  transform: none;
 }
 
 .logo-icon {
-  width: 75px;
-  height: 55px;
+  width: auto;
+  height: 45px;
   background: linear-gradient(135deg, #e53e3e 0%, #ff6b35 100%);
   border-radius: 6px;
   display: flex;
@@ -255,17 +264,10 @@ const handleGoSettings = (projectId) => {
   color: #374151;
 }
 
-.header-center {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-}
-
 .project-title {
   font-size: 30px;
   font-weight: 700;
   color: #111827;
-  margin: 0;
 }
 
 .header-right {
@@ -291,48 +293,24 @@ const handleGoSettings = (projectId) => {
   transform: translateY(-1px);
 }
 
-/* 메인 컨텐츠 */
-.main-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: calc(80vh);
-  padding: 40px;
-  text-align: center;
-}
-
-.welcome-title {
-  font-size: 35px;
-  font-weight: 700;
-  color: #111827;
-  margin: 0 0 0 0;
-  line-height: 1.2;
-}
-
-.welcome-subtitle {
-  font-size: 20px;
-  color: #6b7280;
-  margin: 0;
-  line-height: 1.5;
-}
-
 /* 반응형 디자인 */
 @media (max-width: 768px) {
   .header {
     padding: 0 16px;
-  }
-
-  .header-center {
-    position: static;
-    transform: none;
-    order: 2;
-    flex: 1;
-    text-align: center;
+    justify-content: space-between; /* 좌우 분리 */
   }
 
   .header-left {
     order: 1;
+  }
+
+  .header-center {
+    flex: none;
+    order: 2;
+    position: static;
+    transform: none;
+    text-align: center;
+    margin: 0 auto;
   }
 
   .header-right {
@@ -343,16 +321,9 @@ const handleGoSettings = (projectId) => {
     font-size: 18px;
   }
 
-  .welcome-title {
-    font-size: 36px;
-  }
-
-  .welcome-subtitle {
-    font-size: 18px;
-  }
-
-  .main-content {
-    padding: 24px;
+  .download-button {
+    padding: 6px 12px;
+    font-size: 13px;
   }
 }
 
@@ -375,11 +346,7 @@ const handleGoSettings = (projectId) => {
     font-size: 13px;
   }
 
-  .welcome-title {
-    font-size: 28px;
-  }
-
-  .welcome-subtitle {
+  .project-title {
     font-size: 16px;
   }
 }
