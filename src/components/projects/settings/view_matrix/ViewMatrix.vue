@@ -1,5 +1,5 @@
 <template>
-  <div class="project-main">요구사항 추적 메트릭스</div>
+  <div class="project-main">요구사항 추적 매트릭스</div>
 </template>
 
 <script setup>

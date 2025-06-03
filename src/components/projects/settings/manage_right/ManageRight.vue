@@ -15,7 +15,6 @@
 
             <div class="member-details">
               <div class="member-header">
-                <span class="profile-badge">프로필</span>
                 <span class="member-name">{{ member.name }}</span>
                 <span class="member-department">{{ member.department }}</span>
               </div>
@@ -23,20 +22,24 @@
           </div>
 
           <div class="member-actions">
-            <div class="permission-dropdown">
-              <select
-                v-model="member.permission"
-                @change="updatePermission(member.id, member.permission)"
-                class="permission-select"
+            <div class="permission-toggle-container">
+              <span class="permission-label">{{ member.permission === 'Read' ? 'Read' : 'Read/Write' }}</span>
+              <div 
+                class="permission-toggle"
+                :class="{ 'active': member.permission === 'Read/Write' }"
+                @click="showPermissionModal(member)"
               >
-                <option value="Read">Read</option>
-                <option value="Read/Write">Read/Write</option>
-                <option value="Admin">Admin</option>
-              </select>
+                <div class="toggle-slider">
+                  <div class="toggle-icon">
+                    <span v-if="member.permission === 'Read'">📖</span>
+                    <span v-else>✍️</span>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <button @click="deleteMember(index)" class="delete-button">
-              삭제
+            <button @click="showDeleteModal(member, index)" class="delete-button">
+              <span class="delete-icon">🗑️</span>
             </button>
           </div>
         </div>
@@ -60,6 +63,89 @@
 
     <!-- 성공 모달 (독립적으로 관리) -->
     <AddSuccessModal v-if="showSuccessModal" @close="handleSuccessClose" />
+
+    <!-- 권한 변경 확인 모달 -->
+    <div v-if="showPermissionChangeModal" class="modal-overlay" @click="closePermissionModal">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h3 class="modal-title">권한 변경 확인</h3>
+          <button @click="closePermissionModal" class="close-button">
+            <span>×</span>
+          </button>
+        </div>
+        
+        <div class="modal-body">
+          <div class="member-info-modal">
+            <div class="avatar-small">
+              <span class="avatar-icon">👤</span>
+            </div>
+            <div class="member-details-modal">
+              <div class="member-name-modal">{{ selectedMember?.name }}</div>
+              <div class="member-department-modal">{{ selectedMember?.department }}</div>
+            </div>
+          </div>
+          
+          <div class="permission-change-info">
+            <p class="change-message">
+              <span class="current-permission">{{ selectedMember?.permission }}</span>
+              <span class="arrow">→</span>
+              <span class="new-permission">{{ getNewPermission(selectedMember?.permission) }}</span>
+            </p>
+            <p class="confirm-message">권한을 변경하시겠습니까?</p>
+          </div>
+        </div>
+        
+        <div class="modal-footer">
+          <button @click="confirmPermissionChange" class="confirm-button">
+            변경
+          </button>
+          <button @click="closePermissionModal" class="cancel-button">
+            취소
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 멤버 삭제 확인 모달 -->
+    <div v-if="showDeleteConfirmModal" class="modal-overlay" @click="closeDeleteModal">
+      <div class="modal-content delete-modal" @click.stop>
+        <div class="modal-header">
+          <h3 class="modal-title">멤버 삭제 확인</h3>
+          <button @click="closeDeleteModal" class="close-button">
+            <span>×</span>
+          </button>
+        </div>
+        
+        <div class="modal-body">
+          <div class="member-info-modal">
+            <div class="avatar-small">
+              <span class="avatar-icon">👤</span>
+            </div>
+            <div class="member-details-modal">
+              <div class="member-name-modal">{{ memberToDelete?.name }}</div>
+              <div class="member-department-modal">{{ memberToDelete?.department }}</div>
+            </div>
+          </div>
+          
+          <div class="delete-warning">
+            <div class="warning-icon">⚠️</div>
+            <p class="warning-message">
+              이 멤버를 삭제하면 더 이상 <br>해당 프로젝트에 접근할 수 없습니다.
+            </p>
+            <p class="confirm-message">정말로 삭제하시겠습니까?</p>
+          </div>
+        </div>
+        
+        <div class="modal-footer">
+          <button @click="confirmDelete" class="delete-confirm-button">
+            삭제
+          </button>
+          <button @click="closeDeleteModal" class="cancel-button">
+            취소
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -70,6 +156,11 @@ import AddSuccessModal from "./AddSuccessModal.vue";
 
 const showAddMemberModal = ref(false);
 const showSuccessModal = ref(false);
+const showPermissionChangeModal = ref(false);
+const showDeleteConfirmModal = ref(false);
+const selectedMember = ref(null);
+const memberToDelete = ref(null);
+const memberIndexToDelete = ref(null);
 
 const members = ref([
   {
@@ -98,15 +189,56 @@ const members = ref([
   },
 ]);
 
-const updatePermission = (memberId, permission) => {
-  console.log(`멤버 ${memberId}의 권한을 ${permission}으로 변경`);
-  // 실제 권한 업데이트 로직
+// 권한 변경 모달 표시
+const showPermissionModal = (member) => {
+  selectedMember.value = member;
+  showPermissionChangeModal.value = true;
 };
 
-const deleteMember = (index) => {
-  if (confirm("정말로 이 멤버를 삭제하시겠습니까?")) {
-    members.value.splice(index, 1);
+// 새로운 권한 반환
+const getNewPermission = (currentPermission) => {
+  return currentPermission === 'Read' ? 'Read/Write' : 'Read';
+};
+
+// 권한 변경 확인
+const confirmPermissionChange = () => {
+  if (selectedMember.value) {
+    const newPermission = getNewPermission(selectedMember.value.permission);
+    selectedMember.value.permission = newPermission;
+    console.log(`멤버 ${selectedMember.value.id}의 권한을 ${newPermission}으로 변경`);
+    // 실제 권한 업데이트 로직
   }
+  closePermissionModal();
+};
+
+// 권한 변경 모달 닫기
+const closePermissionModal = () => {
+  showPermissionChangeModal.value = false;
+  selectedMember.value = null;
+};
+
+// 삭제 모달 표시
+const showDeleteModal = (member, index) => {
+  memberToDelete.value = member;
+  memberIndexToDelete.value = index;
+  showDeleteConfirmModal.value = true;
+};
+
+// 삭제 확인
+const confirmDelete = () => {
+  if (memberIndexToDelete.value !== null) {
+    members.value.splice(memberIndexToDelete.value, 1);
+    console.log(`멤버 ${memberToDelete.value.name} 삭제됨`);
+    // 실제 삭제 API 호출 로직
+  }
+  closeDeleteModal();
+};
+
+// 삭제 모달 닫기
+const closeDeleteModal = () => {
+  showDeleteConfirmModal.value = false;
+  memberToDelete.value = null;
+  memberIndexToDelete.value = null;
 };
 
 // 모달 닫기 처리 (X버튼, 취소 버튼)
@@ -210,15 +342,6 @@ const handleSuccessClose = () => {
   flex-wrap: wrap;
 }
 
-.profile-badge {
-  background: #f3f4f6;
-  color: #374151;
-  font-size: 0.75rem;
-  font-weight: 500;
-  padding: 0.25rem 0.5rem;
-  border-radius: 1rem;
-}
-
 .member-name {
   font-weight: 600;
   color: #111827;
@@ -233,53 +356,107 @@ const handleSuccessClose = () => {
 .member-actions {
   display: flex;
   align-items: center;
+  gap: 1rem;
+}
+
+/* 토글 스위치 스타일 */
+.permission-toggle-container {
+  display: flex;
+  align-items: center;
   gap: 0.75rem;
 }
 
-.permission-dropdown {
-  position: relative;
-}
-
-.permission-select {
-  background: #1f2937;
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 1.5rem;
+.permission-label {
   font-size: 0.875rem;
   font-weight: 500;
+  color: #374151;
+  min-width: 80px;
+  text-align: right;
+}
+
+.permission-toggle {
+  position: relative;
+  width: 60px;
+  height: 32px;
+  background: #e5e7eb;
+  border-radius: 16px;
   cursor: pointer;
-  appearance: none;
-  min-width: 100px;
-  text-align: center;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 2px solid transparent;
 }
 
-.permission-select:hover {
-  background: #374151;
+.permission-toggle:hover {
+  background: #d1d5db;
+  transform: scale(1.05);
 }
 
-.permission-select:focus {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+.permission-toggle.active {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.permission-toggle.active:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+}
+
+.toggle-slider {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 26px;
+  height: 26px;
+  background: white;
+  border-radius: 50%;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.permission-toggle.active .toggle-slider {
+  transform: translateX(28px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.toggle-icon {
+  font-size: 0.75rem;
+  transition: all 0.2s ease;
+}
+
+.permission-toggle:not(.active) .toggle-icon {
+  opacity: 0.7;
+}
+
+.permission-toggle.active .toggle-icon {
+  opacity: 1;
 }
 
 .delete-button {
-  background: #1f2937;
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 0.375rem;
+  background: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
   font-size: 0.875rem;
-  font-weight: 500;
   cursor: pointer;
   transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
 }
 
 .delete-button:hover {
-  background: #374151;
+  background: #fecaca;
+  border-color: #f87171;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(31, 41, 55, 0.15);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.15);
+}
+
+.delete-icon {
+  font-size: 1rem;
 }
 
 .add-member-section {
@@ -314,6 +491,242 @@ const handleSuccessClose = () => {
   font-size: 1rem;
 }
 
+/* 모달 공통 스타일 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.modal-content {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  width: 90%;
+  max-width: 400px;
+  overflow: hidden;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.modal-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.close-button:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.modal-body {
+  padding: 1.5rem;
+}
+
+.member-info-modal {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: #f9fafb;
+  border-radius: 12px;
+}
+
+.avatar-small {
+  width: 2rem;
+  height: 2rem;
+  background: #e5e7eb;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.avatar-small .avatar-icon {
+  font-size: 1rem;
+  color: #6b7280;
+}
+
+.member-details-modal {
+  flex: 1;
+}
+
+.member-name-modal {
+  font-weight: 600;
+  color: #111827;
+  font-size: 0.875rem;
+  margin-bottom: 0.25rem;
+}
+
+.member-department-modal {
+  color: #6b7280;
+  font-size: 0.75rem;
+}
+
+/* 권한 변경 모달 스타일 */
+.permission-change-info {
+  text-align: center;
+}
+
+.change-message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+}
+
+.current-permission {
+  padding: 0.5rem 0.75rem;
+  background: #fee2e2;
+  color: #dc2626;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+.new-permission {
+  padding: 0.5rem 0.75rem;
+  background: #dcfce7;
+  color: #059669;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+.arrow {
+  color: #6b7280;
+  font-weight: 600;
+}
+
+.confirm-message {
+  color: #374151;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+/* 삭제 모달 특별 스타일 */
+.delete-modal .modal-header {
+  border-bottom-color: #fed7d7;
+}
+
+.delete-warning {
+  text-align: center;
+  padding: 1rem;
+  background: #fef2f2;
+  border-radius: 12px;
+  border: 1px solid #fecaca;
+}
+
+.warning-icon {
+  font-size: 2rem;
+  margin-bottom: 0.75rem;
+}
+
+.warning-message {
+  color: #7f1d1d;
+  font-size: 0.875rem;
+  margin: 0 0 0.75rem 0;
+  line-height: 1.5;
+}
+
+.modal-footer {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  border-top: 1px solid #f3f4f6;
+  background: #f9fafb;
+}
+
+.cancel-button {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancel-button:hover {
+  background: #e5e7eb;
+  border-color: #9ca3af;
+}
+
+.confirm-button {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.confirm-button:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+}
+
+.delete-confirm-button {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.delete-confirm-button:hover {
+  background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
+}
+
 /* 반응형 디자인 */
 @media (max-width: 768px) {
   .permission-container {
@@ -332,15 +745,23 @@ const handleSuccessClose = () => {
 
   .member-actions {
     justify-content: space-between;
+    width: 100%;
   }
 
-  .permission-select {
-    min-width: 120px;
+  .permission-toggle-container {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-start;
   }
 
-  .modal {
+  .permission-label {
+    text-align: left;
+    min-width: auto;
+  }
+
+  .modal-content {
     margin: 1rem;
-    width: calc(100% - 2rem);
+    max-width: none;
   }
 }
 
@@ -364,9 +785,36 @@ const handleSuccessClose = () => {
     gap: 0.25rem;
   }
 
+  .member-actions {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .permission-toggle-container {
+    flex-direction: row;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
   .add-member-button {
     width: 100%;
     justify-content: center;
+  }
+
+  .change-message {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .modal-footer {
+    flex-direction: column;
+  }
+
+  .cancel-button,
+  .confirm-button,
+  .delete-confirm-button {
+    width: 100%;
   }
 }
 </style>
