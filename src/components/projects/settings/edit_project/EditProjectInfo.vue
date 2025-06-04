@@ -211,12 +211,28 @@ const closeDeleteModal = () => {
   showDeleteModal.value = false;
 };
 
-const confirmDelete = () => {
-  console.log("프로젝트 삭제 확인");
-  showDeleteModal.value = false;
-  // 실제 삭제 로직 구현
-  // 삭제 후 페이지 이동이나 알림 처리
-  router.push({ name: "MainView" });
+const confirmDelete = async () => {
+  try {
+    const response = await fetch(`/api/v1/projects/${projectId}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json"
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error("프로젝트 삭제 실패");
+    }
+
+    console.log("프로젝트 삭제 완료");
+    showDeleteModal.value = false;
+
+    // 삭제 후 메인 페이지로 이동
+    router.push({ name: "MainView" });
+  } catch (error) {
+    console.error("프로젝트 삭제 중 오류 발생:", error);
+    alert("프로젝트 삭제에 실패했습니다.");
+  }
 };
 </script>
 
