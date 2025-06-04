@@ -25,8 +25,8 @@
                   <span>프로필</span>
                 </div>
                 <div class="profile-name">{{ profileData.name }}</div>
-                <div class="profile-company">{{ profileData.company }}</div>
-                <div class="profile-role">{{ profileData.role }}</div>
+                <div class="profile-company">{{ profileData.companyName }}</div>
+                <div class="profile-role">{{ profileData.departmentName }}</div>
               </div>
       
               <div class="sidebar-divider"></div>

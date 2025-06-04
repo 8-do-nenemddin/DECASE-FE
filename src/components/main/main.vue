@@ -79,7 +79,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import CreateProjectModal from "../main/CreateProjectModal.vue";
 import ProjectGallery from "./ProjectGallery.vue";
@@ -123,7 +123,7 @@ const closeModal = () => {
 
 const handleCreateProject = (newProjectName) => {
   console.log(`새 프로젝트 '${newProjectName}'가 생성되었습니다.`);
-  
+
   // 새 프로젝트를 projects 배열에 추가
   const newProject = {
     id: Date.now(),
@@ -133,56 +133,36 @@ const handleCreateProject = (newProjectName) => {
     status: "NOT_STARTED",
   };
   projects.value.unshift(newProject);
-  
+
   closeModal();
   router.push({ name: "ProjectMain", params: { projectName: newProjectName } });
 };
 
 // 프로젝트 데이터
-const projects = ref([
-  {
-    id: 1,
-    name: "Project 1",
-    date: "2025.04.07",
-    versionInfo: "버전 이력 1개",
-    status: "NOT_STARTED",
-  },
-  {
-    id: 2,
-    name: "Project 2",
-    date: "2025.04.11",
-    versionInfo: "버전 이력 2개",
-    status: "IN_PROGRESS",
-  },
-  {
-    id: 3,
-    name: "Project 3",
-    date: "2025.04.13",
-    versionInfo: "버전 이력 3개",
-    status: "DONE",
-  },
-  {
-    id: 4,
-    name: "Project 4",
-    date: "2024.06.22",
-    versionInfo: "버전 이력 4개",
-    status: "DONE",
-  },
-  {
-    id: 5,
-    name: "Project 5",
-    date: "2024.06.25",
-    versionInfo: "버전 이력 5개",
-    status: "IN_PROGRESS",
-  },
-  {
-    id: 6,
-    name: "Project 6",
-    date: "2024.12.21",
-    versionInfo: "버전 이력 6개",
-    status: "DONE",
-  },
-]);
+const projects = ref([]);
+
+const fetchProjects = async () => {
+  try {
+    const memberId = 1; // 하드코딩된 테스트용 ID
+    const page = 0;
+    const size = 10;
+
+    console.log("요청 보냄");
+
+    const response = await fetch(`/api/v1/members/${memberId}/projects?page=${page}&size=${size}`);
+    const json = await response.json();
+
+    console.log("받은 데이터:", json);
+
+    projects.value = json.data;
+  } catch (error) {
+    console.error("프로젝트 데이터를 불러오는 데 실패했습니다:", error);
+  }
+};
+
+onMounted(() => {
+  fetchProjects();
+});
 
 // 뷰 및 필터 관련
 const selectedView = ref("gallery");

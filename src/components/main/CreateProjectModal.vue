@@ -31,7 +31,7 @@
           </div>
           <div class="form-field">
             <label class="form-label">제안 PM</label>
-            <input type="text" v-model="formData.manager" class="form-input" />
+            <input type="text" v-model="formData.proposalPM" class="form-input" />
           </div>
         </div>
 
@@ -47,7 +47,7 @@
         <!-- 프로젝트 규모 -->
         <div class="form-field full-width">
           <label class="form-label">프로젝트 규모</label>
-          <input type="text" v-model="formData.category" class="form-input" />
+          <input type="text" v-model="formData.scale" class="form-input" />
         </div>
 
         <!-- 생성 버튼 -->
@@ -75,25 +75,34 @@
 
 <script setup>
 import { ref } from "vue";
+import { useRouter } from "vue-router";
 import SuccessCreateProject from "./ProjectCreationSuccessModal.vue";
 
+
+const router = useRouter();
 const emit = defineEmits(["close", "createProject"]);
 
 const isLoading = ref(false);
 const showSuccessModal = ref(false);
+
+const today = new Date().toISOString().split("T")[0];
 const formData = ref({
   name: "",
   description: "",
-  category: "",
-  manager: "",
-  startDate: "2025-05-29",
-  endDate: "2025-05-30",
+  scale: "",
+  proposalPM: "",
+  startDate: today,
+  endDate: today,
 });
 
 const handleOverlayClick = () => {
   if (!showSuccessModal.value) {
     emit("close");
   }
+};
+
+const closeModal = () => {
+  emit("close");
 };
 
 const handleCreateProject = async () => {
@@ -104,12 +113,52 @@ const handleCreateProject = async () => {
 
   isLoading.value = true;
 
-  // 로딩 시뮬레이션
-  await new Promise((resolve) => setTimeout(resolve, 1000));
+  try {
+    const requestBody = {
+      name: formData.value.name,
+      scale: formData.value.scale,
+      startDate: formData.value.startDate,
+      endDate: formData.value.endDate,
+      description: formData.value.description,
+      proposalPM: formData.value.proposalPM,
+      creatorMemberId: 1 // 실제 로그인한 유저 ID로 대체
+    };
 
-  isLoading.value = false;
-  // 성공 모달 표시
-  showSuccessModal.value = true;
+    const response = await fetch("/api/v1/projects", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(requestBody)
+    });
+
+    const result = await response.json();
+
+    if (result.status !== 201) {
+      throw new Error(result.message || "프로젝트 생성에 실패했습니다.");
+    }
+
+    // 성공적으로 생성된 프로젝트 정보
+    const newProject = result.data;
+
+    //필요 시 프로젝트 리스트에 추가 (갱신)
+    // projects.value.unshift({
+    //   id: newProject.projectId,
+    //   name: newProject.name,
+    //   date: new Date(newProject.startDate).toISOString().split("T")[0].replace(/-/g, '.'),
+    //   versionInfo: `버전 이력 ${newProject.revisionCount}개`,
+    //   status: newProject.status || "NOT_STARTED",
+    // });
+
+    showSuccessModal.value = true;
+    closeModal();
+    router.push(`/projects/${encodeURIComponent(newProject.name)}`);
+  } catch (error) {
+    console.error("프로젝트 생성 중 오류:", error);
+    alert(error.message || "알 수 없는 오류가 발생했습니다.");
+  } finally {
+    isLoading.value = false;
+  }
 };
 
 const handleSuccessConfirm = () => {
