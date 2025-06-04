@@ -1,5 +1,5 @@
 <template>
-  <div class="project-main">
+  <div class="project-main project-content">
     <div class="table-container">
       <div class="header-section">
         <div class="action-buttons">
