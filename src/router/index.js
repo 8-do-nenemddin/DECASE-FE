@@ -16,13 +16,13 @@ const routes = [
     component: MainView,
   },
   {
-    path: "/projects/:projectName",
+    path: "/projects/:projectId",
     name: "ProjectMain",
     component: ProjectMain,
     props: true, // 라우트 파라미터를 props로 전달
   },
   {
-    path: "/settings/:projectName",
+    path: "/settings/:projectId",
     name: "ProjectSetting",
     component: ProjectSetting,
     props: true, // 라우트 파라미터를 props로 전달

@@ -140,6 +140,7 @@ const handleCreateProject = async () => {
 
     // 성공적으로 생성된 프로젝트 정보
     const newProject = result.data;
+    console.log(result.data)
 
     //필요 시 프로젝트 리스트에 추가 (갱신)
     // projects.value.unshift({
@@ -152,7 +153,7 @@ const handleCreateProject = async () => {
 
     showSuccessModal.value = true;
     closeModal();
-    router.push(`/projects/${encodeURIComponent(newProject.name)}`);
+    router.push(`/projects/${newProject.projectId}`);
   } catch (error) {
     console.error("프로젝트 생성 중 오류:", error);
     alert(error.message || "알 수 없는 오류가 발생했습니다.");
