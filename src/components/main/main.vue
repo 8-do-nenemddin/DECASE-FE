@@ -135,7 +135,7 @@ const handleCreateProject = (newProjectName) => {
   projects.value.unshift(newProject);
 
   closeModal();
-  router.push({ name: "ProjectMain", params: { projectName: newProjectName } });
+  router.push({ name: "ProjectMain", params: { projectId: projectId } });
 };
 
 // 프로젝트 데이터

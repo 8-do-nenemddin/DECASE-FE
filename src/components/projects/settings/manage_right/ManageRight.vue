@@ -23,15 +23,15 @@
 
           <div class="member-actions">
             <div class="permission-toggle-container">
-              <span class="permission-label">{{ member.permission === 'Read' ? 'Read' : 'Read/Write' }}</span>
+              <span class="permission-label">{{ member.permission === 'READ' ? 'Read' : 'Read/Write' }}</span>
               <div 
                 class="permission-toggle"
-                :class="{ 'active': member.permission === 'Read/Write' }"
+                :class="{ 'active': member.permission === 'READ_AND_WRITE' }"
                 @click="showPermissionModal(member)"
               >
                 <div class="toggle-slider">
                   <div class="toggle-icon">
-                    <span v-if="member.permission === 'Read'">📖</span>
+                    <span v-if="member.permission === 'READ'">📖</span>
                     <span v-else>✍️</span>
                   </div>
                 </div>
@@ -150,7 +150,8 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
+import { useRoute } from 'vue-router';
 import AddMemberModal from "./AddMemberModal.vue";
 import AddSuccessModal from "./AddSuccessModal.vue";
 
@@ -162,32 +163,36 @@ const selectedMember = ref(null);
 const memberToDelete = ref(null);
 const memberIndexToDelete = ref(null);
 
-const members = ref([
-  {
-    id: 1,
-    name: "최민주",
-    department: "SK AX 미래혁신팀",
-    permission: "Read/Write",
-  },
-  {
-    id: 2,
-    name: "이민주",
-    department: "SK AX 미래혁신팀",
-    permission: "Read/Write",
-  },
-  {
-    id: 3,
-    name: "강민주",
-    department: "SK AX 재무팀",
-    permission: "Read",
-  },
-  {
-    id: 4,
-    name: "박민주",
-    department: "SK AX 인사팀",
-    permission: "Read",
-  },
-]);
+const props = defineProps({
+  projectId: {
+    type: String,
+    required: true
+  }
+});
+
+const members = ref([]);
+const projectId = props.projectId;
+
+const fetchProjectMembers = async () => {
+  try {
+    const response = await fetch(`/api/v1/projects/${projectId}/members`);
+    const result = await response.json();
+
+    console.log(result)
+
+    if (response.ok) {
+      members.value = result.data;
+    } else {
+      console.error('멤버 불러오기 실패:', result.message);
+    }
+  } catch (error) {
+    console.error('API 호출 에러:', error);
+  }
+};
+
+onMounted(() => {
+  fetchProjectMembers();
+});
 
 // 권한 변경 모달 표시
 const showPermissionModal = (member) => {
@@ -197,18 +202,42 @@ const showPermissionModal = (member) => {
 
 // 새로운 권한 반환
 const getNewPermission = (currentPermission) => {
-  return currentPermission === 'Read' ? 'Read/Write' : 'Read';
+  return currentPermission === 'READ' ? 'READ_AND_WRITE' : 'READ';
 };
 
 // 권한 변경 확인
-const confirmPermissionChange = () => {
+const confirmPermissionChange = async () => {
   if (selectedMember.value) {
+    const projectId = props.projectId;
+    const memberId = selectedMember.value.memberId;
     const newPermission = getNewPermission(selectedMember.value.permission);
-    selectedMember.value.permission = newPermission;
-    console.log(`멤버 ${selectedMember.value.id}의 권한을 ${newPermission}으로 변경`);
-    // 실제 권한 업데이트 로직
+
+    try {
+      const response = await fetch(
+          `/api/v1/projects/${projectId}/members/${memberId}/status`,
+          {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              permission: newPermission
+            })
+          }
+       );
+      if (!response.ok) {
+        throw new Error("권한 변경 실패");
+      }
+
+      selectedMember.value.permission = newPermission;
+      console.log(`멤버 ${selectedMember.value.id}의 권한을 ${newPermission}으로 변경`);
+    } catch (error) {
+      console.error("권한 변경 중 오류:", error);
+      alert("권한 변경에 실패했습니다.");
+    } finally {
+      closePermissionModal();
+    }
   }
-  closePermissionModal();
 };
 
 // 권한 변경 모달 닫기
@@ -225,13 +254,32 @@ const showDeleteModal = (member, index) => {
 };
 
 // 삭제 확인
-const confirmDelete = () => {
-  if (memberIndexToDelete.value !== null) {
-    members.value.splice(memberIndexToDelete.value, 1);
-    console.log(`멤버 ${memberToDelete.value.name} 삭제됨`);
-    // 실제 삭제 API 호출 로직
+const confirmDelete = async () => {
+  if (memberIndexToDelete.value !== null && memberToDelete.value) {
+    const projectId = props.projectId;
+    const memberId = memberToDelete.value.memberId;
+
+    try {
+      const response = await fetch(
+          `/api/v1/projects/${projectId}/members/${memberId}`,
+          {
+            method: "DELETE",
+          }
+      );
+
+      if (!response.ok) {
+        throw new Error("서버 응답 오류");
+      }
+
+      members.value.splice(memberIndexToDelete.value, 1);
+      console.log(`멤버 ${memberToDelete.value.name} 삭제됨`);
+    } catch (error) {
+      console.error("멤버 삭제 실패:", error);
+      alert("삭제에 실패했습니다.");
+    } finally {
+      closeDeleteModal();
+    }
   }
-  closeDeleteModal();
 };
 
 // 삭제 모달 닫기
@@ -248,17 +296,38 @@ const handleModalClose = () => {
 };
 
 // 초대 전송 처리 (전송 버튼 클릭 시)
-const handleSendInvitations = (invitationData) => {
+const handleSendInvitations = async (invitationData) => {
   console.log("초대 전송 처리:", invitationData);
 
-  // 실제 초대 전송 API 호출 로직
-  // API 호출이 성공하면 멤버 목록 업데이트 등의 로직 수행
+  try {
+    const response = await fetch(`/api/v1/projects/${props.projectId}/members`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "*/*"
+      },
+      body: JSON.stringify(invitationData)
+    });
 
-  // AddMemberModal 닫기
-  showAddMemberModal.value = false;
+    const result = await response.json();
 
-  // 성공 모달 표시
-  showSuccessModal.value = true;
+    if (!response.ok) {
+      console.error("초대 실패:", result.message || "Unknown error");
+      alert("초대에 실패했습니다.");
+      return;
+    }
+
+    console.log("초대 성공:", result);
+    showAddMemberModal.value = false;
+    showSuccessModal.value = true;
+
+    // 초대 성공 후 멤버 목록 다시 불러오기
+    await fetchProjectMembers();
+
+  } catch (error) {
+    console.error("초대 요청 에러:", error);
+    alert("초대 요청 중 오류가 발생했습니다.");
+  }
 };
 
 // 성공 모달 닫기 처리

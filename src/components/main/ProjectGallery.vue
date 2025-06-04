@@ -4,8 +4,8 @@
       class="project-card"
       :class="{ 'dropdown-open': project.showDropdown }"
       v-for="project in localProjects"
-      :key="project.id"
-      @click="project.showDropdown ? null : navigateToProject(project.name)"
+      :key="project.projectId"
+      @click="project.showDropdown ? null : navigateToProject(project.projectId)"
     >
       <h2 class="project-header">
         <span class="project-name">{{ project.name }}</span>
@@ -65,8 +65,8 @@ watch(
 
 const router = useRouter();
 
-const navigateToProject = (projectName) => {
-  router.push({ name: "ProjectMain", params: { projectName: projectName } });
+const navigateToProject = (projectId) => {
+  router.push({ name: "ProjectMain", params: { projectId: projectId } });
 };
 
 const statusOptions = ["NOT_STARTED", "IN_PROGRESS", "DONE"];

@@ -12,7 +12,7 @@
 		<tr
 		  v-for="project in localProjects"
 		  :key="project.id"
-		  @click="project.showDropdown ? null : navigateToProject(project.name)"
+		  @click="project.showDropdown ? null : navigateToProject(project.projectId)"
 		  class="project-row"
 		>
 		  <td class="title-cell">{{ project.name }}</td>
@@ -83,8 +83,8 @@ const changeStatus = (project, status) => {
   project.showDropdown = false;
 };
 
-const navigateToProject = (projectName) => {
-  router.push({ name: "ProjectMain", params: { projectName: projectName } });
+const navigateToProject = (projectId) => {
+  router.push({ name: "ProjectMain", params: { projectId: projectId } });
 };
 </script>
 

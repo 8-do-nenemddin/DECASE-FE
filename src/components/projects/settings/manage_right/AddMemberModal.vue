@@ -73,9 +73,9 @@
                 <span class="email-text">{{ emailItem.email }}</span>
                 <span
                   class="email-permission"
-                  :class="emailItem.permission.toLowerCase().replace('/', '-')"
+                  :class="emailItem.permission.toLowerCase().replace('_', '-')"
                 >
-                  {{ emailItem.permission }}
+                  {{ emailItem.displayPermission }}
                 </span>
               </div>
               <button @click="removeEmail(index)" class="remove-email-btn">
@@ -118,11 +118,7 @@ const props = defineProps({
 const emit = defineEmits(["close", "send-invitations"]);
 
 const searchEmail = ref("");
-const emailList = ref([
-  { email: "minjuchoi@skax.com", permission: "Read/Write" },
-  { email: "minjubae@skax.com", permission: "Read/Write" },
-  { email: "minjulee@skax.com", permission: "Read" },
-]);
+const emailList = ref([]);
 const selectedPermission = ref("Read");
 const showPermissionDropdown = ref(false);
 const errorMessage = ref("");
@@ -150,14 +146,16 @@ const togglePermissionDropdown = () => {
 };
 
 // 권한 선택 및 이메일 추가
-const selectPermissionAndAdd = (permission) => {
-  selectedPermission.value = permission;
-  addEmailToList(permission);
+const selectPermissionAndAdd = (label) => {
+  // Map display label to API enum value
+  const apiValue = label === "Read" ? "READ" : "READ_AND_WRITE";
+  selectedPermission.value = label;
+  addEmailToList(apiValue, label);
   showPermissionDropdown.value = false;
 };
 
 // 이메일을 목록에 추가
-const addEmailToList = (permission = selectedPermission.value) => {
+const addEmailToList = (permission, displayLabel = selectedPermission.value) => {
   const email = searchEmail.value.trim();
 
   if (!isValidEmail(email)) {
@@ -173,6 +171,7 @@ const addEmailToList = (permission = selectedPermission.value) => {
   emailList.value.push({
     email: email,
     permission: permission,
+    displayPermission: displayLabel,
   });
 
   searchEmail.value = "";
@@ -197,8 +196,11 @@ const sendInvitations = () => {
 
   console.log("초대 전송:", invitationData);
 
-  // 상위 컴포넌트로 이벤트 전송
-  emit("send-invitations", invitationData);
+  const formattedList = emailList.value.map(({ email, permission }) => ({
+    email,
+    permission
+  }));
+  emit("send-invitations", formattedList);
 };
 
 // 성공 모달 닫기 처리
@@ -224,11 +226,7 @@ const closeModal = () => {
 // 폼 리셋
 const resetForm = () => {
   searchEmail.value = "";
-  emailList.value = [
-    { email: "minjuchoi@skax.com", permission: "Read/Write" },
-    { email: "minjubae@skax.com", permission: "Read/Write" },
-    { email: "minjulee@skax.com", permission: "Read" },
-  ];
+  emailList.value = [];
   selectedPermission.value = "Read";
   showPermissionDropdown.value = false;
   errorMessage.value = "";

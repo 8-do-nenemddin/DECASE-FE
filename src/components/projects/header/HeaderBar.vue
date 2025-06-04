@@ -84,7 +84,7 @@
     </div>
 
     <div class="header-center">
-      <h1 class="project-title" @click="goToMain">{{ decodedProjectName }}</h1>
+      <h1 class="project-title" @click="goToMain">{{ props.projectId }}</h1>
     </div>
     <div class="header-right">
       <button class="download-button" @click="openDownloadFileModal">
@@ -104,7 +104,7 @@
           <circle cx="12" cy="7" r="4"></circle>
         </svg>
       </button>
-      <button class="icon-button" @click="handleGoSettings(projectName)" title="설정">
+      <button class="icon-button" @click="handleGoSettings(projectId)" title="설정">
   <svg
     width="20"
     height="20"
@@ -187,16 +187,15 @@ const showProfileSidebar = ref(false);
 const showMockupViewer = ref(false); // 목업 뷰어 표시 상태
 
 const props = defineProps({
-  projectName: {
+  projectId: {
     type: String,
     required: true
   }
 });
-const decodedProjectName = computed(() => decodeURIComponent(props.projectName));
 
 const goToMain = () => {
-  if (props.projectName) {
-    router.push(`/projects/${props.projectName}`);
+  if (props.projectId) {
+    router.push(`/projects/${props.projectId}`);
     console.log("다시 프로젝트");
   }
 }
@@ -321,9 +320,9 @@ const handleGoMain = () => {
   router.push({ name: "MainView" });
 };
 
-const handleGoSettings = (projectName) => {
-  console.log(`'${projectName}' 세팅`);
-  router.push({ name: "ProjectSetting", params: { projectName: projectName } });
+const handleGoSettings = (projectId) => {
+  console.log(`'${projectId}' 세팅`);
+  router.push({ name: "ProjectSetting", params: { projectId: projectId } });
 };
 </script>
 

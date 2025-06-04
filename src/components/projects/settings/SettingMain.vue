@@ -1,7 +1,7 @@
 <template>
   <div class="app-container">
     <!-- 헤더 컴포넌트 -->
-    <SettingsHeader :project-name="projectName" />
+    <SettingsHeader :project-id="projectId" />
 
     <div class="main-layout">
       <!-- 사이드바 컴포넌트 -->
@@ -19,7 +19,7 @@
         <ViewMatrix v-if="currentComponent === 'ProjectMatrix'" />
 
         <!-- 권한 관리 -->
-        <ManageRight v-if="currentComponent === 'ProjectRight'" />
+        <ManageRight :project-id="projectId" v-if="currentComponent === 'ProjectRight'" />
       </main>
     </div>
   </div>
@@ -34,18 +34,42 @@ import ViewMatrix from "./view_matrix/ViewMatrix.vue";
 import ManageRight from "./manage_right/ManageRight.vue";
 
 const props = defineProps({
-  projectName: {
+  projectId: {
     type: String,
     required: true
   }
 });
 
-console.log(props.projectName)
+console.log(props.projectId)
 
 const currentComponent = ref("ProjectInfo"); // 기본 컴포넌트
 
 const handleChangeComponent = (componentName) => {
   currentComponent.value = componentName;
+};
+
+const handleSendInvitations = async (invitationList) => {
+  const mappedList = invitationList.map(item => ({
+    email: item.email,
+    permission: item.permission === "Read" ? "READ" : "READ_AND_WRITE"
+  }));
+
+  try {
+    const response = await fetch('/api/send-invitations', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(mappedList)
+    });
+    if (!response.ok) {
+      throw new Error('Failed to send invitations');
+    }
+    // handle success
+  } catch (error) {
+    console.error(error);
+    // handle error
+  }
 };
 </script>
 

@@ -84,26 +84,41 @@
   </template>
   
   <script setup>
-  import { defineProps, defineEmits, ref } from 'vue';
-  
+  import { defineProps, defineEmits, ref, onMounted } from 'vue';
+
   // Props 정의
   const props = defineProps({
     isVisible: {
       type: Boolean,
       default: false
-    },
-    profileData: {
-      type: Object,
-      default: () => ({
-        name: '김민주',
-        company: 'SK AX',
-        role: '미래혁신부'
-      })
     }
   });
-  
+
   // Emits 정의
   const emit = defineEmits(['close', 'logout', 'withdraw', 'goHome']);
+
+  // 프로필 데이터 상태
+  const profileData = ref({});
+  const memberId = 1; // 하드코딩된 memberId, 추후에는 동적으로 처리 필요
+
+  const fetchProfile = async () => {
+    try {
+      const response = await fetch(`/api/v1/members/${memberId}`);
+      const result = await response.json();
+
+      if (result.status === 200) {
+        profileData.value = result.data;
+      } else {
+        throw new Error(result.message || "프로필을 가져오는 데 실패했습니다.");
+      }
+    } catch (error) {
+      console.error("프로필 호출 오류:", error);
+    }
+  };
+
+  onMounted(() => {
+    fetchProfile();
+  });
   
   // 모달 상태 관리
   const isLogoutModalVisible = ref(false);

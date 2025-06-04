@@ -52,7 +52,6 @@ onMounted(() => {
   fetchProfile();
 });
 
-
 const toggleProfileSidebar = () => {
   showProfileSidebar.value = !showProfileSidebar.value;
 };

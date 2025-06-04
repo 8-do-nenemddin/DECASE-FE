@@ -11,7 +11,7 @@
     </div>
 
     <div class="header-center">
-      <h1 class="project-title" @click="goToMain">{{ decodedProjectName }}</h1>
+      <h1 class="project-title" @click="goToMain">{{ props.projectId }}</h1>
     </div>
     <div class="header-right">
       <!-- 사용자 버튼에 프로필 바 토글 기능 추가 -->
@@ -41,7 +41,7 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import {onMounted, ref} from "vue";
 import { computed } from 'vue';
 import { useRouter } from "vue-router";
 import ProfileBar from "../../main/ProfileBar.vue";
@@ -51,17 +51,15 @@ const showSidebar = ref(false);
 const showProfileSidebar = ref(false);
 
 const props = defineProps({
-  projectName: {
+  projectId: {
     type: String,
     required: true
   }
 });
 
-const decodedProjectName = computed(() => decodeURIComponent(props.projectName));
-
 const goToMain = () => {
-  if (props.projectName) {
-    router.push(`/projects/${props.projectName}`);
+  if (props.projectId) {
+    router.push(`/projects/${props.projectId}`);
   }
 }
 

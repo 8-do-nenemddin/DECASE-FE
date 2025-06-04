@@ -1,6 +1,6 @@
 <template>
   <div class="project-main">
-    <HeaderBar :project-name="projectName" />
+    <HeaderBar :project-id="projectId"/>
     <!-- 메인 컨텐츠 -->
     <main class="main-content">
       <div class="welcome-section">
@@ -15,6 +15,10 @@
 import HeaderBar from "./header/HeaderBar.vue";
 
 const props = defineProps({
+  projectId: {
+    type: String,
+    required: true
+  },
   projectName: {
     type: String,
     required: true
