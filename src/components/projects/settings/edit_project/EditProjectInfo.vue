@@ -139,7 +139,8 @@
 </template>
 
 <script setup>
-import { ref, reactive } from "vue";
+import { ref, reactive, onMounted } from "vue";
+import { useRoute } from "vue-router";
 import EditSuccessModal from "./EditSuccessModal.vue";
 import router from "../../../../router";
 
@@ -147,19 +148,58 @@ const showSuccessSaveModal = ref(false);
 const showDeleteModal = ref(false);
 
 const projectData = reactive({
-  startDate: "2025-05-29",
-  endDate: "2025-05-30",
+  startDate: "",
+  endDate: "",
   name: "",
   pm: "",
   description: "",
   scale: "",
+  creatorMemberId: null,
+});
+
+const route = useRoute();
+const projectId = route.params.projectId;
+
+onMounted(async () => {
+  try {
+    const res = await fetch(`/api/v1/projects/${projectId}`);
+    if (!res.ok) throw new Error("프로젝트 정보 로드 실패");
+    const data = await res.json();
+    projectData.name = data.name;
+    projectData.scale = data.scale;
+    projectData.startDate = data.startDate.slice(0, 10);
+    projectData.endDate = data.endDate.slice(0, 10);
+    projectData.description = data.description;
+    projectData.pm = data.proposalPM;
+    projectData.creatorMemberId = data.creatorMemberId;
+  } catch (err) {
+    console.error(err);
+  }
 });
 
 // 프로젝트 내용 수정 저장 모달
-const saveProject = () => {
-  console.log("프로젝트 저장:", projectData);
-  showSuccessSaveModal.value = true;
-  // 실제 저장 로직 구현
+const saveProject = async () => {
+  try {
+    const res = await fetch(`/api/v1/projects/${projectId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name: projectData.name,
+        scale: Number(projectData.scale),
+        startDate: new Date(projectData.startDate).toISOString(),
+        endDate: new Date(projectData.endDate).toISOString(),
+        description: projectData.description,
+        proposalPM: projectData.pm,
+        creatorMemberId: projectData.creatorMemberId,
+      }),
+    });
+    if (!res.ok) throw new Error("프로젝트 저장 실패");
+    showSuccessSaveModal.value = true;
+  } catch (err) {
+    console.error("저장 실패:", err.message);
+  }
 };
 
 const closeSuccessSaveModal = () => {
