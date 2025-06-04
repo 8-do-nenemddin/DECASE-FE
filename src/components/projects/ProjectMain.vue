@@ -2,25 +2,26 @@
   <div class="project-main">
     <HeaderBar :project-name="projectName" />
     <!-- 메인 컨텐츠 -->
-    <main class="main-content">
+    <!-- <main class="main-content">
       <div class="welcome-section">
         <h2 class="welcome-title">Welcome aboard!</h2>
         <p class="welcome-title">Let's simplify your projects, together.</p>
       </div>
-    </main>
+    </main> -->
+    <ProjectContent></ProjectContent>
   </div>
 </template>
 
 <script setup>
 import HeaderBar from "./header/HeaderBar.vue";
+import ProjectContent from "./ProjectContent.vue";
 
 const props = defineProps({
   projectName: {
     type: String,
-    required: true
-  }
+    required: true,
+  },
 });
-
 </script>
 
 <style scoped>
