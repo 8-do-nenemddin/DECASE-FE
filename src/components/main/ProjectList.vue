@@ -5,7 +5,7 @@
 		  <th>제목</th>
 		  <th>소스</th>
 		  <th>상태</th>
-		  <th>생성일</th>
+		  <th>프로젝트 기간</th>
 		</tr>
 	  </thead>
 	  <tbody>
@@ -16,7 +16,7 @@
 		  class="project-row"
 		>
 		  <td class="title-cell">{{ project.name }}</td>
-		  <td>{{ project.versionInfo }}</td>
+		  <td>버전 이력 {{ project.revisionCount }}개</td>
 		  <td>
 			<div class="status-wrapper" @click.stop="toggleDropdown(project)">
 			  <span
@@ -38,7 +38,7 @@
 			  </ul>
 			</div>
 		  </td>
-		  <td>{{ project.date }}</td>
+		  <td>{{ project.startDate }}~{{project.endDate}}</td>
 		</tr>
 	  </tbody>
 	</table>

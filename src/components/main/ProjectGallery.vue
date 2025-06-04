@@ -34,7 +34,7 @@
           </ul>
         </div>
       </h2>
-      <p>{{ project.date }} ・ {{ project.versionInfo }}</p>
+      <p>{{ project.startDate }} ~ {{project.endDate}} ・ 버전 이력 {{ project.revisionCount }}개</p>
     </div>
   </div>
 </template>

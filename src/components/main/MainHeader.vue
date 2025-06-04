@@ -25,16 +25,33 @@
 
 <script setup>
 import { ref } from "vue";
+import { onMounted } from "vue";
 import ProfileBar from "./ProfileBar.vue"; // 분리된 컴포넌트 import
 
 const showProfileSidebar = ref(false);
 
-// 프로필 데이터
-const profileData = ref({
-  name: '김민주',
-  company: 'SK AX',
-  role: '미래혁신부'
+const profileData = ref({});
+const memberId = 1; // 하드코딩
+
+const fetchProfile = async () => {
+  try {
+    const response = await fetch(`/api/v1/members/${memberId}`);
+    const result = await response.json();
+
+    if (result.status === 200) {
+      profileData.value = result.data;
+    } else {
+      throw new Error(result.message || "프로필을 가져오는 데 실패했습니다.");
+    }
+  } catch (error) {
+    console.error("프로필 호출 오류:", error);
+  }
+};
+
+onMounted(() => {
+  fetchProfile();
 });
+
 
 const toggleProfileSidebar = () => {
   showProfileSidebar.value = !showProfileSidebar.value;
