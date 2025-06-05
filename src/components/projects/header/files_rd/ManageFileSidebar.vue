@@ -22,11 +22,10 @@
       <!-- Header -->
       <div class="sidebar-header"></div>
 
-      <!-- Content -->
       <div class="sidebar-content">
         <div
           v-for="(item, index) in sidebarItems"
-          :key="index"
+          :key="`section-${index}-${item.name}`"
           class="sidebar-section"
           :class="{ expanded: item.expanded }"
         >
@@ -70,12 +69,17 @@
             <div v-else class="file-grid">
               <div
                 v-for="(file, fileIndex) in item.files"
-                :key="fileIndex"
+                :key="`file-${item.type}-${fileIndex}-${
+                  file.docId || file.revision || file.name
+                }`"
                 class="file-item"
-                :class="{ selected: selectedFileIndex === fileIndex }"
-                @click="selectFile(file, fileIndex)"
-                @contextmenu.prevent="showContextMenu($event, file, fileIndex)"
+                :class="{ selected: isFileSelected(fileIndex, item.type) }"
+                @click="selectFile(file, fileIndex, item.type)"
+                @contextmenu.prevent="
+                  showContextMenu($event, file, fileIndex, item.type)
+                "
               >
+                <!-- 기존 파일 아이템 내용... -->
                 <div class="file-content">
                   <div class="file-icon" :class="file.color || 'default-color'">
                     {{ file.icon || getFileIcon(file.name) }}
@@ -251,9 +255,17 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, onUnmounted, watch } from "vue";
+import {
+  ref,
+  reactive,
+  computed,
+  onMounted,
+  onUnmounted,
+  watch,
+  nextTick,
+} from "vue";
 
-const emit = defineEmits(["close"]);
+const emit = defineEmits(["close", "fileSelected"]);
 
 const props = defineProps({
   projectId: {
@@ -287,8 +299,12 @@ const sidebarStyles = computed(() => {
   };
 });
 
-// State
-const selectedFileIndex = ref(-1);
+// State - 각 섹션별로 선택된 파일 인덱스 관리
+const selectedFiles = reactive({
+  uploaded: -1, // 업로드한 파일 선택 인덱스
+  generated: -1, // 생성된 파일 선택 인덱스
+});
+
 const sidebarRef = ref(null);
 const isLoading = ref(false);
 
@@ -298,30 +314,35 @@ const contextMenu = reactive({
   y: 0,
   file: null,
   fileIndex: -1,
+  sectionType: null, // 어느 섹션인지 추가
 });
 
 const fileInfoModal = reactive({
   show: false,
   file: null,
   fileIndex: -1,
+  sectionType: null, // 어느 섹션인지 추가
 });
 
 // Data
 const sidebarItems = reactive([
   {
     name: "As-Is 보고서",
+    type: "report",
     expanded: false,
     files: [],
     count: 0,
   },
   {
     name: "업로드한 파일",
+    type: "uploaded",
     expanded: true,
     files: [],
     count: 0,
   },
   {
     name: "생성된 파일",
+    type: "generated",
     expanded: false,
     files: [],
     count: 0,
@@ -342,8 +363,11 @@ const fetchUploadedFiles = async () => {
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
     const data = await response.json();
+    await nextTick();
+
     if (Array.isArray(data)) {
-      const uploadedFiles = data.map((item) => ({
+      const uploadedFiles = data.map((item, index) => ({
+        id: `uploaded-${item.docId}-${index}`,
         name: item.fileName || "이름 없음",
         icon: getFileIconByName(item.fileName),
         color: "blue-gradient",
@@ -375,8 +399,11 @@ const fetchGeneratedFiles = async () => {
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
     const data = await response.json();
+    await nextTick();
+
     if (Array.isArray(data)) {
-      const generatedFiles = data.map((item) => ({
+      const generatedFiles = data.map((item, index) => ({
+        id: `generated-${item.revision}-${index}`,
         name: item.label || "이름 없음",
         icon: "📄",
         color: "green-gradient",
@@ -462,10 +489,17 @@ const downloadUploadedFile = async (file) => {
     const link = document.createElement("a");
     link.href = url;
     link.download = file.name;
+    link.style.display = "none";
+
     document.body.appendChild(link);
     link.click();
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);
+
+    setTimeout(() => {
+      if (link.parentNode) {
+        document.body.removeChild(link);
+      }
+      window.URL.revokeObjectURL(url);
+    }, 100);
   } catch (error) {
     console.error("업로드된 파일 다운로드 오류:", error);
     alert("파일 다운로드에 실패했습니다.");
@@ -484,10 +518,17 @@ const downloadGeneratedFile = async (file) => {
     const link = document.createElement("a");
     link.href = url;
     link.download = `${file.name}.pdf`;
+    link.style.display = "none";
+
     document.body.appendChild(link);
     link.click();
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);
+
+    setTimeout(() => {
+      if (link.parentNode) {
+        document.body.removeChild(link);
+      }
+      window.URL.revokeObjectURL(url);
+    }, 100);
   } catch (error) {
     console.error("생성된 파일 다운로드 오류:", error);
     alert("파일 다운로드에 실패했습니다.");
@@ -538,32 +579,77 @@ const toggleItem = (index) => {
   sidebarItems[index].expanded = !sidebarItems[index].expanded;
 };
 
-const selectFile = (file, index) => {
-  selectedFileIndex.value = index;
+// 파일 선택 함수 수정
+const selectFile = (file, fileIndex, sectionType) => {
+  // 모든 선택 상태 초기화
+  selectedFiles.uploaded = -1;
+  selectedFiles.generated = -1;
+
+  // 해당 섹션만 선택
+  if (sectionType === "uploaded") {
+    selectedFiles.uploaded = fileIndex;
+  } else if (sectionType === "generated") {
+    selectedFiles.generated = fileIndex;
+  }
+
+  // 부모 컴포넌트로 선택된 파일 정보 전달
+  const fileData = {
+    type: sectionType,
+    file: file,
+    index: fileIndex,
+  };
+
+  // 업로드한 파일의 경우 docId 전달
+  if (sectionType === "uploaded") {
+    fileData.docId = file.docId;
+  }
+  // 생성된 파일의 경우 projectId와 revision 전달
+  else if (sectionType === "generated") {
+    fileData.projectId = props.projectId;
+    fileData.revision = file.revision;
+  }
+
+  emit("fileSelected", fileData);
+  console.log("파일 선택됨:", fileData);
 };
 
-const showContextMenu = (event, file, fileIndex) => {
+// 선택된 파일인지 확인하는 함수
+const isFileSelected = (fileIndex, sectionType) => {
+  if (sectionType === "uploaded") {
+    return selectedFiles.uploaded === fileIndex;
+  } else if (sectionType === "generated") {
+    return selectedFiles.generated === fileIndex;
+  }
+  return false;
+};
+
+const showContextMenu = (event, file, fileIndex, sectionType) => {
   const rect = sidebarRef.value?.getBoundingClientRect();
   const maxX = rect ? rect.width - 180 : window.innerWidth - 200;
   const maxY = window.innerHeight - 120;
 
   contextMenu.file = file;
   contextMenu.fileIndex = fileIndex;
+  contextMenu.sectionType = sectionType;
   contextMenu.x = Math.min(event.clientX - (rect?.left || 0), maxX);
   contextMenu.y = Math.min(event.clientY, maxY);
   contextMenu.show = true;
-  selectedFileIndex.value = fileIndex;
+
+  // 컨텍스트 메뉴를 연 파일도 선택 상태로 만들기
+  selectFile(file, fileIndex, sectionType);
 };
 
 const hideContextMenu = () => {
   contextMenu.show = false;
   contextMenu.file = null;
   contextMenu.fileIndex = -1;
+  contextMenu.sectionType = null;
 };
 
 const showFileInfo = () => {
   fileInfoModal.file = contextMenu.file;
   fileInfoModal.fileIndex = contextMenu.fileIndex;
+  fileInfoModal.sectionType = contextMenu.sectionType;
   fileInfoModal.show = true;
   hideContextMenu();
 };
@@ -572,6 +658,7 @@ const closeFileInfo = () => {
   fileInfoModal.show = false;
   fileInfoModal.file = null;
   fileInfoModal.fileIndex = -1;
+  fileInfoModal.sectionType = null;
 };
 
 const getFileIcon = (filename) => {
@@ -605,19 +692,26 @@ onMounted(() => {
 onUnmounted(() => {
   document.removeEventListener("keydown", handleKeydown);
   window.removeEventListener("resize", handleWindowResize);
+  hideContextMenu();
+  closeFileInfo();
+  selectedFiles.uploaded = -1;
+  selectedFiles.generated = -1;
+  isLoading.value = false;
 });
 
 watch(
   () => props.projectId,
   (newProjectId, oldProjectId) => {
     if (newProjectId && newProjectId !== oldProjectId) {
+      // 프로젝트 변경 시 선택 상태 초기화
+      selectedFiles.uploaded = -1;
+      selectedFiles.generated = -1;
       loadAllData();
     }
   },
   { immediate: false }
 );
 </script>
-
 <style scoped>
 /* 기본 스타일만 유지 - 불필요한 다크모드, 반응형 등 제거 */
 .sidebar-overlay {
