@@ -1,6 +1,6 @@
 <template>
   <div class="project-main">
-    <HeaderBar :project-id="projectId"/>
+    <HeaderBar :project-id="projectId" />
     <!-- 메인 컨텐츠 -->
     <!-- <main class="main-content">
       <div class="welcome-section">
@@ -22,7 +22,7 @@ import ProjectContent from "./ProjectContent.vue";
 const props = defineProps({
   projectId: {
     type: String,
-    required: true
+    required: true,
   },
   projectName: {
     type: String,

@@ -75,9 +75,9 @@
             stroke-linecap="round"
             stroke-linejoin="round"
           >
-            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
-            <line x1="8" y1="21" x2="16" y2="21"/>
-            <line x1="12" y1="17" x2="12" y2="21"/>
+            <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+            <line x1="8" y1="21" x2="16" y2="21" />
+            <line x1="12" y1="17" x2="12" y2="21" />
           </svg>
         </button>
       </div>
@@ -104,20 +104,24 @@
           <circle cx="12" cy="7" r="4"></circle>
         </svg>
       </button>
-      <button class="icon-button" @click="handleGoSettings(projectId)" title="설정">
-  <svg
-    width="20"
-    height="20"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="2"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-  >
-    <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />
-    <path
-      d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 
+      <button
+        class="icon-button"
+        @click="handleGoSettings(projectId)"
+        title="설정"
+      >
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />
+          <path
+            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 
          2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 
          1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 
          1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 
@@ -128,10 +132,9 @@
          1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 
          1.82c.26.61.86 1 1.51 1H21a2 2 0 1 1 0 4h-.09c-.7 0-1.3.4-1.51 
          1z"
-    />
-  </svg>
-</button>
-
+          />
+        </svg>
+      </button>
     </div>
   </header>
 
@@ -168,11 +171,11 @@
 
 <script setup>
 import { ref } from "vue";
-import { computed } from 'vue';
+import { computed } from "vue";
 import { useRouter } from "vue-router";
 import SearchRequirementsSidebar from "./search_rd/SearchRequirementsSidebar.vue";
 import ManageFileSidebar from "./files_rd/ManageFileSidebar.vue";
-import UploadSourceModal from "./file_upload/UploadSourceModal.vue"
+import UploadSourceModal from "./file_upload/UploadSourceModal.vue";
 import DownloadFileModal from "./download_rd/DownloadFileModal.vue";
 import ProfileBar from "../../main/ProfileBar.vue";
 import MockupViewer from "./mockup/MockupViewer.vue";
@@ -189,8 +192,8 @@ const showMockupViewer = ref(false); // 목업 뷰어 표시 상태
 const props = defineProps({
   projectId: {
     type: String,
-    required: true
-  }
+    required: true,
+  },
 });
 
 const goToMain = () => {
@@ -198,7 +201,7 @@ const goToMain = () => {
     router.push(`/projects/${props.projectId}`);
     console.log("다시 프로젝트");
   }
-}
+};
 
 // 모든 사이드바 닫기 헬퍼 함수
 const closeAllSidebars = () => {

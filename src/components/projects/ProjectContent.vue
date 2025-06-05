@@ -35,16 +35,18 @@
 
     <div v-if="loading" class="loading-notice">🔄 데이터를 불러오는 중...</div>
 
-    <ag-grid-vue
-      class="ag-theme-alpine"
-      style="height: 600px; width: 100%"
-      :columnDefs="columnDefs"
-      :rowData="rowData"
-      :defaultColDef="defaultColDef"
-      :gridOptions="gridOptions"
-      @cell-value-changed="onCellValueChanged"
-      @grid-ready="onGridReady"
-    />
+    <div class="grid-wrapper">
+      <ag-grid-vue
+        class="ag-theme-alpine"
+        style="height: 600px; width: 100%"
+        :columnDefs="columnDefs"
+        :rowData="rowData"
+        :defaultColDef="defaultColDef"
+        :gridOptions="gridOptions"
+        @cell-value-changed="onCellValueChanged"
+        @grid-ready="onGridReady"
+      />
+    </div>
   </div>
 </template>
 
@@ -547,6 +549,9 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.grid-wrapper {
+  padding: 0px 10px;
+}
 .table-container {
   padding: 20px;
   background-color: #ffffff;
