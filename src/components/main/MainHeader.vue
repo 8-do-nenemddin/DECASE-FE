@@ -178,12 +178,12 @@ const handleWithdraw = () => {
   .header {
     padding: 15px 40px;
   }
-  
+
   .logo-container,
   .profile-section {
     width: 150px;
   }
-  
+
   .logo {
     height: 45px;
   }
@@ -203,16 +203,16 @@ const handleWithdraw = () => {
     padding: 20px;
     min-height: auto;
   }
-  
+
   .logo-container,
   .profile-section {
     width: auto;
   }
-  
+
   .logo {
     height: 40px;
   }
-  
+
   .welcome-message h1 {
     font-size: 1.6em;
   }
@@ -222,7 +222,7 @@ const handleWithdraw = () => {
   .header {
     padding: 15px;
   }
-  
+
   .welcome-message h1 {
     font-size: 1.4em;
   }

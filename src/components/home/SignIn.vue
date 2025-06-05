@@ -64,6 +64,7 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import AuthLeftPanel from './AuthLeftPanel.vue';
+import { useProjectStore } from '/src/stores/projectStore.js';
 
 const router = useRouter();
 
@@ -76,37 +77,36 @@ const errorMessage = ref('');
 
 const handleLogin = async () => {
   isLoading.value = true;
-  
+
   try {
     // 로그인 데이터 준비
     const loginData = {
-      userId: userId.value,
+      id: userId.value,
       password: password.value,
     };
-    
+
     console.log('로그인 요청:', loginData);
-    
-    // 실제 API 호출 예시 (필요에 따라 수정)
-    // const response = await fetch('/api/login', {
-    //   method: 'POST',
-    //   headers: {
-    //     'Content-Type': 'application/json',
-    //   },
-    //   body: JSON.stringify(loginData),
-    // });
-    
-    // if (!response.ok) {
-    //   const errorData = await response.json();
-    //   throw new Error(errorData.message || '로그인 실패');
-    // }
-    
-    // const result = await response.json();
-    // // 토큰 저장 등의 로직
-    // localStorage.setItem('token', result.token);
-    
-    // 임시로 2초 대기 (실제 API 응답 시뮬레이션)
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
+
+    const response = await fetch('/api/v1/auth/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(loginData),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || '로그인 실패');
+    }
+
+    const result = await response.json();
+    const userInfo = result.data;
+    console.log("사용자 정보:", userInfo);
+    const memberStore = useProjectStore();
+    memberStore.setUser(userInfo.memberId);
+    console.log("로그인 성공:", result);
+
     // 로그인 성공 시 성공 모달 표시
     console.log("로그인 성공!");
     showSuccessModal.value = true;
