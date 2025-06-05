@@ -113,12 +113,16 @@
 import { useProjectStore } from "/src/stores/projectStore";
 import { defineProps, defineEmits, ref, onMounted } from "vue";
 
-// Props 정의
-const props = defineProps({
+  // Props 정의
+  const props = defineProps({
   isVisible: {
     type: Boolean,
-    default: false,
+    default: false
   },
+  profileData: {
+    type: Object,
+    default: () => ({})  // 기본값으로 빈 객체
+  }
 });
 
 // Emits 정의
