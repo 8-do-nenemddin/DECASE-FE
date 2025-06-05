@@ -2,17 +2,22 @@
   <div class="project-main">
     <HeaderBar :project-id="projectId"/>
     <!-- 메인 컨텐츠 -->
-    <main class="main-content">
+    <!-- <main class="main-content">
       <div class="welcome-section">
         <h2 class="welcome-title">Welcome aboard!</h2>
         <p class="welcome-title">Let's simplify your projects, together.</p>
       </div>
-    </main>
+    </main> -->
+    <div class="content-wrapper" :class="contentClasses">
+      <ProjectContent />
+    </div>
   </div>
 </template>
 
 <script setup>
+import { ref, computed, onMounted, onUnmounted } from "vue";
 import HeaderBar from "./header/HeaderBar.vue";
+import ProjectContent from "./ProjectContent.vue";
 
 const props = defineProps({
   projectId: {
@@ -21,10 +26,36 @@ const props = defineProps({
   },
   projectName: {
     type: String,
-    required: true
+    required: true,
+  },
+});
+
+// 사이드바 상태를 전역적으로 감지
+const showSidebar = ref(false);
+
+// DOM에서 사이드바 존재 여부 체크
+const checkSidebarVisibility = () => {
+  const searchSidebar = document.querySelector(".sidebar"); // 검색 사이드바
+  const fileSidebar = document.querySelector(".sidebar"); // 파일 사이드바
+  showSidebar.value = !!(searchSidebar || fileSidebar);
+};
+
+// 주기적으로 사이드바 상태 확인
+let intervalId = null;
+
+onMounted(() => {
+  intervalId = setInterval(checkSidebarVisibility, 100);
+});
+
+onUnmounted(() => {
+  if (intervalId) {
+    clearInterval(intervalId);
   }
 });
 
+const contentClasses = computed(() => ({
+  "with-sidebar": showSidebar.value,
+}));
 </script>
 
 <style scoped>
@@ -35,7 +66,22 @@ const props = defineProps({
     Roboto, sans-serif;
 }
 
-/* 메인 컨텐츠 */
+.content-wrapper {
+  transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.content-wrapper.with-sidebar {
+  margin-left: 320px;
+}
+
+/* 반응형: 모바일에서는 margin 적용 안함 */
+@media (max-width: 768px) {
+  .content-wrapper.with-sidebar {
+    margin-left: 0;
+  }
+}
+
+/* 기존 스타일들... */
 .main-content {
   display: flex;
   flex-direction: column;
@@ -61,7 +107,6 @@ const props = defineProps({
   line-height: 1.5;
 }
 
-/* 반응형 디자인 */
 @media (max-width: 768px) {
   .project-title {
     font-size: 18px;
