@@ -54,6 +54,7 @@ import { AgGridVue } from "ag-grid-vue3";
 import { ModuleRegistry, AllCommunityModule } from "ag-grid-community";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
+import { useProjectStore} from '../../stores/projectStore'
 
 // AG Grid 모듈 등록 (필수!)
 ModuleRegistry.registerModules([AllCommunityModule]);
@@ -63,8 +64,9 @@ const loading = ref(false);
 
 // API 설정
 const API_BASE_URL = "http://localhost:8080";
-const projectId = ref(9); // 프로젝트 ID (실제로는 props나 router에서 받아올 수 있음)
-const revisionCount = ref(1); // 리비전 수
+const revisionCount = ref(0); // 리비전 수
+const projectStore = useProjectStore();
+const projectId = projectStore.projectId;
 
 // 컬럼 정의 - API 응답에 맞게 수정
 const columnDefs = ref([
@@ -336,7 +338,7 @@ async function loadDataFromAPI() {
     return;
   }
 
-  if (!revisionCount.value || revisionCount.value < 1) {
+  if (!revisionCount.value || revisionCount.value < 0) {
     console.error("유효하지 않은 리비전 수:", revisionCount.value);
     return;
   }
