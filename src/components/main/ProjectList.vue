@@ -61,8 +61,11 @@ const router = useRouter();
 
 function getProjectStatus(project) {
   const today = new Date();
+  today.setHours(0, 0, 0, 0);  // 시간 초기화
   const startDate = new Date(project.startDate);
+  startDate.setHours(0, 0, 0, 0);
   const endDate = new Date(project.endDate);
+  endDate.setHours(23, 59, 59, 999);  // 오늘 끝까지 포함
 
   if (today < startDate) return "not_started";
   if (today <= endDate) return "in_progress";
