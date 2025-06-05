@@ -97,7 +97,9 @@
 
                 <button
                   class="menu-button"
-                  @click.stop="showContextMenu($event, file, fileIndex)"
+                  @click.stop="
+                    showContextMenu($event, file, fileIndex, item.type)
+                  "
                 >
                   <svg
                     width="16"
