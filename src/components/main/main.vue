@@ -87,9 +87,13 @@ import ProjectList from "./ProjectList.vue";
 import MainHeader from "../main/MainHeader.vue";
 import ProfileBar from "./ProfileBar.vue";
 
+import { useProjectStore } from "/src/stores/projectStore";
+
 const showModal = ref(false);
 const router = useRouter();
 const showProfileSidebar = ref(false);
+
+const projectStore = useProjectStore();
 
 // 프로필 사이드바 관련 메서드
 const toggleProfileSidebar = () => {
@@ -101,9 +105,8 @@ const closeProfileSidebar = () => {
 };
 
 const handleLogout = () => {
-  console.log("로그아웃");
+  console.log("로그아웃 시작");
   closeProfileSidebar();
-  // 로그아웃 로직 구현
 };
 
 const handleWithdraw = () => {
@@ -143,7 +146,7 @@ const projects = ref([]);
 
 const fetchProjects = async () => {
   try {
-    const memberId = 1; // 하드코딩된 테스트용 ID
+    const memberId = projectStore.userId;
     const page = 0;
     const size = 10;
 

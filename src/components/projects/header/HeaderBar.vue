@@ -2,79 +2,35 @@
   <!-- 헤더 -->
   <header class="header">
     <div class="header-left">
-      <img
-        src="/DECASE-light.png"
-        alt="DECASE Logo"
-        class="logo-icon"
-        @click="handleGoMain"
-      />
+      <div class="logo-container" @click="handleGoMain">
+        <div class="logo-icon">
+          <img src="/DECASE-light.png" alt="DECASE Logo" class="logo" />
+        </div>
+        <span class="logo-text">DECASE</span>
+      </div>
       <div class="header-actions">
-        <button class="icon-button" @click="toggleSidebar" title="검색">
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
+        <button class="icon-button search-btn" @click="toggleSidebar" title="검색">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="11" cy="11" r="8"></circle>
             <path d="m21 21-4.35-4.35"></path>
           </svg>
         </button>
-        <button class="icon-button" @click="toggleFileListSidebar" title="메뉴">
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
+        <button class="icon-button menu-btn" @click="toggleFileListSidebar" title="메뉴">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="3" y1="6" x2="21" y2="6"></line>
             <line x1="3" y1="12" x2="21" y2="12"></line>
             <line x1="3" y1="18" x2="21" y2="18"></line>
           </svg>
         </button>
-        <!-- 소스 업로드 -->
-        <button
-          class="icon-button"
-          @click="openSourceUploadModal"
-          title="파일 업로드"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
+        <button class="icon-button upload-btn" @click="openSourceUploadModal" title="파일 업로드">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
             <polyline points="17 8 12 3 7 8" />
             <line x1="12" y1="3" x2="12" y2="15" />
           </svg>
         </button>
-        <!-- 목업 뷰어 버튼 추가 -->
-        <button
-          class="icon-button"
-          @click="toggleMockupViewer"
-          title="목업 뷰어"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
+        <button class="icon-button mockup-btn" @click="toggleMockupViewer" title="목업 뷰어">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
             <line x1="8" y1="21" x2="16" y2="21" />
             <line x1="12" y1="17" x2="12" y2="21" />
@@ -84,96 +40,45 @@
     </div>
 
     <div class="header-center">
-      <h1 class="project-title" @click="goToMain">
-        {{ projectStore.projectName }}
-      </h1>
+      <div class="project-title-container" @click="goToMain">
+        <h1 class="project-title">{{ projectStore.projectName }}</h1>
+        <div class="project-status">Active Project</div>
+      </div>
     </div>
+
     <div class="header-right">
       <button class="download-button" @click="openDownloadFileModal">
-        다운로드
-      </button>
-      <!-- 사용자 버튼에 프로필 바 토글 기능 추가 -->
-      <button class="icon-button" @click="toggleProfileSidebar" title="사용자">
-        <svg
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-        >
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-          <circle cx="12" cy="7" r="4"></circle>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 14v6a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-6" />
+          <polyline points="12 2 12 14" />
+          <polyline points="5 9 12 16 19 9" />
         </svg>
+        <span>다운로드</span>
       </button>
-      <button
-        class="icon-button"
-        @click="handleGoSettings(projectId)"
-        title="설정"
-      >
-        <svg
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        >
-          <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />
-          <path
-            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 
-         2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 
-         1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 
-         1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 
-         1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 
-         0-4h.09c.7 0 1.3-.4 1.51-1a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 
-         2 0 1 1 2.83-2.83l.06.06c.46.46 1.12.61 1.82.33.61-.26 1-.86 
-         1-1.51V3a2 2 0 1 1 4 0v.09c0 .7.4 1.3 1 1.51.7.28 1.36.13 
-         1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 
-         1.82c.26.61.86 1 1.51 1H21a2 2 0 1 1 0 4h-.09c-.7 0-1.3.4-1.51 
-         1z"
-          />
-        </svg>
-      </button>
+
+      <div class="action-buttons">
+        <button class="icon-button profile-btn" @click="toggleProfileSidebar" title="사용자">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+        </button>
+        <button class="icon-button settings-btn" @click="handleGoSettings(projectId)" title="설정">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09c.7 0 1.3-.4 1.51-1a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06c.46.46 1.12.61 1.82.33.61-.26 1-.86 1-1.51V3a2 2 0 1 1 4 0v.09c0 .7.4 1.3 1 1.51.7.28 1.36.13 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82c.26.61.86 1 1.51 1H21a2 2 0 1 1 0 4h-.09c-.7 0-1.3.4-1.51 1z" />
+          </svg>
+        </button>
+      </div>
     </div>
   </header>
 
   <MockupViewer v-if="showMockupViewer" @close="closeMockupViewer" />
-
-  <!-- 검색 사이드바 -->
   <SearchRequirementsSidebar v-if="showSidebar" @close="closeSidebar" />
-
-  <!-- 파일 관리 사이드 바 (projectId 전달) -->
-  <ManageFileSidebar
-    v-if="showFileListSidebar"
-    :projectId="props.projectId"
-    @close="closeFileListSidebar"
-    @fileSelected="handleFileSelected"
-  />
-
-  <!-- 소스 업로드 모달 -->
-  <UploadSourceModal
-    v-if="showSourceUploadModal"
-    @close="closeSourceUploadModal"
-    @createProject="handleUploadSource"
-  />
-
-  <!--  요구사항 정의서 다운로드 모달 -->
-  <DownloadFileModal
-    v-if="showDownloadFileModal"
-    @close="closeDownloadFileModal"
-    @createProject="handleDownloadSource"
-  />
-
-  <!-- 프로필 바 -->
-  <ProfileBar
-    :isVisible="showProfileSidebar"
-    @close="closeProfileSidebar"
-    @logout="handleLogout"
-    @withdraw="handleWithdraw"
-  />
+  <ManageFileSidebar v-if="showFileListSidebar" :projectId="props.projectId" @close="closeFileListSidebar" @fileSelected="handleFileSelected" />
+  <UploadSourceModal v-if="showSourceUploadModal" @close="closeSourceUploadModal" @createProject="handleUploadSource" />
+  <DownloadFileModal v-if="showDownloadFileModal" @close="closeDownloadFileModal" @createProject="handleDownloadSource" />
+  <ProfileBar :isVisible="showProfileSidebar" @close="closeProfileSidebar" @logout="handleLogout" @withdraw="handleWithdraw" />
 </template>
 
 <script setup>
@@ -195,7 +100,7 @@ const showFileListSidebar = ref(false);
 const showSourceUploadModal = ref(false);
 const showDownloadFileModal = ref(false);
 const showProfileSidebar = ref(false);
-const showMockupViewer = ref(false); // 목업 뷰어 표시 상태
+const showMockupViewer = ref(false);
 
 const props = defineProps({
   projectId: {
@@ -215,23 +120,15 @@ const goToMain = () => {
 const closeAllSidebars = () => {
   showSidebar.value = false;
   showFileListSidebar.value = false;
-  showProfileSidebar.value = false; // 프로필 바도 포함
-  showMockupViewer.value = false; // 목업 뷰어도 포함
+  showProfileSidebar.value = false;
+  showMockupViewer.value = false;
 };
 
 // 프로필 사이드바 관련 메서드
 const toggleProfileSidebar = () => {
-  // 다른 사이드바가 열려있으면 닫기
-  if (showSidebar.value) {
-    showSidebar.value = false;
-  }
-  if (showFileListSidebar.value) {
-    showFileListSidebar.value = false;
-  }
-  if (showMockupViewer.value) {
-    showMockupViewer.value = false;
-  }
-  // 프로필 사이드바 토글
+  if (showSidebar.value) showSidebar.value = false;
+  if (showFileListSidebar.value) showFileListSidebar.value = false;
+  if (showMockupViewer.value) showMockupViewer.value = false;
   showProfileSidebar.value = !showProfileSidebar.value;
 };
 
@@ -241,7 +138,7 @@ const closeProfileSidebar = () => {
 
 // 목업 뷰어 관련 메서드
 const toggleMockupViewer = () => {
-  closeAllSidebars(); // 다른 모든 사이드바 닫기
+  closeAllSidebars();
   showMockupViewer.value = true;
 };
 
@@ -252,29 +149,18 @@ const closeMockupViewer = () => {
 const handleLogout = () => {
   console.log("로그아웃");
   closeProfileSidebar();
-  // 로그아웃 로직 구현
-  // 예: router.push({ name: "Login" });
 };
 
 const handleWithdraw = () => {
   console.log("탈퇴하기");
   closeProfileSidebar();
-  // 탈퇴 로직 구현
 };
 
 // 검색 사이드바
 const toggleSidebar = () => {
-  // 다른 사이드바가 열려있으면 닫기
-  if (showFileListSidebar.value) {
-    showFileListSidebar.value = false;
-  }
-  if (showProfileSidebar.value) {
-    showProfileSidebar.value = false;
-  }
-  if (showMockupViewer.value) {
-    showMockupViewer.value = false;
-  }
-  // 검색 사이드바 토글
+  if (showFileListSidebar.value) showFileListSidebar.value = false;
+  if (showProfileSidebar.value) showProfileSidebar.value = false;
+  if (showMockupViewer.value) showMockupViewer.value = false;
   showSidebar.value = !showSidebar.value;
 };
 
@@ -284,37 +170,18 @@ const closeSidebar = () => {
 
 // 파일 리스트 사이드 바
 const toggleFileListSidebar = () => {
-  // 다른 사이드바가 열려있으면 닫기
-  if (showSidebar.value) {
-    showSidebar.value = false;
-  }
-  if (showProfileSidebar.value) {
-    showProfileSidebar.value = false;
-  }
-  if (showMockupViewer.value) {
-    showMockupViewer.value = false;
-  }
-  // 파일 리스트 사이드바 토글
+  if (showSidebar.value) showSidebar.value = false;
+  if (showProfileSidebar.value) showProfileSidebar.value = false;
+  if (showMockupViewer.value) showMockupViewer.value = false;
   showFileListSidebar.value = !showFileListSidebar.value;
 };
 
-// 파일 선택 처리 함수 추가
 const handleFileSelected = (fileData) => {
   console.log("선택된 파일:", fileData);
-
   if (fileData.type === "uploaded") {
-    // 업로드한 파일 선택 시 docId 사용
     console.log("업로드한 파일 docId:", fileData.docId);
-    // ProjectContent로 docId 전달하는 로직 추가
   } else if (fileData.type === "generated") {
-    // 생성된 파일 선택 시 projectId와 revision 사용
-    console.log(
-      "생성된 파일 projectId:",
-      fileData.projectId,
-      "revision:",
-      fileData.revision
-    );
-    // ProjectContent로 projectId와 revision 전달하는 로직 추가
+    console.log("생성된 파일 projectId:", fileData.projectId, "revision:", fileData.revision);
   }
 };
 
@@ -360,64 +227,91 @@ const handleGoSettings = (projectId) => {
 <style scoped>
 .project-main {
   min-height: 100vh;
-  background-color: #ffffff;
-  font-family: "Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI",
-    Roboto, sans-serif;
+  background-color: #fafbfc;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
 }
 
 /* 헤더 스타일 */
 .header {
   display: flex;
   align-items: center;
-  justify-content: center; /* 중앙 정렬 */
-  padding: 0 40px;
-  height: 64px;
-  border-bottom: 1px solid #e5e7eb;
-  background: white;
+  justify-content: space-between;
+  padding: 0 32px;
+  height: 72px;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
   position: relative;
-  z-index: 10;
-  gap: 40px; /* 좌우 간격 */
-  isolation: isolate;
-  animation: none !important;
-  transition: none !important;
-  transform: none !important;
+  z-index: 50;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
 }
 
-.header-left,
-.header-right {
-  flex: 0 0 auto; /* 고정 크기 */
+.header-left {
   display: flex;
   align-items: center;
-  gap: 16px;
-  transform: none !important;
+  gap: 24px;
+  min-width: 0;
 }
 
 .header-center {
-  flex: 1 1 auto; /* 공간 채움 */
-  text-align: center;
-  position: static; /* 절대 위치 제거 */
-  transform: none;
-  transform: none !important;
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  min-width: 0;
 }
 
-.logo-icon {
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+/* 로고 스타일 */
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 16px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.logo-container:hover {
+  background: rgba(0, 0, 0, 0.03);
+  transform: translateY(-1px);
+}
+
+.logo {
+  height: 100%;
   width: auto;
-  height: 45px;
-  background: linear-gradient(135deg, #e53e3e 0%, #ff6b35 100%);
-  border-radius: 6px;
+  max-height: 36px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  font-weight: 700;
-  font-size: 16px;
-  cursor: pointer;
+  object-fit: contain;
 }
 
+.logo-text {
+  font-size: 20px;
+  font-weight: 800;
+  color: #000000;
+  letter-spacing: 0.02em;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+}
+
+/* 헤더 액션 버튼들 */
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
+  background: rgba(248, 250, 252, 0.8);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-radius: 16px;
+  padding: 4px;
+  backdrop-filter: blur(8px);
 }
 
 .icon-button {
@@ -425,110 +319,293 @@ const handleGoSettings = (projectId) => {
   height: 40px;
   border: none;
   background: transparent;
-  border-radius: 8px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
-  color: #6b7280;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  color: #64748b;
+  position: relative;
+  overflow: hidden;
+}
+
+.icon-button::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(59, 130, 246, 0.1);
+  border-radius: 12px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
 .icon-button:hover {
-  background: #f3f4f6;
-  color: #374151;
+  color: #3b82f6;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
 }
 
-/* 활성 상태 표시 (사이드바가 열려있을 때) */
-.icon-button.active {
-  background: #f3f4f6;
-  color: #374151;
+.icon-button:hover::before {
+  opacity: 1;
 }
 
-.project-title {
-  font-size: 30px;
-  font-weight: 700;
-  color: #111827;
+.icon-button:active {
+  transform: translateY(0);
 }
 
-.header-right {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
+/* 특별한 버튼 스타일 */
+.search-btn:hover { color: #10b981; }
+.menu-btn:hover { color: #f59e0b; }
+.upload-btn:hover { color: #8b5cf6; }
+.mockup-btn:hover { color: #ef4444; }
 
-.download-button {
-  background: #000000;
-  color: white;
-  border: none;
-  padding: 8px 30px;
-  border-radius: 20px;
-  font-size: 14px;
-  font-weight: 500;
+/* 프로젝트 타이틀 */
+.project-title-container {
+  text-align: center;
   cursor: pointer;
-  transition: all 0.2s ease;
+  padding: 8px 16px;
+  border-radius: 12px;
+  transition: all 0.3s ease;
 }
 
-.download-button:hover {
-  background: #1f2937;
+.project-title-container:hover {
+  background: rgba(59, 130, 246, 0.05);
   transform: translateY(-1px);
 }
 
+.project-title {
+  font-size: 28px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #1e293b 0%, #3b82f6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.project-status {
+  font-size: 11px;
+  font-weight: 500;
+  color: #10b981;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 2px;
+}
+
+/* 다운로드 버튼 */
+.download-button {
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(30, 41, 59, 0.3);
+}
+
+.download-button::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%);
+  border-radius: 16px;
+}
+
+.download-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(30, 41, 59, 0.4);
+  background: linear-gradient(135deg, #334155 0%, #475569 100%);
+}
+
+.download-button:active {
+  transform: translateY(0);
+}
+
+/* 액션 버튼 그룹 */
+.action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(248, 250, 252, 0.8);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-radius: 16px;
+  padding: 4px;
+  backdrop-filter: blur(8px);
+}
+
+.profile-btn:hover { color: #f59e0b; }
+.settings-btn:hover { color: #64748b; }
+
 /* 반응형 디자인 */
+@media (max-width: 1024px) {
+  .header {
+    padding: 0 24px;
+    gap: 16px;
+  }
+
+  .logo-text {
+    display: none;
+  }
+
+  .project-title {
+    font-size: 24px;
+  }
+}
+
 @media (max-width: 768px) {
   .header {
     padding: 0 16px;
-    justify-content: space-between; /* 좌우 분리 */
+    height: 64px;
+    flex-wrap: nowrap;
   }
 
   .header-left {
-    order: 1;
+    gap: 12px;
+    min-width: auto;
   }
 
   .header-center {
     flex: none;
-    order: 2;
-    position: static;
-    transform: none;
-    text-align: center;
-    margin: 0 auto;
+    min-width: 0;
   }
 
   .header-right {
-    order: 3;
+    gap: 8px;
+    min-width: auto;
   }
 
   .project-title {
-    font-size: 18px;
+    font-size: 20px;
+  }
+
+  .project-status {
+    display: none;
+  }
+
+  .download-button span {
+    display: none;
   }
 
   .download-button {
-    padding: 6px 12px;
-    font-size: 13px;
-  }
-}
-
-@media (max-width: 480px) {
-  .header {
-    padding: 0 12px;
+    padding: 12px;
+    min-width: 48px;
   }
 
   .header-actions {
-    gap: 4px;
+    padding: 2px;
+    gap: 2px;
+  }
+
+  .action-buttons {
+    padding: 2px;
+    gap: 2px;
   }
 
   .icon-button {
     width: 36px;
     height: 36px;
   }
+}
 
-  .download-button {
-    padding: 6px 12px;
-    font-size: 13px;
+@media (max-width: 480px) {
+  .header {
+    padding: 0 12px;
+    height: 60px;
+  }
+
+  .logo-icon {
+    width: 40px;
+    height: 36px;
   }
 
   .project-title {
-    font-size: 16px;
+    font-size: 18px;
+  }
+
+  .header-actions {
+    gap: 1px;
+  }
+
+  .action-buttons {
+    gap: 1px;
+  }
+
+  .icon-button {
+    width: 32px;
+    height: 32px;
+  }
+
+  .download-button {
+    padding: 10px;
+    min-width: 44px;
   }
 }
+
+/* 다크 모드 지원 */
+@media (prefers-color-scheme: dark) {
+  .header {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    border-bottom-color: rgba(148, 163, 184, 0.2);
+  }
+
+  .logo-text {
+    color: #f1f5f9;
+  }
+
+  .project-title {
+    background: linear-gradient(135deg, #f1f5f9 0%, #3b82f6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .icon-button {
+    color: #94a3b8;
+  }
+
+  .header-actions,
+  .action-buttons {
+    background: rgba(15, 23, 42, 0.8);
+    border-color: rgba(148, 163, 184, 0.2);
+  }
+}
+
+/* 스크롤 시 헤더 효과 */
+.header.scrolled {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(20px);
+}
+
+/* 애니메이션 */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.header {
+  animation: fadeInUp 0.6s ease-out;
+}
 </style>
+.logo-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+}

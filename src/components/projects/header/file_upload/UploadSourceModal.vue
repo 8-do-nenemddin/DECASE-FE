@@ -157,7 +157,7 @@ const handleFileSelect = (e) => {
 };
 
 const addFiles = (files) => {
-  const allowed = ['.pdf', '.xlsx', '.xls', '.wav', '.docx'];
+  const allowed = ['.pdf', '.csv', '.xlsx', '.xls', '.wav', '.docx'];
   const validFiles = files.filter((file) =>
     allowed.includes('.' + file.name.split('.').pop().toLowerCase())
   );
@@ -203,6 +203,7 @@ const handleUpload = async () => {
         case 'docx':
           type = 3; // 회의록 문서
           break;
+        case 'csv':
         case 'xlsx':
         case 'xls':
           type = 5; // 요구사항정의서
