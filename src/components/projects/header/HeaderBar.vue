@@ -75,16 +75,18 @@
             stroke-linecap="round"
             stroke-linejoin="round"
           >
-            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
-            <line x1="8" y1="21" x2="16" y2="21"/>
-            <line x1="12" y1="17" x2="12" y2="21"/>
+            <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+            <line x1="8" y1="21" x2="16" y2="21" />
+            <line x1="12" y1="17" x2="12" y2="21" />
           </svg>
         </button>
       </div>
     </div>
 
     <div class="header-center">
-      <h1 class="project-title" @click="goToMain">{{ projectStore.projectName }}</h1>
+      <h1 class="project-title" @click="goToMain">
+        {{ projectStore.projectName }}
+      </h1>
     </div>
     <div class="header-right">
       <button class="download-button" @click="openDownloadFileModal">
@@ -104,34 +106,37 @@
           <circle cx="12" cy="7" r="4"></circle>
         </svg>
       </button>
-      <button class="icon-button" @click="handleGoSettings(projectStore.projectId)" title="설정">
-  <svg
-    width="20"
-    height="20"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="2"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-  >
-    <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />
-    <path
-      d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83
-         2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1
-         1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65
-         1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65
-         1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1
-         0-4h.09c.7 0 1.3-.4 1.51-1a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2
-         2 0 1 1 2.83-2.83l.06.06c.46.46 1.12.61 1.82.33.61-.26 1-.86
-         1-1.51V3a2 2 0 1 1 4 0v.09c0 .7.4 1.3 1 1.51.7.28 1.36.13
-         1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33
-         1.82c.26.61.86 1 1.51 1H21a2 2 0 1 1 0 4h-.09c-.7 0-1.3.4-1.51
+      <button
+        class="icon-button"
+        @click="handleGoSettings(projectId)"
+        title="설정"
+      >
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />
+          <path
+            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 
+         2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 
+         1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 
+         1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 
+         1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 
+         0-4h.09c.7 0 1.3-.4 1.51-1a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 
+         2 0 1 1 2.83-2.83l.06.06c.46.46 1.12.61 1.82.33.61-.26 1-.86 
+         1-1.51V3a2 2 0 1 1 4 0v.09c0 .7.4 1.3 1 1.51.7.28 1.36.13 
+         1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 
+         1.82c.26.61.86 1 1.51 1H21a2 2 0 1 1 0 4h-.09c-.7 0-1.3.4-1.51 
          1z"
-    />
-  </svg>
-</button>
-
+          />
+        </svg>
+      </button>
     </div>
   </header>
 
@@ -140,8 +145,13 @@
   <!-- 검색 사이드바 -->
   <SearchRequirementsSidebar v-if="showSidebar" @close="closeSidebar" />
 
-  <!-- 파일 관리 사이드 바 -->
-  <ManageFileSidebar v-if="showFileListSidebar" @close="closeFileListSidebar" />
+  <!-- 파일 관리 사이드 바 (projectId 전달) -->
+  <ManageFileSidebar
+    v-if="showFileListSidebar"
+    :projectId="props.projectId"
+    @close="closeFileListSidebar"
+    @fileSelected="handleFileSelected"
+  />
 
   <!-- 소스 업로드 모달 -->
   <UploadSourceModal
@@ -171,11 +181,11 @@ import { ref } from "vue";
 import { useRouter } from "vue-router";
 import SearchRequirementsSidebar from "./search_rd/SearchRequirementsSidebar.vue";
 import ManageFileSidebar from "./files_rd/ManageFileSidebar.vue";
-import UploadSourceModal from "./file_upload/UploadSourceModal.vue"
+import UploadSourceModal from "./file_upload/UploadSourceModal.vue";
 import DownloadFileModal from "./download_rd/DownloadFileModal.vue";
 import ProfileBar from "../../main/ProfileBar.vue";
 import MockupViewer from "./mockup/MockupViewer.vue";
-import { useProjectStore } from '/src/stores/projectStore';
+import { useProjectStore } from "/src/stores/projectStore";
 const projectStore = useProjectStore();
 
 const router = useRouter();
@@ -187,12 +197,19 @@ const showDownloadFileModal = ref(false);
 const showProfileSidebar = ref(false);
 const showMockupViewer = ref(false); // 목업 뷰어 표시 상태
 
+const props = defineProps({
+  projectId: {
+    type: String,
+    required: true,
+  },
+});
+
 const goToMain = () => {
   if (projectStore.projectId) {
     router.push(`/projects/${projectStore.projectId}`);
     console.log("다시 프로젝트");
   }
-}
+};
 
 // 모든 사이드바 닫기 헬퍼 함수
 const closeAllSidebars = () => {
@@ -279,6 +296,26 @@ const toggleFileListSidebar = () => {
   }
   // 파일 리스트 사이드바 토글
   showFileListSidebar.value = !showFileListSidebar.value;
+};
+
+// 파일 선택 처리 함수 추가
+const handleFileSelected = (fileData) => {
+  console.log("선택된 파일:", fileData);
+
+  if (fileData.type === "uploaded") {
+    // 업로드한 파일 선택 시 docId 사용
+    console.log("업로드한 파일 docId:", fileData.docId);
+    // ProjectContent로 docId 전달하는 로직 추가
+  } else if (fileData.type === "generated") {
+    // 생성된 파일 선택 시 projectId와 revision 사용
+    console.log(
+      "생성된 파일 projectId:",
+      fileData.projectId,
+      "revision:",
+      fileData.revision
+    );
+    // ProjectContent로 projectId와 revision 전달하는 로직 추가
+  }
 };
 
 const closeFileListSidebar = () => {
