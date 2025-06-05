@@ -63,8 +63,8 @@ const loading = ref(false);
 
 // API 설정
 const API_BASE_URL = "http://localhost:8080";
-const projectId = ref(1); // 프로젝트 ID (실제로는 props나 router에서 받아올 수 있음)
-const revisionCount = ref(3); // 리비전 수
+const projectId = ref(9); // 프로젝트 ID (실제로는 props나 router에서 받아올 수 있음)
+const revisionCount = ref(1); // 리비전 수
 
 // 컬럼 정의 - API 응답에 맞게 수정
 const columnDefs = ref([
