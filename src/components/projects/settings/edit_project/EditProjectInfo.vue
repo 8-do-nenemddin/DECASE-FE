@@ -65,20 +65,20 @@
 
         <!-- 프로젝트 규모 -->
         <div class="form-section">
-  <label class="form-label" for="project-scale">프로젝트 규모</label>
-  <div class="input-with-unit">
-    <input
-      id="project-scale"
-      type="number"
-      v-model.number="projectData.scale"
-      class="form-input no-spinner"
-      placeholder="0"
-      min="0"
-    />
-    <span class="unit-label">원</span>
-  </div>
-</div>
-
+          <label class="form-label" for="project-scale">프로젝트 규모</label>
+          <div class="input-with-unit">
+            <input
+              id="project-scale"
+              type="text"
+              @input="onScaleInput"
+              :value="displayValue"
+              class="form-input no-spinner"
+              placeholder="0"
+            />
+            <span class="unit-label">원</span>
+          </div>
+          <div v-if="scaleError" class="error-message">{{ scaleError }}</div>
+        </div>
 
         <!-- 저장 버튼 -->
         <div class="form-actions">
@@ -144,13 +144,14 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from "vue";
+import { ref, reactive, computed, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import EditSuccessModal from "./EditSuccessModal.vue";
 import router from "../../../../router";
 
 const showSuccessSaveModal = ref(false);
 const showDeleteModal = ref(false);
+const scaleError = ref('');
 
 const projectData = reactive({
   startDate: "",
@@ -171,7 +172,7 @@ onMounted(async () => {
     if (!res.ok) throw new Error("프로젝트 정보 로드 실패");
     const data = await res.json();
     projectData.name = data.name;
-    projectData.scale = data.scale;
+    projectData.scale = data.scale.toString();
     projectData.startDate = data.startDate.slice(0, 10);
     projectData.endDate = data.endDate.slice(0, 10);
     projectData.description = data.description;
@@ -180,6 +181,34 @@ onMounted(async () => {
   } catch (err) {
     console.error(err);
   }
+});
+
+function onScaleInput(event) {
+  const raw = event.target.value.replace(/[^\d]/g, ''); // 숫자만 추출
+  
+  // 9,999조 = 9999000000000000 (최대값)
+  const maxValue = 9999000000000000;
+  
+  if (raw) {
+    const numValue = Number(raw);
+    if (numValue > maxValue) {
+      scaleError.value = '프로젝트 규모는 9,999조를 초과할 수 없습니다.';
+      return;
+    } else {
+      scaleError.value = '';
+    }
+  } else {
+    scaleError.value = '';
+  }
+  
+  // 13자리로 제한 (9,999조까지)
+  const limited = raw.slice(0, 13);
+  projectData.scale = limited;
+}
+
+const displayValue = computed(() => {
+  if (!projectData.scale) return '';
+  return Number(projectData.scale).toLocaleString();
 });
 
 // 프로젝트 내용 수정 저장 모달
@@ -592,6 +621,32 @@ const confirmDelete = async () => {
   font-size: 0.875rem;
 }
 
+.input-with-unit {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+}
+
+.input-with-unit .form-input {
+  padding-right: 2.5rem;
+}
+
+.unit-label {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6b7280;
+  pointer-events: none;
+  font-size: 0.875rem;
+}
+
+.error-message {
+  font-size: 0.75rem;
+  color: #dc2626;
+  margin-top: 0.25rem;
+}
+
 /* 반응형 디자인 */
 @media (max-width: 768px) {
   .project-info-container {
@@ -691,24 +746,4 @@ const confirmDelete = async () => {
   outline: 2px solid #4f46e5;
   outline-offset: 2px;
 }
-
-.input-with-unit {
-  position: relative;
-  display: inline-block;
-  width: 100%;
-}
-
-.input-with-unit .form-input {
-  padding-right: 2.5em; /* 여백 확보 */
-}
-
-.unit-label {
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #666;
-  pointer-events: none;
-}
-
 </style>
