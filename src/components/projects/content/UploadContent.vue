@@ -68,6 +68,13 @@ const loading = ref(false);
 const error = ref(null);
 const previewData = ref(null);
 
+// 파일 확장자에서 파일 타입 추출
+const getFileTypeFromExtension = (filename) => {
+  if (!filename) return "unknown";
+  const extension = filename.split(".").pop().toLowerCase();
+  return extension;
+};
+
 // API에서 파일 미리보기 데이터 로드
 const loadPreview = async () => {
   if (!props.docId) return;
@@ -79,21 +86,72 @@ const loadPreview = async () => {
   try {
     console.log("파일 미리보기 로드:", props.docId);
 
-    const response = await fetch(`/api/v1/documents/${props.docId}/preview`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    // 먼저 파일 정보를 가져옴 (메타데이터 API가 있다면)
+    // 없다면 파일 타입을 PDF로 가정하고 직접 URL 생성
+    const previewUrl = `/api/v1/documents/${props.docId}/preview`;
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    // HEAD 요청으로 파일 존재 여부 확인
+    const headResponse = await fetch(previewUrl, { method: "HEAD" });
+
+    if (!headResponse.ok) {
+      throw new Error(`파일을 찾을 수 없습니다. (${headResponse.status})`);
     }
 
-    const data = await response.json();
-    console.log("미리보기 데이터:", data);
+    // Content-Type 헤더에서 파일 타입 확인
+    const contentType = headResponse.headers.get("content-type");
+    let fileType = "unknown";
 
-    previewData.value = data;
+    if (contentType) {
+      if (contentType.includes("pdf")) {
+        fileType = "pdf";
+      } else if (
+        contentType.includes("word") ||
+        contentType.includes("officedocument")
+      ) {
+        fileType = "docx";
+      } else if (contentType.includes("image")) {
+        fileType = "image";
+      } else if (contentType.includes("text")) {
+        fileType = "text";
+      }
+    }
+
+    // Content-Disposition 헤더에서 파일명 추출 (있는 경우)
+    const contentDisposition = headResponse.headers.get("content-disposition");
+    let fileName = `document_${props.docId}`;
+
+    if (contentDisposition) {
+      const fileNameMatch = contentDisposition.match(
+        /filename\*?=['"]?([^'"\s]+)['"]?/
+      );
+      if (fileNameMatch) {
+        fileName = decodeURIComponent(fileNameMatch[1]);
+      }
+    }
+
+    console.log("파일 타입:", fileType, "파일명:", fileName);
+
+    // 파일 타입에 따라 미리보기 데이터 설정
+    if (fileType === "pdf") {
+      previewData.value = {
+        fileType: "pdf",
+        previewUrl: previewUrl,
+        fileName: fileName,
+      };
+    } else if (fileType === "docx") {
+      // DOCX의 경우 별도 처리가 필요하거나 지원하지 않음을 표시
+      previewData.value = {
+        fileType: "docx",
+        fileName: fileName,
+        htmlContent: "<p>DOCX 파일 미리보기는 현재 지원되지 않습니다.</p>",
+      };
+    } else {
+      // 기타 파일 타입
+      previewData.value = {
+        fileType: fileType,
+        fileName: fileName,
+      };
+    }
   } catch (err) {
     console.error("미리보기 로드 오류:", err);
     error.value = err.message || "파일을 불러오는 중 오류가 발생했습니다.";
@@ -110,7 +168,7 @@ const refreshPreview = () => {
 // 파일 다운로드
 const downloadFile = async () => {
   try {
-    const response = await fetch(`/api/v1/documents/${props.docId}/download`);
+    const response = await fetch(`/api/v1/documents/${props.docId}/preview`);
     if (!response.ok) throw new Error("다운로드 실패");
 
     const blob = await response.blob();
