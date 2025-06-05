@@ -13,12 +13,14 @@
           <button
             @click="saveChanges"
             class="save-button"
+            :disabled="modifiedRows.size === 0"
           >
             💾 저장 ({{ modifiedRows.size }})
           </button>
           <button
             @click="cancelChanges"
             class="cancel-button"
+            :disabled="modifiedRows.size === 0"
           >
             ❌취소
           </button>
@@ -33,16 +35,18 @@
 
     <div v-if="loading" class="loading-notice">🔄 데이터를 불러오는 중...</div>
 
-    <ag-grid-vue
-      class="ag-theme-alpine"
-      style="height: 600px; width: 100%"
-      :columnDefs="columnDefs"
-      :rowData="rowData"
-      :defaultColDef="defaultColDef"
-      :gridOptions="gridOptions"
-      @cell-value-changed="onCellValueChanged"
-      @grid-ready="onGridReady"
-    />
+    <div class="grid-wrapper">
+      <ag-grid-vue
+        class="ag-theme-alpine"
+        style="height: 600px; width: 100%"
+        :columnDefs="columnDefs"
+        :rowData="rowData"
+        :defaultColDef="defaultColDef"
+        :gridOptions="gridOptions"
+        @cell-value-changed="onCellValueChanged"
+        @grid-ready="onGridReady"
+      />
+    </div>
   </div>
 </template>
 
@@ -316,13 +320,12 @@ function transformApiDataToTableData(apiData) {
   });
 }
 
-// API URL 생성 함수 - 수정된 버전
+// API URL 생성 함수
 function buildApiUrl(projectId, revisionCount) {
   const baseUrl = `${API_BASE_URL}/api/projects/${projectId}/requirements/generated`;
   const params = new URLSearchParams();
 
-  // 🔧 수정: revisionCount가 0이어도 파라미터에 추가
-  if (revisionCount !== null && revisionCount !== undefined) {
+  if (revisionCount) {
     params.append("revisionCount", revisionCount);
   }
 
@@ -330,15 +333,14 @@ function buildApiUrl(projectId, revisionCount) {
   return queryString ? `${baseUrl}?${queryString}` : baseUrl;
 }
 
-// API에서 데이터를 로드하는 함수 - 수정된 버전
+// API에서 데이터를 로드하는 함수
 async function loadDataFromAPI() {
   if (!projectId.value || projectId.value < 1) {
     console.error("유효하지 않은 프로젝트 ID:", projectId.value);
     return;
   }
 
-  // 🔧 수정: revisionCount는 0 이상이면 유효하도록 변경
-  if (revisionCount.value === null || revisionCount.value === undefined || revisionCount.value < 0) {
+  if (!revisionCount.value || revisionCount.value < 0) {
     console.error("유효하지 않은 리비전 수:", revisionCount.value);
     return;
   }
@@ -549,6 +551,9 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.grid-wrapper {
+  padding: 0px 10px;
+}
 .table-container {
   padding: 20px;
   background-color: #ffffff;
