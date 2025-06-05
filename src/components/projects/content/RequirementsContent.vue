@@ -54,6 +54,7 @@
         :rowData="rowData"
         :defaultColDef="defaultColDef"
         :gridOptions="gridOptions"
+        :headerHeight="55"
         @cell-value-changed="onCellValueChanged"
         @grid-ready="onGridReady"
       />
@@ -94,14 +95,14 @@ const columnDefs = ref([
     field: "reqIdCode",
     headerName: "요구사항 ID",
     editable: false,
-    width: 120,
+    width: 140,
     pinned: "left",
   },
   {
     field: "type",
-    headerName: "요구사항 유형",
+    headerName: "요구사항\n 유형",
     editable: true,
-    width: 120,
+    width: 50,
     cellEditor: "agSelectCellEditor",
     cellEditorParams: {
       values: ["기능", "비기능"],
@@ -118,19 +119,19 @@ const columnDefs = ref([
     field: "level1",
     headerName: "대분류",
     editable: true,
-    width: 200,
+    width: 150,
   },
   {
     field: "level2",
     headerName: "중분류",
     editable: true,
-    width: 200,
+    width: 150,
   },
   {
     field: "level3",
     headerName: "소분류",
     editable: true,
-    width: 200,
+    width: 150,
   },
   {
     field: "name",
@@ -144,7 +145,7 @@ const columnDefs = ref([
     field: "description",
     headerName: "요구사항 설명",
     editable: true,
-    width: 200,
+    width: 250,
     cellEditor: "agLargeTextCellEditor",
     cellEditorPopup: true,
   },
@@ -152,7 +153,7 @@ const columnDefs = ref([
     field: "priority",
     headerName: "중요도",
     editable: true,
-    width: 100,
+    width: 50,
     cellEditor: "agSelectCellEditor",
     cellEditorParams: {
       values: ["상", "중", "하"],
@@ -166,7 +167,7 @@ const columnDefs = ref([
     field: "difficulty",
     headerName: "난이도",
     editable: true,
-    width: 100,
+    width: 50,
     cellEditor: "agSelectCellEditor",
     cellEditorParams: {
       values: ["상", "중", "하"],
@@ -191,14 +192,14 @@ const columnDefs = ref([
     field: "sourceIds",
     headerName: "출처 ID",
     editable: true,
-    width: 120,
+    width: 50,
   },
   {
     field: "managementStatus",
-    headerName: "관리구분",
+    headerName: "관리\n구분",
     editable: true,
     cellEditor: "agSelectCellEditor",
-    width: 100,
+    width: 50,
     valueFormatter: (params) => {
       const statusMap = { true: "삭제", false: "등록" };
       return statusMap[params.value] || params.value;
@@ -256,11 +257,11 @@ const gridOptions = {
   enableRangeSelection: true,
   enableCellChangeFlash: true,
   undoRedoCellEditing: true,
-  undoRedoCellEditingLimit: 20,
+  // undoRedoCellEditingLimit: 20,
   stopEditingWhenCellsLoseFocus: true,
   rowSelection: "multiple",
   animateRows: true,
-  getRowHeight: () => 60,
+  getRowHeight: () => 60, //행높이
 };
 
 let gridApi = null;
@@ -705,7 +706,8 @@ onMounted(() => {
 }
 
 :deep(.ag-header) {
-  border-bottom: 2px solid #e5e7eb;
+  border-bottom: 1px solid #d1d5db;
+  background-color: #f3f4f6; /* 연한 회색 배경 */
 }
 
 :deep(.ag-header-cell) {
@@ -719,9 +721,10 @@ onMounted(() => {
   line-height: 1.4;
   display: flex;
   align-items: center;
-  padding: 8px 12px;
+  padding: 4px 12px;
   word-wrap: break-word;
   white-space: pre-wrap;
+  font-size: 13px;
 }
 
 :deep(.ag-row) {
@@ -740,6 +743,7 @@ onMounted(() => {
 :deep(.ag-header-cell-text) {
   font-weight: 600;
   color: #374151;
+  font-size: 12px;
 }
 
 /* 로딩 상태 스타일 */
@@ -840,5 +844,18 @@ onMounted(() => {
   .cancel-button {
     width: 100%;
   }
+}
+
+:deep(.ag-header-cell-text) {
+  white-space: pre-line; /* 줄바꿈 문자를 실제 줄바꿈으로 처리 */
+  line-height: 1.3;
+  font-weight: 600;
+  color: #374151;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
 }
 </style>
