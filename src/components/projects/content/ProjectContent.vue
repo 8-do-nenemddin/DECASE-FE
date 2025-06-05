@@ -35,16 +35,18 @@
 
     <div v-if="loading" class="loading-notice">🔄 데이터를 불러오는 중...</div>
 
-    <ag-grid-vue
-      class="ag-theme-alpine"
-      style="height: 600px; width: 100%"
-      :columnDefs="columnDefs"
-      :rowData="rowData"
-      :defaultColDef="defaultColDef"
-      :gridOptions="gridOptions"
-      @cell-value-changed="onCellValueChanged"
-      @grid-ready="onGridReady"
-    />
+    <div class="grid-wrapper">
+      <ag-grid-vue
+        class="ag-theme-alpine"
+        style="height: 600px; width: 100%"
+        :columnDefs="columnDefs"
+        :rowData="rowData"
+        :defaultColDef="defaultColDef"
+        :gridOptions="gridOptions"
+        @cell-value-changed="onCellValueChanged"
+        @grid-ready="onGridReady"
+      />
+    </div>
   </div>
 </template>
 
@@ -63,7 +65,7 @@ const loading = ref(false);
 
 // API 설정
 const API_BASE_URL = "http://localhost:8080";
-const projectId = ref(9); // 프로젝트 ID (실제로는 props나 router에서 받아올 수 있음)
+const projectId = ref(1); // 프로젝트 ID (실제로는 props나 router에서 받아올 수 있음)
 const revisionCount = ref(1); // 리비전 수
 
 // 컬럼 정의 - API 응답에 맞게 수정
@@ -547,6 +549,9 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.grid-wrapper {
+  padding: 0px 10px;
+}
 .table-container {
   padding: 20px;
   background-color: #ffffff;
