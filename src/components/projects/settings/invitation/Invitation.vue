@@ -133,9 +133,9 @@ const confirmCancel = async () => {
   if (inviteToCancel.value) {
     try {
       const response = await fetch(`/api/v1/projects/${projectId}/members/invitation/cancel`, {
-        method: 'POST',
+        method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: inviteToCancel.value.email })
+        body: JSON.stringify({ adminId: 1, email:inviteToCancel.value.email })
       });
 
       if (!response.ok) {
