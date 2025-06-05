@@ -84,7 +84,7 @@
     </div>
 
     <div class="header-center">
-      <h1 class="project-title" @click="goToMain">{{ props.projectId }}</h1>
+      <h1 class="project-title" @click="goToMain">{{ projectStore.projectName }}</h1>
     </div>
     <div class="header-right">
       <button class="download-button" @click="openDownloadFileModal">
@@ -104,7 +104,7 @@
           <circle cx="12" cy="7" r="4"></circle>
         </svg>
       </button>
-      <button class="icon-button" @click="handleGoSettings(projectId)" title="설정">
+      <button class="icon-button" @click="handleGoSettings(projectStore.projectId)" title="설정">
   <svg
     width="20"
     height="20"
@@ -117,16 +117,16 @@
   >
     <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />
     <path
-      d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 
-         2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 
-         1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 
-         1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 
-         1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 
-         0-4h.09c.7 0 1.3-.4 1.51-1a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 
-         2 0 1 1 2.83-2.83l.06.06c.46.46 1.12.61 1.82.33.61-.26 1-.86 
-         1-1.51V3a2 2 0 1 1 4 0v.09c0 .7.4 1.3 1 1.51.7.28 1.36.13 
-         1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 
-         1.82c.26.61.86 1 1.51 1H21a2 2 0 1 1 0 4h-.09c-.7 0-1.3.4-1.51 
+      d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83
+         2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1
+         1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65
+         1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65
+         1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1
+         0-4h.09c.7 0 1.3-.4 1.51-1a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2
+         2 0 1 1 2.83-2.83l.06.06c.46.46 1.12.61 1.82.33.61-.26 1-.86
+         1-1.51V3a2 2 0 1 1 4 0v.09c0 .7.4 1.3 1 1.51.7.28 1.36.13
+         1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33
+         1.82c.26.61.86 1 1.51 1H21a2 2 0 1 1 0 4h-.09c-.7 0-1.3.4-1.51
          1z"
     />
   </svg>
@@ -168,7 +168,6 @@
 
 <script setup>
 import { ref } from "vue";
-import { computed } from 'vue';
 import { useRouter } from "vue-router";
 import SearchRequirementsSidebar from "./search_rd/SearchRequirementsSidebar.vue";
 import ManageFileSidebar from "./files_rd/ManageFileSidebar.vue";
@@ -176,6 +175,8 @@ import UploadSourceModal from "./file_upload/UploadSourceModal.vue"
 import DownloadFileModal from "./download_rd/DownloadFileModal.vue";
 import ProfileBar from "../../main/ProfileBar.vue";
 import MockupViewer from "./mockup/MockupViewer.vue";
+import { useProjectStore } from '/src/stores/projectStore';
+const projectStore = useProjectStore();
 
 const router = useRouter();
 
@@ -186,16 +187,9 @@ const showDownloadFileModal = ref(false);
 const showProfileSidebar = ref(false);
 const showMockupViewer = ref(false); // 목업 뷰어 표시 상태
 
-const props = defineProps({
-  projectId: {
-    type: String,
-    required: true
-  }
-});
-
 const goToMain = () => {
-  if (props.projectId) {
-    router.push(`/projects/${props.projectId}`);
+  if (projectStore.projectId) {
+    router.push(`/projects/${projectStore.projectId}`);
     console.log("다시 프로젝트");
   }
 }
