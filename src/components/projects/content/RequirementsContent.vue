@@ -5,8 +5,7 @@
         <div class="content-info">
           <h2 class="content-title">📋 요구사항 정의서</h2>
           <div class="file-details">
-            <span class="detail-item">프로젝트 ID: {{ projectId }}</span>
-            <span class="detail-item">리비전: {{ revision }}</span>
+            <span class="detail-item">ver. {{ revision }}</span>
           </div>
         </div>
         <div class="action-buttons">
@@ -515,57 +514,62 @@ onMounted(() => {
   });
 });
 </script>
-
 <style scoped>
-.grid-wrapper {
-  padding: 0px 10px;
-}
-
-.table-container {
+.project-content {
   padding: 20px;
-  background-color: #ffffff;
+  height: calc(100vh - 64px);
+  overflow-y: auto;
+  background-color: #f8f9fa;
   font-family: "Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI",
     Roboto, sans-serif;
 }
 
-.header-section {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
+.table-container {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
   margin-bottom: 20px;
+}
+
+.header-section {
+  padding: 20px;
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
 }
 
 .content-info {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
 }
 
 .content-title {
   font-size: 24px;
-  font-weight: 700;
-  color: #111827;
-  margin: 0;
+  font-weight: 600;
+  color: #1f2937;
 }
 
 .file-details {
   display: flex;
+  align-items: center;
   gap: 16px;
   flex-wrap: wrap;
 }
 
 .detail-item {
-  background: #f3f4f6;
-  color: #374151;
-  padding: 6px 12px;
-  border-radius: 6px;
   font-size: 14px;
+  /* color: #374151; */
+  /* background: #e5e7eb; */
+  padding: 0px 12px;
+  border-radius: 6px;
   font-weight: 500;
 }
 
 .action-buttons {
   display: flex;
-  gap: 10px;
+  align-items: center;
+  gap: 12px;
   flex-wrap: wrap;
 }
 
@@ -588,6 +592,11 @@ onMounted(() => {
 
 .load-button:hover:not(:disabled) {
   background-color: #2563eb;
+}
+
+.load-button:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
 }
 
 .save-button {
@@ -622,30 +631,36 @@ onMounted(() => {
   background-color: #fef3c7;
   border: 1px solid #f59e0b;
   color: #92400e;
-  padding: 12px;
-  border-radius: 6px;
+  padding: 12px 20px;
+  border-radius: 12px;
   margin-bottom: 16px;
   font-weight: 500;
+  font-size: 14px;
 }
 
 .loading-notice {
   background-color: #dbeafe;
   border: 1px solid #3b82f6;
   color: #1e40af;
-  padding: 12px;
-  border-radius: 6px;
+  padding: 12px 20px;
+  border-radius: 12px;
   margin-bottom: 16px;
   font-weight: 500;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .error-notice {
   background-color: #fef2f2;
   border: 1px solid #ef4444;
   color: #dc2626;
-  padding: 12px;
-  border-radius: 6px;
+  padding: 12px 20px;
+  border-radius: 12px;
   margin-bottom: 16px;
   font-weight: 500;
+  font-size: 14px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -656,7 +671,7 @@ onMounted(() => {
   background: #ef4444;
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   font-size: 12px;
   cursor: pointer;
   transition: background-color 0.2s;
@@ -666,15 +681,55 @@ onMounted(() => {
   background: #dc2626;
 }
 
-/* AG Grid 테마 커스터마이징 */
+.grid-wrapper {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  padding: 0;
+}
+
+/* AG Grid 테마 커스터마이징 - UploadContent와 일치 */
 :deep(.ag-theme-alpine) {
   --ag-header-background-color: #f8f9fa;
-  --ag-header-foreground-color: #495057;
+  --ag-header-foreground-color: #374151;
   --ag-odd-row-background-color: #ffffff;
   --ag-even-row-background-color: #f8f9fa;
-  --ag-row-hover-color: #e3f2fd;
+  --ag-row-hover-color: #f0f9ff;
   --ag-selected-row-background-color: #bbdefb;
-  font-size: 13px;
+  --ag-border-color: #d1d5db;
+  --ag-font-size: 13px;
+  --ag-row-height: 60px;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+:deep(.ag-header) {
+  border-bottom: 2px solid #e5e7eb;
+}
+
+:deep(.ag-header-cell) {
+  border-right: 1px solid #d1d5db;
+  font-weight: 600;
+  color: #374151;
+}
+
+:deep(.ag-cell) {
+  border-right: 1px solid #d1d5db;
+  line-height: 1.4;
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+}
+
+:deep(.ag-row) {
+  border-bottom: 1px solid #d1d5db;
+}
+
+:deep(.ag-row:hover) {
+  background-color: #f0f9ff;
 }
 
 :deep(.ag-cell-flash) {
@@ -684,40 +739,106 @@ onMounted(() => {
 
 :deep(.ag-header-cell-text) {
   font-weight: 600;
+  color: #374151;
 }
 
-:deep(.ag-cell) {
-  line-height: 1.4;
-  display: flex;
-  align-items: center;
+/* 로딩 상태 스타일 */
+.loading-notice::before {
+  content: "";
+  width: 20px;
+  height: 20px;
+  border: 2px solid #e5e7eb;
+  border-top: 2px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-right: 12px;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* 반응형 디자인 */
 @media (max-width: 768px) {
-  .table-container {
-    padding: 10px;
+  .project-content {
+    padding: 16px;
   }
 
   .header-section {
-    gap: 12px;
+    padding: 16px;
   }
 
   .content-title {
     font-size: 20px;
   }
 
-  .action-buttons {
-    justify-content: center;
+  .file-details {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
   }
 
-  .file-details {
+  .detail-item {
+    font-size: 13px;
+  }
+
+  .action-buttons {
     justify-content: center;
+    width: 100%;
+  }
+
+  .load-button,
+  .save-button,
+  .cancel-button {
+    flex: 1;
+    min-width: 0;
+    font-size: 13px;
+    padding: 10px 14px;
+  }
+
+  .modification-notice,
+  .loading-notice,
+  .error-notice {
+    margin: 0 16px 16px 16px;
+    font-size: 13px;
   }
 
   .error-notice {
     flex-direction: column;
     gap: 12px;
     text-align: center;
+  }
+
+  .grid-wrapper {
+    margin: 0 16px;
+    height: calc(100vh - 400px);
+  }
+
+  :deep(.ag-theme-alpine) {
+    --ag-font-size: 12px;
+    --ag-row-height: 50px;
+  }
+
+  :deep(.ag-cell) {
+    padding: 6px 8px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .action-buttons {
+    flex-direction: column;
+  }
+
+  .load-button,
+  .save-button,
+  .cancel-button {
+    width: 100%;
   }
 }
 </style>
