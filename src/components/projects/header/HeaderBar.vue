@@ -84,7 +84,9 @@
     </div>
 
     <div class="header-center">
-      <h1 class="project-title" @click="goToMain">{{ props.projectId }}</h1>
+      <h1 class="project-title" @click="goToMain">
+        {{ projectStore.projectName }}
+      </h1>
     </div>
     <div class="header-right">
       <button class="download-button" @click="openDownloadFileModal">
@@ -176,7 +178,6 @@
 
 <script setup>
 import { ref } from "vue";
-import { computed } from "vue";
 import { useRouter } from "vue-router";
 import SearchRequirementsSidebar from "./search_rd/SearchRequirementsSidebar.vue";
 import ManageFileSidebar from "./files_rd/ManageFileSidebar.vue";
@@ -184,6 +185,8 @@ import UploadSourceModal from "./file_upload/UploadSourceModal.vue";
 import DownloadFileModal from "./download_rd/DownloadFileModal.vue";
 import ProfileBar from "../../main/ProfileBar.vue";
 import MockupViewer from "./mockup/MockupViewer.vue";
+import { useProjectStore } from "/src/stores/projectStore";
+const projectStore = useProjectStore();
 
 const router = useRouter();
 
@@ -202,8 +205,8 @@ const props = defineProps({
 });
 
 const goToMain = () => {
-  if (props.projectId) {
-    router.push(`/projects/${props.projectId}`);
+  if (projectStore.projectId) {
+    router.push(`/projects/${projectStore.projectId}`);
     console.log("다시 프로젝트");
   }
 };

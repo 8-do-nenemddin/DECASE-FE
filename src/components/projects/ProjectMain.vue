@@ -16,6 +16,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from "vue";
+import { useProjectStore } from "/src/stores/projectStore";
 import HeaderBar from "./header/HeaderBar.vue";
 import ProjectContent from "./content/ProjectContent.vue";
 
@@ -29,6 +30,7 @@ const props = defineProps({
     required: true,
   },
 });
+const projectStore = useProjectStore();
 
 // 사이드바 상태를 전역적으로 감지
 const showSidebar = ref(false);

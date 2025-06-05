@@ -12,6 +12,10 @@ npm install axios
 npm install vue-router
 npm install xlsx
 npm install vue3-excel-editor  //엑셀 ui 라이브러리
+npm install ag-grid-community ag-grid-vue3  
+npm install pinia  // pinia 상태관리
+npm install pinia-plugin-persistedstate  // pinia 상태 지속 플러그인
+
 ```
 
 3. 프로젝트 실행
