@@ -1,34 +1,25 @@
 <template>
   <div class="sidebar-overlay" @click="$emit('close')">
-    <div 
+    <div
       ref="sidebarRef"
-      class="modern-sidebar" 
-      :class="{ 
-        'mobile': isMobile, 
-        'tablet': isTablet,
-        'resizing': isResizing 
+      class="modern-sidebar sidebar"
+      :class="{
+        mobile: isMobile,
+        tablet: isTablet,
+        resizing: isResizing,
       }"
       :style="sidebarStyles"
       @click.stop
     >
       <!-- 리사이즈 핸들 (데스크톱에서만 표시) -->
-      <div 
+      <div
         v-if="!isMobile && !isTablet"
-        class="resize-handle" 
+        class="resize-handle"
         @mousedown="startResize"
-        :class="{ 'active': isResizing }"
+        :class="{ active: isResizing }"
       ></div>
-
       <!-- Header -->
-      <div class="sidebar-header">
-        <h2 class="header-title">파일 목록</h2>
-        <button class="close-button" @click="$emit('close')">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-        </button>
-      </div>
+      <div class="sidebar-header"></div>
 
       <!-- Content -->
       <div class="sidebar-content">
@@ -36,25 +27,37 @@
           v-for="(item, index) in sidebarItems"
           :key="index"
           class="sidebar-section"
-          :class="{ 'expanded': item.expanded }"
+          :class="{ expanded: item.expanded }"
         >
           <div class="section-header" @click="toggleItem(index)">
             <div class="section-header-content">
-              <div class="expand-icon" :class="{ 'rotated': item.expanded }">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <div class="expand-icon" :class="{ rotated: item.expanded }">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
                   <polyline points="9,18 15,12 9,6"></polyline>
                 </svg>
               </div>
               <span class="section-title">{{ item.name }}</span>
-              <span v-if="item.count" class="count-badge">{{ item.count }}</span>
+              <span v-if="item.count" class="count-badge">{{
+                item.count
+              }}</span>
             </div>
           </div>
 
           <div v-if="item.expanded" class="section-content">
             <!-- Empty state -->
-            <div v-if="!item.files || item.files.length === 0" class="empty-state">
+            <div
+              v-if="!item.files || item.files.length === 0"
+              class="empty-state"
+            >
               <p class="empty-message">
-                {{ '파일이 여기에 표시됩니다.' }}
+                {{ "파일이 여기에 표시됩니다." }}
               </p>
             </div>
 
@@ -64,7 +67,7 @@
                 v-for="(file, fileIndex) in item.files"
                 :key="fileIndex"
                 class="file-item"
-                :class="{ 'selected': selectedFileIndex === fileIndex }"
+                :class="{ selected: selectedFileIndex === fileIndex }"
                 @click="selectFile(file, fileIndex)"
                 @contextmenu.prevent="showContextMenu($event, file, fileIndex)"
               >
@@ -74,18 +77,27 @@
                   </div>
                   <div class="file-info">
                     <div class="file-name">{{ file.name }}</div>
-                    <div v-if="file.date" class="file-date">{{ file.date }}</div>
+                    <div v-if="file.date" class="file-date">
+                      {{ file.date }}
+                    </div>
                   </div>
                   <div v-if="file.count" class="file-count">
                     {{ file.count.toLocaleString() }}
                   </div>
                 </div>
-                
+
                 <button
                   class="menu-button"
                   @click.stop="showContextMenu($event, file, fileIndex)"
                 >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
                     <circle cx="12" cy="12" r="1"></circle>
                     <circle cx="12" cy="5" r="1"></circle>
                     <circle cx="12" cy="19" r="1"></circle>
@@ -103,12 +115,19 @@
         class="context-menu"
         :style="{
           top: contextMenu.y + 'px',
-          left: contextMenu.x + 'px'
+          left: contextMenu.x + 'px',
         }"
         @click.stop
       >
         <div class="context-menu-item" @click="showFileInfo">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
             <circle cx="12" cy="12" r="10"></circle>
             <line x1="12" y1="16" x2="12" y2="12"></line>
             <line x1="12" y1="8" x2="12.01" y2="8"></line>
@@ -116,7 +135,14 @@
           <span>파일 정보</span>
         </div>
         <div class="context-menu-item" @click="downloadFile">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
             <polyline points="7,10 12,15 17,10"></polyline>
             <line x1="12" y1="15" x2="12" y2="3"></line>
@@ -126,12 +152,23 @@
       </div>
 
       <!-- File Info Modal -->
-      <div v-if="fileInfoModal.show" class="modal-overlay" @click="closeFileInfo">
+      <div
+        v-if="fileInfoModal.show"
+        class="modal-overlay"
+        @click="closeFileInfo"
+      >
         <div class="modal" @click.stop>
           <div class="modal-header">
             <h3>파일 정보</h3>
             <button class="modal-close" @click="closeFileInfo">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
                 <line x1="18" y1="6" x2="6" y2="18"></line>
                 <line x1="6" y1="6" x2="18" y2="18"></line>
               </svg>
@@ -139,19 +176,26 @@
           </div>
           <div class="modal-content">
             <div class="file-preview">
-              <div class="preview-icon" :class="fileInfoModal.file?.color || 'default-color'">
-                {{ fileInfoModal.file?.icon || '📁' }}
+              <div
+                class="preview-icon"
+                :class="fileInfoModal.file?.color || 'default-color'"
+              >
+                {{ fileInfoModal.file?.icon || "📁" }}
               </div>
               <div class="preview-details">
                 <div class="preview-name">{{ fileInfoModal.file?.name }}</div>
                 <div class="preview-meta">
                   <div v-if="fileInfoModal.file?.date" class="meta-row">
                     <span class="meta-label">생성일:</span>
-                    <span class="meta-value">{{ fileInfoModal.file.date }}</span>
+                    <span class="meta-value">{{
+                      fileInfoModal.file.date
+                    }}</span>
                   </div>
                   <div v-if="fileInfoModal.file?.count" class="meta-row">
                     <span class="meta-label">개수:</span>
-                    <span class="meta-value">{{ fileInfoModal.file.count.toLocaleString() }}</span>
+                    <span class="meta-value">{{
+                      fileInfoModal.file.count.toLocaleString()
+                    }}</span>
                   </div>
                   <div class="meta-row">
                     <span class="meta-label">유형:</span>
@@ -164,7 +208,14 @@
           <div class="modal-footer">
             <button class="btn-secondary" @click="closeFileInfo">닫기</button>
             <button class="btn-primary" @click="downloadFile">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                 <polyline points="7,10 12,15 17,10"></polyline>
                 <line x1="12" y1="15" x2="12" y2="3"></line>
@@ -176,7 +227,11 @@
       </div>
 
       <!-- Context overlay -->
-      <div v-if="contextMenu.show" class="context-overlay" @click="hideContextMenu"></div>
+      <div
+        v-if="contextMenu.show"
+        class="context-overlay"
+        @click="hideContextMenu"
+      ></div>
     </div>
   </div>
 </template>
@@ -193,13 +248,15 @@ const isResizing = ref(false);
 
 // Computed responsive values
 const isMobile = computed(() => windowWidth.value < 768);
-const isTablet = computed(() => windowWidth.value >= 768 && windowWidth.value < 1024);
+const isTablet = computed(
+  () => windowWidth.value >= 768 && windowWidth.value < 1024
+);
 const isDesktop = computed(() => windowWidth.value >= 1024);
 
 // 반응형 사이드바 스타일
 const sidebarStyles = computed(() => {
   let width;
-  
+
   if (isMobile.value) {
     // 모바일: 전체 화면 또는 화면 너비 - 여백
     width = Math.min(windowWidth.value - 40, 280);
@@ -210,10 +267,10 @@ const sidebarStyles = computed(() => {
     // 데스크톱: 사용자 설정 가능한 너비
     width = sidebarWidth.value;
   }
-  
+
   return {
     width: `${width}px`,
-    maxWidth: isMobile.value ? '90vw' : 'none'
+    maxWidth: isMobile.value ? "90vw" : "none",
   };
 });
 
@@ -226,22 +283,22 @@ const contextMenu = reactive({
   x: 0,
   y: 0,
   file: null,
-  fileIndex: -1
+  fileIndex: -1,
 });
 
 const fileInfoModal = reactive({
   show: false,
   file: null,
-  fileIndex: -1
+  fileIndex: -1,
 });
 
 // Data
 const sidebarItems = reactive([
   {
-    name: "As-Is 보고서", 
+    name: "As-Is 보고서",
     expanded: false,
-    files: []
-  },  
+    files: [],
+  },
   {
     name: "업로드한 파일",
     expanded: true,
@@ -250,68 +307,71 @@ const sidebarItems = reactive([
         name: "Google",
         icon: "☁️",
         color: "blue-gradient",
-        date: "2025-05-22"
+        date: "2025-05-22",
       },
       {
         name: "Google-aws",
-        icon: "☁️", 
+        icon: "☁️",
         color: "blue-gradient",
-        date: "2025-05-21"
+        date: "2025-05-21",
       },
       {
         name: "iCloud",
         icon: "☁️",
-        color: "blue-gradient", 
-        date: "2025-05-20"
+        color: "blue-gradient",
+        date: "2025-05-20",
       },
       {
         name: "Naver",
         icon: "☁️",
         color: "blue-gradient",
-        date: "2025-05-19"
-      }
-    ]
+        date: "2025-05-19",
+      },
+    ],
   },
   {
     name: "생성된 파일",
     expanded: false,
-    files: []
-  }
+    files: [],
+  },
 ]);
 
 // 리사이즈 핸들러
 const startResize = (event) => {
   if (isMobile.value || isTablet.value) return;
-  
+
   isResizing.value = true;
   const startX = event.clientX;
   const startWidth = sidebarWidth.value;
 
   const handleMouseMove = (e) => {
-    const newWidth = Math.max(280, Math.min(600, startWidth + (e.clientX - startX)));
+    const newWidth = Math.max(
+      280,
+      Math.min(600, startWidth + (e.clientX - startX))
+    );
     sidebarWidth.value = newWidth;
   };
 
   const handleMouseUp = () => {
     isResizing.value = false;
-    document.removeEventListener('mousemove', handleMouseMove);
-    document.removeEventListener('mouseup', handleMouseUp);
-    document.body.style.cursor = '';
-    document.body.style.userSelect = '';
+    document.removeEventListener("mousemove", handleMouseMove);
+    document.removeEventListener("mouseup", handleMouseUp);
+    document.body.style.cursor = "";
+    document.body.style.userSelect = "";
   };
 
   // 커서 스타일 변경
-  document.body.style.cursor = 'col-resize';
-  document.body.style.userSelect = 'none';
+  document.body.style.cursor = "col-resize";
+  document.body.style.userSelect = "none";
 
-  document.addEventListener('mousemove', handleMouseMove);
-  document.addEventListener('mouseup', handleMouseUp);
+  document.addEventListener("mousemove", handleMouseMove);
+  document.addEventListener("mouseup", handleMouseUp);
 };
 
 // Window resize handler
 const handleWindowResize = () => {
   windowWidth.value = window.innerWidth;
-  
+
   // 화면 크기 변경 시 사이드바 너비 자동 조정
   if (isMobile.value) {
     // 모바일로 전환 시
@@ -367,7 +427,10 @@ const closeFileInfo = () => {
 };
 
 const downloadFile = () => {
-  console.log("다운로드 실행:", contextMenu.file?.name || fileInfoModal.file?.name);
+  console.log(
+    "다운로드 실행:",
+    contextMenu.file?.name || fileInfoModal.file?.name
+  );
   hideContextMenu();
   closeFileInfo();
 };
@@ -378,7 +441,7 @@ const getFileIcon = (filename) => {
 
 // Event handlers
 const handleKeydown = (event) => {
-  if (event.key === 'Escape') {
+  if (event.key === "Escape") {
     hideContextMenu();
     closeFileInfo();
   }
@@ -386,14 +449,14 @@ const handleKeydown = (event) => {
 
 // Lifecycle
 onMounted(() => {
-  document.addEventListener('keydown', handleKeydown);
-  window.addEventListener('resize', handleWindowResize);
+  document.addEventListener("keydown", handleKeydown);
+  window.addEventListener("resize", handleWindowResize);
   handleWindowResize(); // 초기 설정
 });
 
 onUnmounted(() => {
-  document.removeEventListener('keydown', handleKeydown);
-  window.removeEventListener('resize', handleWindowResize);
+  document.removeEventListener("keydown", handleKeydown);
+  window.removeEventListener("resize", handleWindowResize);
 });
 </script>
 
@@ -455,7 +518,7 @@ onUnmounted(() => {
 }
 
 .resize-handle::after {
-  content: '';
+  content: "";
   position: absolute;
   right: 2px;
   top: 50%;
@@ -479,7 +542,7 @@ onUnmounted(() => {
   align-items: center;
   justify-content: space-between;
   padding: 24px;
-  border-bottom: 1px solid #e5e7eb;
+  padding-top: 52px;
   flex-shrink: 0;
 }
 
@@ -511,7 +574,7 @@ onUnmounted(() => {
 /* Content */
 .sidebar-content {
   flex: 1;
-  padding: 20px;
+  padding: 15px;
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: #d1d5db transparent;
@@ -989,82 +1052,82 @@ onUnmounted(() => {
     width: 100vw !important;
     max-width: none !important;
   }
-  
+
   .sidebar-header {
     padding: 20px;
   }
-  
+
   .header-title {
     font-size: 18px;
   }
-  
+
   .sidebar-content {
     padding: 16px;
   }
-  
+
   .section-header {
     padding: 14px 16px;
   }
-  
+
   .file-grid {
     padding: 8px;
   }
-  
+
   .file-item {
     padding: 14px;
     margin-bottom: 6px;
   }
-  
+
   .file-icon {
     width: 28px;
     height: 28px;
     font-size: 14px;
   }
-  
+
   .file-name {
     font-size: 13px;
   }
-  
+
   .file-date {
     font-size: 10px;
   }
-  
+
   .context-menu {
     min-width: 160px;
   }
-  
+
   .context-menu-item {
     padding: 14px;
     font-size: 13px;
   }
-  
+
   .modal {
     width: 95%;
     margin: 16px;
   }
-  
+
   .modal-header,
   .modal-content,
   .modal-footer {
     padding: 20px;
   }
-  
+
   .preview-icon {
     width: 56px;
     height: 56px;
     font-size: 28px;
   }
-  
+
   .preview-name {
     font-size: 16px;
   }
-  
+
   .meta-row {
     flex-direction: column;
     align-items: flex-start;
     gap: 4px;
   }
-  
+
   .btn-primary,
   .btn-secondary {
     padding: 12px 18px;
@@ -1076,16 +1139,16 @@ onUnmounted(() => {
   .sidebar-header {
     padding: 22px;
   }
-  
+
   .sidebar-content {
     padding: 18px;
   }
-  
+
   .file-icon {
     width: 30px;
     height: 30px;
   }
-  
+
   .context-menu {
     min-width: 170px;
   }
@@ -1104,135 +1167,135 @@ onUnmounted(() => {
     background: #1f2937;
     color: #f9fafb;
   }
-  
+
   .sidebar-header {
     border-bottom-color: #374151;
   }
-  
+
   .header-title {
     color: #f9fafb;
   }
-  
+
   .close-button {
     background: #374151;
     color: #9ca3af;
   }
-  
+
   .close-button:hover {
     background: #4b5563;
     color: #f9fafb;
   }
-  
+
   .section-header:hover {
     background: #374151;
   }
-  
+
   .section-title {
     color: #e5e7eb;
   }
-  
+
   .expand-icon {
     color: #9ca3af;
   }
-  
+
   .expand-icon.rotated {
     color: #d1d5db;
   }
-  
+
   .file-item {
     background: #374151;
   }
-  
+
   .file-item:hover {
     background: #4b5563;
   }
-  
+
   .file-item.selected {
     background: rgba(59, 130, 246, 0.2);
   }
-  
+
   .file-name {
     color: #f9fafb;
   }
-  
+
   .file-date {
     color: #9ca3af;
   }
-  
+
   .file-count {
     background: #4b5563;
     color: #e5e7eb;
   }
-  
+
   .menu-button {
     background: #4b5563;
     color: #9ca3af;
   }
-  
+
   .menu-button:hover {
     background: #6b7280;
     color: #f9fafb;
   }
-  
+
   .context-menu {
     background: #1f2937;
     border-color: #374151;
   }
-  
+
   .context-menu-item {
     color: #e5e7eb;
   }
-  
+
   .context-menu-item:hover {
     background: #374151;
     color: #f9fafb;
   }
-  
+
   .modal {
     background: #1f2937;
     border-color: #374151;
   }
-  
+
   .modal-header {
     border-bottom-color: #374151;
   }
-  
+
   .modal-header h3 {
     color: #f9fafb;
   }
-  
+
   .modal-close {
     background: #374151;
     color: #9ca3af;
   }
-  
+
   .modal-close:hover {
     background: #4b5563;
     color: #f9fafb;
   }
-  
+
   .preview-name {
     color: #f9fafb;
   }
-  
+
   .meta-label {
     color: #9ca3af;
   }
-  
+
   .meta-value {
     color: #e5e7eb;
   }
-  
+
   .modal-footer {
     background: #111827;
     border-top-color: #374151;
   }
-  
+
   .btn-secondary {
     background: #374151;
     color: #e5e7eb;
   }
-  
+
   .btn-secondary:hover {
     background: #4b5563;
     color: #f9fafb;
@@ -1254,11 +1317,11 @@ onUnmounted(() => {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-  
+
   .expand-icon {
     transition: none;
   }
-  
+
   .sidebar-overlay,
   .modern-sidebar,
   .section-content,
@@ -1336,7 +1399,7 @@ onUnmounted(() => {
 }
 
 .loading::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 50%;
   left: 50%;
@@ -1350,7 +1413,11 @@ onUnmounted(() => {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 </style>
