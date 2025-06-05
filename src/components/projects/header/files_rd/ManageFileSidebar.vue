@@ -1,195 +1,226 @@
 <template>
   <div class="sidebar-overlay" @click="$emit('close')">
-    <div class="sidebar" @click.stop>
+    <div 
+      ref="sidebarRef"
+      class="modern-sidebar" 
+      :class="{ 
+        'mobile': isMobile, 
+        'tablet': isTablet,
+        'resizing': isResizing 
+      }"
+      :style="sidebarStyles"
+      @click.stop
+    >
+      <!-- 리사이즈 핸들 (데스크톱에서만 표시) -->
+      <div 
+        v-if="!isMobile && !isTablet"
+        class="resize-handle" 
+        @mousedown="startResize"
+        :class="{ 'active': isResizing }"
+      ></div>
+
+      <!-- Header -->
+      <div class="sidebar-header">
+        <h2 class="header-title">파일 목록</h2>
+        <button class="close-button" @click="$emit('close')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Content -->
       <div class="sidebar-content">
         <div
           v-for="(item, index) in sidebarItems"
           :key="index"
-          class="sidebar-item-container"
-          :class="{ 'expanded-container': item.expanded }"
+          class="sidebar-section"
+          :class="{ 'expanded': item.expanded }"
         >
-          <div class="sidebar-item" @click="toggleItem(index)">
-            <div class="sidebar-item-header">
-              {{ item.name }}
-              <span class="arrow" :class="{ expanded: item.expanded }">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                  <path d="M4.5 6L8 9.5L11.5 6H4.5Z"/>
+          <div class="section-header" @click="toggleItem(index)">
+            <div class="section-header-content">
+              <div class="expand-icon" :class="{ 'rotated': item.expanded }">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="9,18 15,12 9,6"></polyline>
                 </svg>
-              </span>
-            </div>
-            <div v-if="item.expanded" class="sidebar-item-content-integrated">
-              <p
-                v-if="
-                  item.name === '업로드한 파일' &&
-                  (!item.files || item.files.length === 0)
-                "
-                class="empty-message"
-              >
-                업로드된 파일 목록이 여기에 표시됩니다.
-              </p>
-              <ul
-                v-if="
-                  item.name === '업로드한 파일' &&
-                  item.files &&
-                  item.files.length > 0
-                "
-                class="file-list file-list-scrollable"
-              >
-                <li
-                  v-for="(file, fileIndex) in item.files"
-                  :key="fileIndex"
-                  class="file-item"
-                >
-                  <div class="file-line">
-                    <span
-                      class="file-icon"
-                      :class="'file-icon-' + getFileIcon(file.name).type"
-                    >
-                      {{ getFileIcon(file.name).type }}
-                    </span>
-                    <span class="file-name">{{ file.name }}</span>
-
-                    <!-- ❌ 삭제 버튼: 파일명 오른쪽에 위치 -->
-                    <button
-                      class="delete-button"
-                      @click.stop="deleteUploadedFile(fileIndex)"
-                      title="파일 삭제"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                  <div class="file-date">{{ file.date }}</div>
-                </li>
-              </ul>
-
-              <p
-                v-if="
-                  item.name === '생성된 파일' &&
-                  (!item.files || item.files.length === 0)
-                "
-                class="empty-message"
-              >
-                생성된 파일 목록이 여기에 표시됩니다.
-              </p>
-
-              <ul
-                v-if="
-                  item.name === '생성된 파일' &&
-                  item.files &&
-                  item.files.length > 0
-                "
-                class="file-list file-list-scrollable"
-              >
-                <li
-                  v-for="(file, fileIndex) in item.files"
-                  :key="fileIndex"
-                  class="file-item generated-file-item"
-                  @contextmenu.prevent="showContextMenu($event, file, fileIndex)"
-                  @click="selectFile(file, fileIndex)"
-                  :class="{ 'selected': selectedFileIndex === fileIndex }"
-                >
-                  <div class="file-line">
-                    <span
-                      class="file-icon"
-                      :class="'file-icon-' + getFileIcon(file.name).type"
-                    >
-                      {{ getFileIcon(file.name).type }}
-                    </span>
-                    <span class="file-name">{{ file.name }}</span>
-
-                    <!-- 메뉴 버튼 -->
-                    <button
-                      class="menu-button"
-                      @click.stop="showContextMenu($event, file, fileIndex)"
-                      title="메뉴"
-                    >
-                      ⋯
-                    </button>
-                  </div>
-                  <div class="file-date">{{ file.date }}</div>
-                </li>
-              </ul>
+              </div>
+              <span class="section-title">{{ item.name }}</span>
+              <span v-if="item.count" class="count-badge">{{ item.count }}</span>
             </div>
           </div>
-        </div>
-      </div>
-    </div>
 
-    <!-- 컨텍스트 메뉴 -->
-    <div
-      v-if="contextMenu.show"
-      class="context-menu"
-      :style="{
-        top: contextMenu.y + 'px',
-        left: contextMenu.x + 'px'
-      }"
-      @click.stop
-    >
-      <div class="context-menu-item" @click="showFileInfo">
-        <span class="context-menu-icon">ℹ️</span>
-        파일 정보
-      </div>
-      <div class="context-menu-item" @click="downloadFile">
-        <span class="context-menu-icon">⬇️</span>
-        다운로드
-      </div>
-    </div>
-
-    <!-- 파일 정보 모달 -->
-    <div v-if="fileInfoModal.show" class="modal-overlay" @click="closeFileInfo">
-      <div class="modal" @click.stop>
-        <div class="modal-header">
-          <h3>파일 정보</h3>
-          <button class="modal-close" @click="closeFileInfo">✕</button>
-        </div>
-        <div class="modal-content">
-          <div class="file-info-section">
-            <div class="file-info-icon">
-              {{ getFileIcon(fileInfoModal.file?.name || '').type }}
+          <div v-if="item.expanded" class="section-content">
+            <!-- Empty state -->
+            <div v-if="!item.files || item.files.length === 0" class="empty-state">
+              <p class="empty-message">
+                {{ '파일이 여기에 표시됩니다.' }}
+              </p>
             </div>
-            <div class="file-info-details">
-              <div class="file-info-name">{{ fileInfoModal.file?.name }}</div>
-              <div class="file-info-meta">
-                <div class="info-row">
-                  <span class="info-label">생성일:</span>
-                  <span class="info-value">{{ fileInfoModal.file?.date }}</span>
+
+            <!-- File list -->
+            <div v-else class="file-grid">
+              <div
+                v-for="(file, fileIndex) in item.files"
+                :key="fileIndex"
+                class="file-item"
+                :class="{ 'selected': selectedFileIndex === fileIndex }"
+                @click="selectFile(file, fileIndex)"
+                @contextmenu.prevent="showContextMenu($event, file, fileIndex)"
+              >
+                <div class="file-content">
+                  <div class="file-icon" :class="file.color || 'default-color'">
+                    {{ file.icon || getFileIcon(file.name) }}
+                  </div>
+                  <div class="file-info">
+                    <div class="file-name">{{ file.name }}</div>
+                    <div v-if="file.date" class="file-date">{{ file.date }}</div>
+                  </div>
+                  <div v-if="file.count" class="file-count">
+                    {{ file.count.toLocaleString() }}
+                  </div>
                 </div>
-                <div class="info-row">
-                  <span class="info-label">파일 형식:</span>
-                  <span class="info-value">{{ getFileType(fileInfoModal.file?.name || '') }}</span>
-                </div>
-                <div class="info-row">
-                  <span class="info-label">크기:</span>
-                  <span class="info-value">{{ fileInfoModal.file?.size || '알 수 없음' }}</span>
-                </div>
-                <div class="info-row" v-if="fileInfoModal.file?.description">
-                  <span class="info-label">설명:</span>
-                  <span class="info-value">{{ fileInfoModal.file.description }}</span>
-                </div>
+                
+                <button
+                  class="menu-button"
+                  @click.stop="showContextMenu($event, file, fileIndex)"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="1"></circle>
+                    <circle cx="12" cy="5" r="1"></circle>
+                    <circle cx="12" cy="19" r="1"></circle>
+                  </svg>
+                </button>
               </div>
             </div>
           </div>
         </div>
-        <div class="modal-footer">
-          <button class="btn btn-secondary" @click="closeFileInfo">닫기</button>
+      </div>
+
+      <!-- Context Menu -->
+      <div
+        v-if="contextMenu.show"
+        class="context-menu"
+        :style="{
+          top: contextMenu.y + 'px',
+          left: contextMenu.x + 'px'
+        }"
+        @click.stop
+      >
+        <div class="context-menu-item" @click="showFileInfo">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="16" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+          </svg>
+          <span>파일 정보</span>
+        </div>
+        <div class="context-menu-item" @click="downloadFile">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7,10 12,15 17,10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          <span>다운로드</span>
         </div>
       </div>
-    </div>
 
-    <!-- 오버레이 (컨텍스트 메뉴 닫기용) -->
-    <div v-if="contextMenu.show" class="context-overlay" @click="hideContextMenu"></div>
+      <!-- File Info Modal -->
+      <div v-if="fileInfoModal.show" class="modal-overlay" @click="closeFileInfo">
+        <div class="modal" @click.stop>
+          <div class="modal-header">
+            <h3>파일 정보</h3>
+            <button class="modal-close" @click="closeFileInfo">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+          <div class="modal-content">
+            <div class="file-preview">
+              <div class="preview-icon" :class="fileInfoModal.file?.color || 'default-color'">
+                {{ fileInfoModal.file?.icon || '📁' }}
+              </div>
+              <div class="preview-details">
+                <div class="preview-name">{{ fileInfoModal.file?.name }}</div>
+                <div class="preview-meta">
+                  <div v-if="fileInfoModal.file?.date" class="meta-row">
+                    <span class="meta-label">생성일:</span>
+                    <span class="meta-value">{{ fileInfoModal.file.date }}</span>
+                  </div>
+                  <div v-if="fileInfoModal.file?.count" class="meta-row">
+                    <span class="meta-label">개수:</span>
+                    <span class="meta-value">{{ fileInfoModal.file.count.toLocaleString() }}</span>
+                  </div>
+                  <div class="meta-row">
+                    <span class="meta-label">유형:</span>
+                    <span class="meta-value">메일함</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn-secondary" @click="closeFileInfo">닫기</button>
+            <button class="btn-primary" @click="downloadFile">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7,10 12,15 17,10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              다운로드
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Context overlay -->
+      <div v-if="contextMenu.show" class="context-overlay" @click="hideContextMenu"></div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, onUnmounted } from "vue";
+import { ref, reactive, computed, onMounted, onUnmounted } from "vue";
 
-const emit = defineEmits(["close", "search"]);
+const emit = defineEmits(["close"]);
 
-// 선택된 파일 추적
+// Responsive state
+const windowWidth = ref(window.innerWidth);
+const sidebarWidth = ref(320);
+const isResizing = ref(false);
+
+// Computed responsive values
+const isMobile = computed(() => windowWidth.value < 768);
+const isTablet = computed(() => windowWidth.value >= 768 && windowWidth.value < 1024);
+const isDesktop = computed(() => windowWidth.value >= 1024);
+
+// 반응형 사이드바 스타일
+const sidebarStyles = computed(() => {
+  let width;
+  
+  if (isMobile.value) {
+    // 모바일: 전체 화면 또는 화면 너비 - 여백
+    width = Math.min(windowWidth.value - 40, 280);
+  } else if (isTablet.value) {
+    // 태블릿: 고정 너비
+    width = 300;
+  } else {
+    // 데스크톱: 사용자 설정 가능한 너비
+    width = sidebarWidth.value;
+  }
+  
+  return {
+    width: `${width}px`,
+    maxWidth: isMobile.value ? '90vw' : 'none'
+  };
+});
+
+// State
 const selectedFileIndex = ref(-1);
+const sidebarRef = ref(null);
 
-// 컨텍스트 메뉴 상태
 const contextMenu = reactive({
   show: false,
   x: 0,
@@ -198,98 +229,130 @@ const contextMenu = reactive({
   fileIndex: -1
 });
 
-// 파일 정보 모달 상태
 const fileInfoModal = reactive({
   show: false,
   file: null,
   fileIndex: -1
 });
 
-// ✅ 목업 데이터 - 더 상세한 정보 추가
+// Data
 const sidebarItems = reactive([
+  {
+    name: "As-Is 보고서", 
+    expanded: false,
+    files: []
+  },  
   {
     name: "업로드한 파일",
     expanded: true,
     files: [
       {
-        name: "기획서_v1.pdf",
-        date: "2025-05-22",
-        size: "2.3 MB",
-        description: "프로젝트 기획 문서"
+        name: "Google",
+        icon: "☁️",
+        color: "blue-gradient",
+        date: "2025-05-22"
       },
       {
-        name: "요구사항정의서.docx",
-        date: "2025-05-21",
-        size: "1.8 MB",
-        description: "시스템 요구사항 정의서"
+        name: "Google-aws",
+        icon: "☁️", 
+        color: "blue-gradient",
+        date: "2025-05-21"
       },
-    ],
+      {
+        name: "iCloud",
+        icon: "☁️",
+        color: "blue-gradient", 
+        date: "2025-05-20"
+      },
+      {
+        name: "Naver",
+        icon: "☁️",
+        color: "blue-gradient",
+        date: "2025-05-19"
+      }
+    ]
   },
   {
     name: "생성된 파일",
     expanded: false,
-    files: [
-      {
-        name: "API_명세서.json",
-        date: "2025-05-22",
-        size: "45 KB",
-        description: "REST API 명세서 및 엔드포인트 정의"
-      },
-      {
-        name: "디자인_가이드라인.md",
-        date: "2025-05-21",
-        size: "12 KB",
-        description: "UI/UX 디자인 가이드라인 문서"
-      },
-      {
-        name: "데이터베이스_스키마.sql",
-        date: "2025-05-20",
-        size: "8 KB",
-        description: "MySQL 데이터베이스 스키마 정의"
-      },
-    ],
-  },
+    files: []
+  }
 ]);
 
+// 리사이즈 핸들러
+const startResize = (event) => {
+  if (isMobile.value || isTablet.value) return;
+  
+  isResizing.value = true;
+  const startX = event.clientX;
+  const startWidth = sidebarWidth.value;
+
+  const handleMouseMove = (e) => {
+    const newWidth = Math.max(280, Math.min(600, startWidth + (e.clientX - startX)));
+    sidebarWidth.value = newWidth;
+  };
+
+  const handleMouseUp = () => {
+    isResizing.value = false;
+    document.removeEventListener('mousemove', handleMouseMove);
+    document.removeEventListener('mouseup', handleMouseUp);
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+  };
+
+  // 커서 스타일 변경
+  document.body.style.cursor = 'col-resize';
+  document.body.style.userSelect = 'none';
+
+  document.addEventListener('mousemove', handleMouseMove);
+  document.addEventListener('mouseup', handleMouseUp);
+};
+
+// Window resize handler
+const handleWindowResize = () => {
+  windowWidth.value = window.innerWidth;
+  
+  // 화면 크기 변경 시 사이드바 너비 자동 조정
+  if (isMobile.value) {
+    // 모바일로 전환 시
+    sidebarWidth.value = Math.min(windowWidth.value - 40, 280);
+  } else if (isTablet.value) {
+    // 태블릿으로 전환 시
+    sidebarWidth.value = 300;
+  } else if (isDesktop.value && sidebarWidth.value < 320) {
+    // 데스크톱으로 전환 시 최소 너비 보장
+    sidebarWidth.value = 320;
+  }
+};
+
+// Methods
 const toggleItem = (index) => {
   sidebarItems[index].expanded = !sidebarItems[index].expanded;
 };
 
-// 파일 선택
 const selectFile = (file, index) => {
   selectedFileIndex.value = index;
 };
 
-// 컨텍스트 메뉴 표시
 const showContextMenu = (event, file, fileIndex) => {
+  const rect = sidebarRef.value?.getBoundingClientRect();
+  const maxX = rect ? rect.width - 180 : window.innerWidth - 200;
+  const maxY = window.innerHeight - 120;
+
   contextMenu.file = file;
   contextMenu.fileIndex = fileIndex;
-  contextMenu.x = event.clientX;
-  contextMenu.y = event.clientY;
+  contextMenu.x = Math.min(event.clientX - (rect?.left || 0), maxX);
+  contextMenu.y = Math.min(event.clientY, maxY);
   contextMenu.show = true;
   selectedFileIndex.value = fileIndex;
-
-  // 화면 경계 체크
-  const menuWidth = 180;
-  const menuHeight = 120;
-  
-  if (contextMenu.x + menuWidth > window.innerWidth) {
-    contextMenu.x = window.innerWidth - menuWidth - 10;
-  }
-  
-  if (contextMenu.y + menuHeight > window.innerHeight) {
-    contextMenu.y = window.innerHeight - menuHeight - 10;
-  }
 };
 
-// 컨텍스트 메뉴 숨기기
 const hideContextMenu = () => {
   contextMenu.show = false;
   contextMenu.file = null;
   contextMenu.fileIndex = -1;
 };
 
-// 파일 정보 표시
 const showFileInfo = () => {
   fileInfoModal.file = contextMenu.file;
   fileInfoModal.fileIndex = contextMenu.fileIndex;
@@ -297,87 +360,23 @@ const showFileInfo = () => {
   hideContextMenu();
 };
 
-// 파일 정보 모달 닫기
 const closeFileInfo = () => {
   fileInfoModal.show = false;
   fileInfoModal.file = null;
   fileInfoModal.fileIndex = -1;
 };
 
-// 다운로드 (컨텍스트 메뉴에서)
 const downloadFile = () => {
-  console.log("다운로드 실행:", contextMenu.file?.name);
-  downloadGeneratedFile(contextMenu.file);
+  console.log("다운로드 실행:", contextMenu.file?.name || fileInfoModal.file?.name);
   hideContextMenu();
-};
-
-// 다운로드 (모달에서)
-const downloadFromModal = () => {
-  console.log("다운로드 실행:", fileInfoModal.file?.name);
-  downloadGeneratedFile(fileInfoModal.file);
   closeFileInfo();
 };
 
-// 파일 삭제 (컨텍스트 메뉴에서)
-const deleteFile = () => {
-  const generatedSection = sidebarItems.find(
-    (item) => item.name === "생성된 파일"
-  );
-  if (generatedSection?.files && contextMenu.fileIndex >= 0) {
-    generatedSection.files.splice(contextMenu.fileIndex, 1);
-  }
-  hideContextMenu();
-  selectedFileIndex.value = -1;
+const getFileIcon = (filename) => {
+  return "📁";
 };
 
-// 간단한 파일 아이콘 타입 반환 함수
-function getFileIcon(filename) {
-  const extension = filename.split(".").pop()?.toLowerCase();
-  const iconMap = {
-    pdf: "📄",
-    docx: "📝",
-    json: "⚙️",
-    md: "📋",
-    sql: "🗄️",
-    txt: "📄",
-    xlsx: "📊",
-    csv: "📈"
-  };
-  return { type: iconMap[extension] || "📁" };
-}
-
-// 파일 타입 반환 함수
-function getFileType(filename) {
-  const extension = filename.split(".").pop()?.toLowerCase();
-  const typeMap = {
-    pdf: "PDF 문서",
-    docx: "Word 문서",
-    json: "JSON 데이터",
-    md: "Markdown 문서",
-    sql: "SQL 스크립트",
-    txt: "텍스트 파일",
-    xlsx: "Excel 스프레드시트",
-    csv: "CSV 데이터"
-  };
-  return typeMap[extension] || "알 수 없는 형식";
-}
-
-// 삭제 및 다운로드 함수
-function deleteUploadedFile(index) {
-  const uploadedSection = sidebarItems.find(
-    (item) => item.name === "업로드한 파일"
-  );
-  if (uploadedSection?.files) {
-    uploadedSection.files.splice(index, 1);
-  }
-}
-
-function downloadGeneratedFile(file) {
-  console.log("다운로드 실행:", file.name);
-  // 실제 다운로드 로직 구현
-}
-
-// 키보드 이벤트 처리
+// Event handlers
 const handleKeydown = (event) => {
   if (event.key === 'Escape') {
     hideContextMenu();
@@ -385,334 +384,343 @@ const handleKeydown = (event) => {
   }
 };
 
-// 라이프사이클
+// Lifecycle
 onMounted(() => {
   document.addEventListener('keydown', handleKeydown);
+  window.addEventListener('resize', handleWindowResize);
+  handleWindowResize(); // 초기 설정
 });
 
 onUnmounted(() => {
   document.removeEventListener('keydown', handleKeydown);
+  window.removeEventListener('resize', handleWindowResize);
 });
 </script>
 
 <style scoped>
-/* 기존 스타일 유지 */
+/* Base styles */
 .sidebar-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.4);
   animation: overlayFadeIn 0.3s ease-out;
 }
 
-@keyframes overlayFadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-.sidebar {
+.modern-sidebar {
   position: fixed;
-  top: 0;
   left: 0;
-  width: 320px;
+  top: 0;
   height: 100vh;
-  background: #ffffff;
-  box-shadow: 4px 0 30px rgba(0, 0, 0, 0.12);
-  z-index: 51;
-  animation: sidebarSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  overflow-y: auto;
-}
-
-@keyframes sidebarSlideIn {
-  from {
-    transform: translateX(-100%);
-  }
-  to {
-    transform: translateX(0);
-  }
-}
-
-.sidebar-content {
-  margin-top: 70px;
-  padding: 28px 24px;
+  background: white;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+  animation: slideInLeft 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  transition: width 0.2s ease;
 }
 
-.sidebar-item-container {
-  background: #ffffff;
-  border-radius: 10px;
-  border: 1.5px solid #e5e7eb;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  overflow: hidden;
+/* 반응형 클래스 */
+.modern-sidebar.mobile {
+  width: 100vw !important;
+  max-width: 90vw;
 }
 
-.sidebar-item-container:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  border-color: #d1d5db;
+.modern-sidebar.tablet {
+  width: 300px !important;
 }
 
-.sidebar-item-container.expanded-container {
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
-  border-color: #9ca3af;
+.modern-sidebar.resizing {
+  transition: none;
 }
 
-.sidebar-item {
-  cursor: pointer;
+/* 리사이즈 핸들 */
+.resize-handle {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 6px;
+  height: 100%;
+  background: transparent;
+  cursor: col-resize;
+  z-index: 10;
+  transition: background-color 0.2s ease;
 }
 
-.sidebar-item-header {
+.resize-handle:hover,
+.resize-handle.active {
+  background: linear-gradient(90deg, transparent, #3b82f6);
+}
+
+.resize-handle::after {
+  content: '';
+  position: absolute;
+  right: 2px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2px;
+  height: 40px;
+  background: #d1d5db;
+  border-radius: 1px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.resize-handle:hover::after,
+.resize-handle.active::after {
+  opacity: 1;
+}
+
+/* Header */
+.sidebar-header {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  align-items: center;
-  padding: 16px 20px;
+  padding: 24px;
+  border-bottom: 1px solid #e5e7eb;
+  flex-shrink: 0;
+}
+
+.header-title {
+  font-size: 20px;
   font-weight: 600;
-  font-size: 15px;
-  color: #374151;
-  background: #fafafa;
-  transition: all 0.3s ease;
-  letter-spacing: -0.02em;
+  color: #111827;
+  margin: 0;
+  letter-spacing: -0.025em;
 }
 
-.sidebar-item-header:hover {
+.close-button {
+  padding: 8px;
   background: #f3f4f6;
-  color: #1f2937;
-}
-
-.arrow {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: none;
+  border-radius: 8px;
   color: #6b7280;
-  width: 20px;
-  height: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
-.arrow.expanded {
-  transform: rotate(180deg);
-  color: #374151;
+.close-button:hover {
+  background: #e5e7eb;
+  color: #111827;
+  transform: scale(1.05);
 }
 
-.arrow svg {
-  width: 16px;
-  height: 16px;
-}
-
-.sidebar-item-content-integrated {
-  padding: 0;
-  animation: contentSlideDown 0.3s ease-out;
-  background: #ffffff;
-}
-
-@keyframes contentSlideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.empty-message {
-  padding: 24px 20px;
-  text-align: center;
-  color: #9ca3af;
-  font-size: 14px;
-  font-style: italic;
-  background: #fafafa;
-  margin: 0;
-  line-height: 1.4;
-}
-
-.file-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  max-height: 300px;
+/* Content */
+.sidebar-content {
+  flex: 1;
+  padding: 20px;
   overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db transparent;
 }
 
-.file-list-scrollable::-webkit-scrollbar {
+.sidebar-content::-webkit-scrollbar {
   width: 6px;
 }
 
-.file-list-scrollable::-webkit-scrollbar-track {
-  background: #f9fafb;
+.sidebar-content::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-.file-list-scrollable::-webkit-scrollbar-thumb {
+.sidebar-content::-webkit-scrollbar-thumb {
   background: #d1d5db;
   border-radius: 3px;
 }
 
-.file-list-scrollable::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
-}
-
-.file-item {
-  padding: 16px 20px;
-  border-bottom: 1px solid #f3f4f6;
+.sidebar-section {
+  margin-bottom: 16px;
+  background: transparent;
+  border-radius: 12px;
+  overflow: hidden;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  background: #ffffff;
 }
 
-.file-item:last-child {
-  border-bottom: none;
+.sidebar-section:hover {
+  background: transparent;
 }
 
-.file-item:hover {
-  background: #f9fafb;
+.sidebar-section.expanded {
+  background: transparent;
 }
 
-/* 생성된 파일 아이템 추가 스타일 */
-.generated-file-item {
+/* Section header */
+.section-header {
+  padding: 16px 20px;
   cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.generated-file-item.selected {
-  background: #eff6ff;
-  border-left: 3px solid #3b82f6;
+.section-header:hover {
+  background: #f3f4f6;
 }
 
-.generated-file-item.selected .file-name {
-  color: #1d4ed8;
-  font-weight: 600;
-}
-
-.file-line {
+.section-header-content {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 6px;
+}
+
+.expand-icon {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+}
+
+.expand-icon.rotated {
+  transform: rotate(90deg);
+  color: #374151;
+}
+
+.section-title {
+  flex: 1;
+  font-weight: 500;
+  color: #374151;
+  font-size: 15px;
+  letter-spacing: -0.01em;
+}
+
+.count-badge {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+}
+
+/* Section content */
+.section-content {
+  animation: expandDown 0.3s ease-out;
+  border-top: 1px solid #f3f4f6;
+}
+
+.empty-state {
+  padding: 32px 20px;
+  text-align: center;
+}
+
+.empty-message {
+  color: #6b7280;
+  font-size: 14px;
+  font-style: italic;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* File grid */
+.file-grid {
+  padding: 12px;
+}
+
+.file-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  margin-bottom: 8px;
+  background: white;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.file-item:hover {
+  background: #f3f4f6;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.file-item.selected {
+  background: rgba(59, 130, 246, 0.1);
+  border-left: 3px solid #3b82f6;
+}
+
+.file-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
 }
 
 .file-icon {
-  font-size: 16px;
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 6px;
-  background: #f3f4f6;
-  transition: all 0.3s ease;
+  font-size: 16px;
   flex-shrink: 0;
 }
 
-.file-item:hover .file-icon {
-  background: #e5e7eb;
+.file-icon.blue-gradient {
+  background: linear-gradient(135deg, #60a5fa, #3b82f6);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.file-icon.default-color {
+  background: #f3f4f6;
+}
+
+.file-info {
+  flex: 1;
+  min-width: 0;
 }
 
 .file-name {
-  flex: 1;
-  font-size: 14px;
   font-weight: 500;
-  color: #374151;
+  color: #111827;
+  font-size: 14px;
+  margin-bottom: 2px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  transition: color 0.3s ease;
-  line-height: 1.4;
-}
-
-.file-item:hover .file-name {
-  color: #1f2937;
-  font-weight: 600;
 }
 
 .file-date {
-  font-size: 12px;
-  color: #9ca3af;
-  margin-left: 40px;
-  transition: color 0.3s ease;
-}
-
-.file-item:hover .file-date {
+  font-size: 11px;
   color: #6b7280;
 }
 
-/* 기존 버튼 스타일 */
-.delete-button {
-  background: #fee2e2;
-  color: #dc2626;
-  border: none;
-  border-radius: 6px;
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: bold;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  opacity: 0;
-  transform: scale(0.8);
-  flex-shrink: 0;
-}
-
-.file-item:hover .delete-button {
-  opacity: 1;
-  transform: scale(1);
-}
-
-.delete-button:hover {
-  background: #fecaca;
-  color: #b91c1c;
-  transform: scale(1.05);
-}
-
-.delete-button:active {
-  transform: scale(0.95);
-}
-
-/* 메뉴 버튼 */
-.menu-button {
+.file-count {
   background: #f3f4f6;
-  color: #6b7280;
-  border: none;
-  border-radius: 6px;
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-size: 16px;
-  font-weight: bold;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  opacity: 0;
-  transform: scale(0.8);
-  flex-shrink: 0;
+  color: #374151;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  margin-left: 8px;
 }
 
-.generated-file-item:hover .menu-button {
+.menu-button {
+  opacity: 0;
+  padding: 8px;
+  background: #f3f4f6;
+  border: none;
+  border-radius: 6px;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-left: 8px;
+}
+
+.file-item:hover .menu-button {
   opacity: 1;
-  transform: scale(1);
 }
 
 .menu-button:hover {
   background: #e5e7eb;
-  color: #374151;
-  transform: scale(1.05);
+  color: #111827;
+  transform: scale(1.1);
 }
 
-.menu-button:active {
-  transform: scale(0.95);
-}
-
-/* 컨텍스트 메뉴 */
+/* Context menu */
 .context-overlay {
   position: fixed;
   top: 0;
@@ -724,24 +732,14 @@ onUnmounted(() => {
 
 .context-menu {
   position: fixed;
-  background: #ffffff;
+  background: white;
   border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  border-radius: 12px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
   z-index: 100;
   min-width: 180px;
-  animation: contextMenuSlideIn 0.2s ease-out;
-}
-
-@keyframes contextMenuSlideIn {
-  from {
-    opacity: 0;
-    transform: scale(0.95) translateY(-5px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
+  animation: contextSlideIn 0.2s ease-out;
+  overflow: hidden;
 }
 
 .context-menu-item {
@@ -750,96 +748,49 @@ onUnmounted(() => {
   gap: 12px;
   padding: 12px 16px;
   cursor: pointer;
-  font-size: 14px;
   color: #374151;
+  font-size: 14px;
   transition: all 0.2s ease;
 }
 
 .context-menu-item:hover {
   background: #f3f4f6;
-  color: #1f2937;
+  color: #111827;
 }
 
-.context-menu-item:first-child {
-  border-radius: 8px 8px 0 0;
-}
-
-.context-menu-item:last-child {
-  border-radius: 0 0 8px 8px;
-}
-
-.context-menu-item.danger {
-  color: #dc2626;
-}
-
-.context-menu-item.danger:hover {
-  background: #fee2e2;
-  color: #b91c1c;
-}
-
-.context-menu-icon {
-  font-size: 16px;
-  width: 20px;
-  text-align: center;
-}
-
-.context-menu-divider {
-  height: 1px;
-  background: #e5e7eb;
-  margin: 4px 0;
-}
-
-/* 모달 스타일 */
+/* Modal */
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
-  animation: modalOverlayFadeIn 0.3s ease-out;
-}
-
-@keyframes modalOverlayFadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  z-index: 200;
+  animation: fadeIn 0.3s ease-out;
 }
 
 .modal {
-  background: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
   width: 90%;
-  max-width: 500px;
+  max-width: 480px;
   max-height: 80vh;
   overflow: hidden;
-  animation: modalSlideIn 0.3s ease-out;
-}
-
-@keyframes modalSlideIn {
-  from {
-    opacity: 0;
-    transform: scale(0.9) translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
+  animation: modalSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 24px;
+  padding: 24px;
   border-bottom: 1px solid #e5e7eb;
 }
 
@@ -847,239 +798,559 @@ onUnmounted(() => {
   margin: 0;
   font-size: 18px;
   font-weight: 600;
-  color: #1f2937;
+  color: #111827;
 }
 
 .modal-close {
-  background: none;
+  padding: 8px;
+  background: #f3f4f6;
   border: none;
-  font-size: 20px;
+  border-radius: 8px;
   color: #6b7280;
   cursor: pointer;
-  padding: 4px;
-  border-radius: 4px;
   transition: all 0.2s ease;
 }
 
 .modal-close:hover {
-  background: #f3f4f6;
-  color: #374151;
+  background: #e5e7eb;
+  color: #111827;
 }
 
 .modal-content {
   padding: 24px;
 }
 
-.file-info-section {
+.file-preview {
   display: flex;
   gap: 16px;
   align-items: flex-start;
 }
 
-.file-info-icon {
-  font-size: 48px;
+.preview-icon {
   width: 64px;
   height: 64px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f3f4f6;
-  border-radius: 12px;
+  font-size: 32px;
   flex-shrink: 0;
 }
 
-.file-info-details {
+.preview-icon.blue-gradient {
+  background: linear-gradient(135deg, #60a5fa, #3b82f6);
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
+}
+
+.preview-icon.default-color {
+  background: #f3f4f6;
+}
+
+.preview-details {
   flex: 1;
 }
 
-.file-info-name {
+.preview-name {
   font-size: 18px;
   font-weight: 600;
-  color: #1f2937;
+  color: #111827;
   margin-bottom: 16px;
   word-break: break-word;
 }
 
-.file-info-meta {
+.preview-meta {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-.info-row {
+.meta-row {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 12px;
 }
 
-.info-label {
+.meta-label {
   font-size: 14px;
-  font-weight: 500;
   color: #6b7280;
-  min-width: 80px;
+  font-weight: 500;
 }
 
-.info-value {
+.meta-value {
   font-size: 14px;
   color: #374151;
-  flex: 1;
 }
 
 .modal-footer {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-  padding: 20px 24px;
+  padding: 24px;
   border-top: 1px solid #e5e7eb;
   background: #f9fafb;
 }
 
-.btn {
+.btn-secondary {
   padding: 10px 20px;
+  background: #f3f4f6;
+  color: #374151;
+  border: none;
   border-radius: 8px;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  border: none;
   transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.btn-secondary {
-  background: #f3f4f6;
-  color: #374151;
 }
 
 .btn-secondary:hover {
   background: #e5e7eb;
-  color: #1f2937;
+  color: #111827;
 }
 
 .btn-primary {
-  background: #3b82f6;
-  color: #ffffff;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 .btn-primary:hover {
-  background: #2563eb;
+  background: linear-gradient(135deg, #2563eb, #1e40af);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
 }
 
-.btn-icon {
-  font-size: 16px;
-}
-
-/* 반응형 디자인 */
-@media (max-width: 768px) {
-  .sidebar {
-    width: 100vw;
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
   }
+  to {
+    opacity: 1;
+  }
+}
 
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes expandDown {
+  from {
+    max-height: 0;
+    opacity: 0;
+  }
+  to {
+    max-height: 500px;
+    opacity: 1;
+  }
+}
+
+@keyframes contextSlideIn {
+  from {
+    transform: translateY(-8px) scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes modalSlideIn {
+  from {
+    transform: translateY(-20px) scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 767px) {
+  .modern-sidebar {
+    width: 100vw !important;
+    max-width: none !important;
+  }
+  
+  .sidebar-header {
+    padding: 20px;
+  }
+  
+  .header-title {
+    font-size: 18px;
+  }
+  
   .sidebar-content {
-    padding: 24px 20px;
+    padding: 16px;
   }
-
-  .modal {
-    width: 95%;
-    margin: 0 10px;
-  }
-
-  .file-info-section {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-  }
-
-  .file-info-icon {
-    margin-bottom: 8px;
-  }
-
-  .modal-footer {
-    flex-direction: column;
-  }
-
-  .btn {
-    width: 100%;
-    justify-content: center;
-  }
-}
-
-@media (max-width: 480px) {
-  .sidebar-content {
-    padding: 20px 16px;
-    gap: 16px;
-  }
-
-  .sidebar-item-header {
+  
+  .section-header {
     padding: 14px 16px;
+  }
+  
+  .file-grid {
+    padding: 8px;
+  }
+  
+  .file-item {
+    padding: 14px;
+    margin-bottom: 6px;
+  }
+  
+  .file-icon {
+    width: 28px;
+    height: 28px;
     font-size: 14px;
   }
-
-  .file-item {
-    padding: 14px 16px;
-  }
-
+  
   .file-name {
     font-size: 13px;
   }
-
+  
   .file-date {
-    font-size: 11px;
-    margin-left: 36px;
+    font-size: 10px;
   }
-
+  
   .context-menu {
     min-width: 160px;
   }
-
+  
   .context-menu-item {
-    padding: 10px 14px;
+    padding: 14px;
     font-size: 13px;
   }
-
-  .modal-header {
-    padding: 16px 20px;
+  
+  .modal {
+    width: 95%;
+    margin: 16px;
   }
-
-  .modal-header h3 {
-    font-size: 16px;
-  }
-
-  .modal-content {
+  
+  .modal-header,
+  .modal-content,
+  .modal-footer {
     padding: 20px;
   }
-
-  .file-info-name {
+  
+  .preview-icon {
+    width: 56px;
+    height: 56px;
+    font-size: 28px;
+  }
+  
+  .preview-name {
     font-size: 16px;
   }
-
-  .modal-footer {
-    padding: 16px 20px;
+  
+  .meta-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  
+  .btn-primary,
+  .btn-secondary {
+    padding: 12px 18px;
+    font-size: 13px;
   }
 }
 
-/* 스크롤바 커스터마이징 */
-.sidebar::-webkit-scrollbar {
+@media (min-width: 768px) and (max-width: 1023px) {
+  .sidebar-header {
+    padding: 22px;
+  }
+  
+  .sidebar-content {
+    padding: 18px;
+  }
+  
+  .file-icon {
+    width: 30px;
+    height: 30px;
+  }
+  
+  .context-menu {
+    min-width: 170px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .modern-sidebar {
+    min-width: 280px;
+    max-width: 600px;
+  }
+}
+
+/* Dark mode support (optional) */
+@media (prefers-color-scheme: dark) {
+  .modern-sidebar {
+    background: #1f2937;
+    color: #f9fafb;
+  }
+  
+  .sidebar-header {
+    border-bottom-color: #374151;
+  }
+  
+  .header-title {
+    color: #f9fafb;
+  }
+  
+  .close-button {
+    background: #374151;
+    color: #9ca3af;
+  }
+  
+  .close-button:hover {
+    background: #4b5563;
+    color: #f9fafb;
+  }
+  
+  .section-header:hover {
+    background: #374151;
+  }
+  
+  .section-title {
+    color: #e5e7eb;
+  }
+  
+  .expand-icon {
+    color: #9ca3af;
+  }
+  
+  .expand-icon.rotated {
+    color: #d1d5db;
+  }
+  
+  .file-item {
+    background: #374151;
+  }
+  
+  .file-item:hover {
+    background: #4b5563;
+  }
+  
+  .file-item.selected {
+    background: rgba(59, 130, 246, 0.2);
+  }
+  
+  .file-name {
+    color: #f9fafb;
+  }
+  
+  .file-date {
+    color: #9ca3af;
+  }
+  
+  .file-count {
+    background: #4b5563;
+    color: #e5e7eb;
+  }
+  
+  .menu-button {
+    background: #4b5563;
+    color: #9ca3af;
+  }
+  
+  .menu-button:hover {
+    background: #6b7280;
+    color: #f9fafb;
+  }
+  
+  .context-menu {
+    background: #1f2937;
+    border-color: #374151;
+  }
+  
+  .context-menu-item {
+    color: #e5e7eb;
+  }
+  
+  .context-menu-item:hover {
+    background: #374151;
+    color: #f9fafb;
+  }
+  
+  .modal {
+    background: #1f2937;
+    border-color: #374151;
+  }
+  
+  .modal-header {
+    border-bottom-color: #374151;
+  }
+  
+  .modal-header h3 {
+    color: #f9fafb;
+  }
+  
+  .modal-close {
+    background: #374151;
+    color: #9ca3af;
+  }
+  
+  .modal-close:hover {
+    background: #4b5563;
+    color: #f9fafb;
+  }
+  
+  .preview-name {
+    color: #f9fafb;
+  }
+  
+  .meta-label {
+    color: #9ca3af;
+  }
+  
+  .meta-value {
+    color: #e5e7eb;
+  }
+  
+  .modal-footer {
+    background: #111827;
+    border-top-color: #374151;
+  }
+  
+  .btn-secondary {
+    background: #374151;
+    color: #e5e7eb;
+  }
+  
+  .btn-secondary:hover {
+    background: #4b5563;
+    color: #f9fafb;
+  }
+}
+
+/* High DPI displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .file-icon,
+  .preview-icon {
+    image-rendering: -webkit-optimize-contrast;
+  }
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
+  .expand-icon {
+    transition: none;
+  }
+  
+  .sidebar-overlay,
+  .modern-sidebar,
+  .section-content,
+  .context-menu,
+  .modal-overlay,
+  .modal {
+    animation: none;
+  }
+}
+
+/* Print styles */
+@media print {
+  .sidebar-overlay,
+  .modern-sidebar {
+    display: none;
+  }
+}
+
+/* Focus styles for accessibility */
+.close-button:focus-visible,
+.menu-button:focus-visible,
+.modal-close:focus-visible,
+.btn-primary:focus-visible,
+.btn-secondary:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+.file-item:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: -2px;
+}
+
+.section-header:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: -2px;
+}
+
+.context-menu-item:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: -2px;
+  background: #f3f4f6;
+}
+
+/* Custom scrollbar for WebKit browsers */
+.sidebar-content::-webkit-scrollbar {
   width: 6px;
 }
 
-.sidebar::-webkit-scrollbar-track {
-  background: #f9fafb;
-}
-
-.sidebar::-webkit-scrollbar-thumb {
-  background: #d1d5db;
+.sidebar-content::-webkit-scrollbar-track {
+  background: transparent;
   border-radius: 3px;
 }
 
-.sidebar::-webkit-scrollbar-thumb:hover {
+.sidebar-content::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+  transition: background 0.2s ease;
+}
+
+.sidebar-content::-webkit-scrollbar-thumb:hover {
   background: #9ca3af;
 }
 
-/* Firefox 스크롤바 */
-.sidebar {
+/* Firefox scrollbar */
+.sidebar-content {
   scrollbar-width: thin;
-  scrollbar-color: #d1d5db #f9fafb;
+  scrollbar-color: #d1d5db transparent;
+}
+
+/* Loading states (for future enhancement) */
+.loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  border: 2px solid #e5e7eb;
+  border-top: 2px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 </style>
