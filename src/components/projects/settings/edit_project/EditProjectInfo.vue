@@ -65,15 +65,20 @@
 
         <!-- 프로젝트 규모 -->
         <div class="form-section">
-          <label class="form-label" for="project-scale">프로젝트 규모</label>
-          <input
-            id="project-scale"
-            type="text"
-            v-model="projectData.scale"
-            class="form-input"
-            placeholder="프로젝트 규모를 입력하세요"
-          />
-        </div>
+  <label class="form-label" for="project-scale">프로젝트 규모</label>
+  <div class="input-with-unit">
+    <input
+      id="project-scale"
+      type="number"
+      v-model.number="projectData.scale"
+      class="form-input no-spinner"
+      placeholder="0"
+      min="0"
+    />
+    <span class="unit-label">원</span>
+  </div>
+</div>
+
 
         <!-- 저장 버튼 -->
         <div class="form-actions">
@@ -686,4 +691,24 @@ const confirmDelete = async () => {
   outline: 2px solid #4f46e5;
   outline-offset: 2px;
 }
+
+.input-with-unit {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+}
+
+.input-with-unit .form-input {
+  padding-right: 2.5em; /* 여백 확보 */
+}
+
+.unit-label {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #666;
+  pointer-events: none;
+}
+
 </style>
