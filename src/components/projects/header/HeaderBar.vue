@@ -306,21 +306,6 @@ const handleFileSelected = (fileData) => {
   console.log("선택된 파일:", fileData);
 
   emit("fileSelected", fileData);
-
-  if (fileData.type === "uploaded") {
-    // 업로드한 파일 선택 시 docId 사용
-    console.log("업로드한 파일 docId:", fileData.docId);
-    // ProjectContent로 docId 전달하는 로직 추가
-  } else if (fileData.type === "generated") {
-    // 생성된 파일 선택 시 projectId와 revision 사용
-    console.log(
-      "생성된 파일 projectId:",
-      fileData.projectId,
-      "revision:",
-      fileData.revision
-    );
-    // ProjectContent로 projectId와 revision 전달하는 로직 추가
-  }
 };
 
 const closeFileListSidebar = () => {

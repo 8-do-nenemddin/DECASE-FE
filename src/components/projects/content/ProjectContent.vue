@@ -7,6 +7,7 @@
     <UploadContent
       v-else-if="selectedFile.type === 'uploaded'"
       :docId="selectedFile.docId"
+      :file="selectedFile.file"
     />
 
     <!-- 생성된 파일 선택 시 -->
@@ -35,9 +36,23 @@ const props = defineProps({
 const selectedFile = ref(null);
 
 // 파일 선택 이벤트 처리 (부모에서 호출)
+// 파일 선택 이벤트 처리 (부모에서 호출)
 const handleFileSelected = (fileData) => {
   console.log("ProjectContent에서 파일 선택됨:", fileData);
-  selectedFile.value = fileData;
+  console.log(`docId:`, fileData.docId);
+  console.log(`file:`, fileData.file);
+  console.log(`file.name:`, fileData.file?.name);
+
+  selectedFile.value = {
+    type: fileData.type,
+    docId: fileData.docId,
+    file: fileData.file, // file 객체 전체 전달
+    // 생성된 파일의 경우 추가 정보
+    ...(fileData.type === "generated" && {
+      projectId: fileData.projectId,
+      revision: fileData.revision,
+    }),
+  };
 };
 
 // 파일 선택 해제 (필요한 경우)
