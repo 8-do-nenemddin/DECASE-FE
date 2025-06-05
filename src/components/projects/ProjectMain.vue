@@ -2,12 +2,12 @@
   <div class="project-main">
     <HeaderBar :project-id="projectId" />
     <!-- 메인 컨텐츠 -->
-    <!-- <main class="main-content">
+    <main class="main-content">
       <div class="welcome-section">
         <h2 class="welcome-title">Welcome aboard!</h2>
         <p class="welcome-title">Let's simplify your projects, together.</p>
       </div>
-    </main> -->
+    </main>
     <div class="content-wrapper" :class="contentClasses">
       <ProjectContent />
     </div>
@@ -17,7 +17,7 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from "vue";
 import HeaderBar from "./header/HeaderBar.vue";
-import ProjectContent from "./ProjectContent.vue";
+import ProjectContent from "./content/ProjectContent.vue";
 
 const props = defineProps({
   projectId: {
