@@ -18,6 +18,7 @@
         @mousedown="startResize"
         :class="{ active: isResizing }"
       ></div>
+
       <!-- Header -->
       <div class="sidebar-header"></div>
 
@@ -44,7 +45,7 @@
                 </svg>
               </div>
               <span class="section-title">{{ item.name }}</span>
-              <span v-if="item.count" class="count-badge">{{
+              <span v-if="item.count > 0" class="count-badge">{{
                 item.count
               }}</span>
             </div>
@@ -56,9 +57,13 @@
               v-if="!item.files || item.files.length === 0"
               class="empty-state"
             >
-              <p class="empty-message">
-                {{ "파일이 여기에 표시됩니다." }}
-              </p>
+              <div v-if="isLoading" class="loading-state">
+                <div class="loading-spinner"></div>
+                <p class="loading-message">파일을 불러오는 중...</p>
+              </div>
+              <div v-else>
+                <p class="empty-message">파일이 여기에 표시됩니다.</p>
+              </div>
             </div>
 
             <!-- File list -->
@@ -81,8 +86,8 @@
                       {{ file.date }}
                     </div>
                   </div>
-                  <div v-if="file.count" class="file-count">
-                    {{ file.count.toLocaleString() }}
+                  <div v-if="file.revision" class="file-revision">
+                    v{{ file.revision }}
                   </div>
                 </div>
 
@@ -113,10 +118,7 @@
       <div
         v-if="contextMenu.show"
         class="context-menu"
-        :style="{
-          top: contextMenu.y + 'px',
-          left: contextMenu.x + 'px',
-        }"
+        :style="{ top: contextMenu.y + 'px', left: contextMenu.x + 'px' }"
         @click.stop
       >
         <div class="context-menu-item" @click="showFileInfo">
@@ -191,15 +193,27 @@
                       fileInfoModal.file.date
                     }}</span>
                   </div>
-                  <div v-if="fileInfoModal.file?.count" class="meta-row">
-                    <span class="meta-label">개수:</span>
+                  <div v-if="fileInfoModal.file?.revision" class="meta-row">
+                    <span class="meta-label">버전:</span>
+                    <span class="meta-value"
+                      >v{{ fileInfoModal.file.revision }}</span
+                    >
+                  </div>
+                  <div v-if="fileInfoModal.file?.docId" class="meta-row">
+                    <span class="meta-label">문서 ID:</span>
                     <span class="meta-value">{{
-                      fileInfoModal.file.count.toLocaleString()
+                      fileInfoModal.file.docId
                     }}</span>
                   </div>
                   <div class="meta-row">
                     <span class="meta-label">유형:</span>
-                    <span class="meta-value">메일함</span>
+                    <span class="meta-value">
+                      {{
+                        fileInfoModal.file?.docId
+                          ? "업로드 파일"
+                          : "생성된 파일"
+                      }}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -237,37 +251,36 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, onUnmounted } from "vue";
+import { ref, reactive, computed, onMounted, onUnmounted, watch } from "vue";
 
 const emit = defineEmits(["close"]);
+
+const props = defineProps({
+  projectId: {
+    type: String,
+    required: true,
+  },
+});
 
 // Responsive state
 const windowWidth = ref(window.innerWidth);
 const sidebarWidth = ref(320);
 const isResizing = ref(false);
 
-// Computed responsive values
 const isMobile = computed(() => windowWidth.value < 768);
 const isTablet = computed(
   () => windowWidth.value >= 768 && windowWidth.value < 1024
 );
-const isDesktop = computed(() => windowWidth.value >= 1024);
 
-// 반응형 사이드바 스타일
 const sidebarStyles = computed(() => {
   let width;
-
   if (isMobile.value) {
-    // 모바일: 전체 화면 또는 화면 너비 - 여백
     width = Math.min(windowWidth.value - 40, 280);
   } else if (isTablet.value) {
-    // 태블릿: 고정 너비
     width = 300;
   } else {
-    // 데스크톱: 사용자 설정 가능한 너비
     width = sidebarWidth.value;
   }
-
   return {
     width: `${width}px`,
     maxWidth: isMobile.value ? "90vw" : "none",
@@ -277,6 +290,7 @@ const sidebarStyles = computed(() => {
 // State
 const selectedFileIndex = ref(-1);
 const sidebarRef = ref(null);
+const isLoading = ref(false);
 
 const contextMenu = reactive({
   show: false,
@@ -298,58 +312,200 @@ const sidebarItems = reactive([
     name: "As-Is 보고서",
     expanded: false,
     files: [],
+    count: 0,
   },
   {
     name: "업로드한 파일",
     expanded: true,
-    files: [
-      {
-        name: "Google",
-        icon: "☁️",
-        color: "blue-gradient",
-        date: "2025-05-22",
-      },
-      {
-        name: "Google-aws",
-        icon: "☁️",
-        color: "blue-gradient",
-        date: "2025-05-21",
-      },
-      {
-        name: "iCloud",
-        icon: "☁️",
-        color: "blue-gradient",
-        date: "2025-05-20",
-      },
-      {
-        name: "Naver",
-        icon: "☁️",
-        color: "blue-gradient",
-        date: "2025-05-19",
-      },
-    ],
+    files: [],
+    count: 0,
   },
   {
     name: "생성된 파일",
     expanded: false,
     files: [],
+    count: 0,
   },
 ]);
+
+// API 호출 함수들
+const fetchUploadedFiles = async () => {
+  try {
+    const response = await fetch(
+      `/api/v1/projects/${props.projectId}/document/uploads`,
+      {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+    const data = await response.json();
+    if (Array.isArray(data)) {
+      const uploadedFiles = data.map((item) => ({
+        name: item.fileName || "이름 없음",
+        icon: getFileIconByName(item.fileName),
+        color: "blue-gradient",
+        date: new Date().toISOString().split("T")[0],
+        docId: item.docId,
+        type: "uploaded",
+      }));
+
+      sidebarItems[1].files = uploadedFiles;
+      sidebarItems[1].count = uploadedFiles.length;
+    } else {
+      sidebarItems[1].files = [];
+      sidebarItems[1].count = 0;
+    }
+  } catch (error) {
+    console.error("업로드된 파일 API 호출 오류:", error);
+    sidebarItems[1].files = [];
+    sidebarItems[1].count = 0;
+  }
+};
+
+const fetchGeneratedFiles = async () => {
+  try {
+    const response = await fetch(`/api/projects/${props.projectId}/revision`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    });
+
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+    const data = await response.json();
+    if (Array.isArray(data)) {
+      const generatedFiles = data.map((item) => ({
+        name: item.label || "이름 없음",
+        icon: "📄",
+        color: "green-gradient",
+        date: item.date || new Date().toISOString().split("T")[0],
+        revision: item.revision,
+        type: "generated",
+      }));
+
+      sidebarItems[2].files = generatedFiles;
+      sidebarItems[2].count = generatedFiles.length;
+    } else {
+      sidebarItems[2].files = [];
+      sidebarItems[2].count = 0;
+    }
+  } catch (error) {
+    console.error("생성된 파일 API 호출 오류:", error);
+    sidebarItems[2].files = [];
+    sidebarItems[2].count = 0;
+  }
+};
+
+const getFileIconByName = (fileName) => {
+  if (!fileName) return "📁";
+  const extension = fileName.split(".").pop()?.toLowerCase();
+  const iconMap = {
+    pdf: "📄",
+    doc: "📝",
+    docx: "📝",
+    xls: "📊",
+    xlsx: "📊",
+    csv: "📊",
+    txt: "📄",
+    json: "🔧",
+    xml: "🔧",
+    zip: "📦",
+    rar: "📦",
+    jpg: "🖼️",
+    jpeg: "🖼️",
+    png: "🖼️",
+    gif: "🖼️",
+    mp4: "🎬",
+    avi: "🎬",
+    mov: "🎬",
+    mp3: "🎵",
+    wav: "🎵",
+  };
+  return iconMap[extension] || "📁";
+};
+
+const loadAllData = async () => {
+  if (isLoading.value) return;
+  isLoading.value = true;
+  try {
+    await Promise.allSettled([fetchUploadedFiles(), fetchGeneratedFiles()]);
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+const downloadFile = () => {
+  const file = contextMenu.file || fileInfoModal.file;
+  if (!file) return;
+
+  if (file.type === "uploaded") {
+    downloadUploadedFile(file);
+  } else if (file.type === "generated") {
+    downloadGeneratedFile(file);
+  }
+
+  hideContextMenu();
+  closeFileInfo();
+};
+
+const downloadUploadedFile = async (file) => {
+  try {
+    const response = await fetch(
+      `/api/v1/projects/${props.projectId}/document/uploads/${file.docId}/download`
+    );
+    if (!response.ok) throw new Error(`다운로드 실패: ${response.status}`);
+
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = file.name;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error("업로드된 파일 다운로드 오류:", error);
+    alert("파일 다운로드에 실패했습니다.");
+  }
+};
+
+const downloadGeneratedFile = async (file) => {
+  try {
+    const response = await fetch(
+      `/api/projects/${props.projectId}/revision/${file.revision}/download`
+    );
+    if (!response.ok) throw new Error(`다운로드 실패: ${response.status}`);
+
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${file.name}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error("생성된 파일 다운로드 오류:", error);
+    alert("파일 다운로드에 실패했습니다.");
+  }
+};
 
 // 리사이즈 핸들러
 const startResize = (event) => {
   if (isMobile.value || isTablet.value) return;
-
   isResizing.value = true;
   const startX = event.clientX;
   const startWidth = sidebarWidth.value;
 
   const handleMouseMove = (e) => {
-    const newWidth = Math.max(
+    sidebarWidth.value = Math.max(
       280,
       Math.min(600, startWidth + (e.clientX - startX))
     );
-    sidebarWidth.value = newWidth;
   };
 
   const handleMouseUp = () => {
@@ -360,27 +516,19 @@ const startResize = (event) => {
     document.body.style.userSelect = "";
   };
 
-  // 커서 스타일 변경
   document.body.style.cursor = "col-resize";
   document.body.style.userSelect = "none";
-
   document.addEventListener("mousemove", handleMouseMove);
   document.addEventListener("mouseup", handleMouseUp);
 };
 
-// Window resize handler
 const handleWindowResize = () => {
   windowWidth.value = window.innerWidth;
-
-  // 화면 크기 변경 시 사이드바 너비 자동 조정
   if (isMobile.value) {
-    // 모바일로 전환 시
     sidebarWidth.value = Math.min(windowWidth.value - 40, 280);
   } else if (isTablet.value) {
-    // 태블릿으로 전환 시
     sidebarWidth.value = 300;
-  } else if (isDesktop.value && sidebarWidth.value < 320) {
-    // 데스크톱으로 전환 시 최소 너비 보장
+  } else if (sidebarWidth.value < 320) {
     sidebarWidth.value = 320;
   }
 };
@@ -426,20 +574,10 @@ const closeFileInfo = () => {
   fileInfoModal.fileIndex = -1;
 };
 
-const downloadFile = () => {
-  console.log(
-    "다운로드 실행:",
-    contextMenu.file?.name || fileInfoModal.file?.name
-  );
-  hideContextMenu();
-  closeFileInfo();
-};
-
 const getFileIcon = (filename) => {
-  return "📁";
+  return getFileIconByName(filename);
 };
 
-// Event handlers
 const handleKeydown = (event) => {
   if (event.key === "Escape") {
     hideContextMenu();
@@ -447,21 +585,41 @@ const handleKeydown = (event) => {
   }
 };
 
+// 데이터 새로고침
+const refreshData = () => {
+  loadAllData();
+};
+
+defineExpose({ refreshData, loadAllData });
+
 // Lifecycle
 onMounted(() => {
   document.addEventListener("keydown", handleKeydown);
   window.addEventListener("resize", handleWindowResize);
-  handleWindowResize(); // 초기 설정
+  handleWindowResize();
+  if (props.projectId) {
+    loadAllData();
+  }
 });
 
 onUnmounted(() => {
   document.removeEventListener("keydown", handleKeydown);
   window.removeEventListener("resize", handleWindowResize);
 });
+
+watch(
+  () => props.projectId,
+  (newProjectId, oldProjectId) => {
+    if (newProjectId && newProjectId !== oldProjectId) {
+      loadAllData();
+    }
+  },
+  { immediate: false }
+);
 </script>
 
 <style scoped>
-/* Base styles */
+/* 기본 스타일만 유지 - 불필요한 다크모드, 반응형 등 제거 */
 .sidebar-overlay {
   position: fixed;
   top: 0;
@@ -485,21 +643,17 @@ onUnmounted(() => {
   transition: width 0.2s ease;
 }
 
-/* 반응형 클래스 */
 .modern-sidebar.mobile {
   width: 100vw !important;
   max-width: 90vw;
 }
-
 .modern-sidebar.tablet {
   width: 300px !important;
 }
-
 .modern-sidebar.resizing {
   transition: none;
 }
 
-/* 리사이즈 핸들 */
 .resize-handle {
   position: absolute;
   right: 0;
@@ -517,26 +671,6 @@ onUnmounted(() => {
   background: linear-gradient(90deg, transparent, #3b82f6);
 }
 
-.resize-handle::after {
-  content: "";
-  position: absolute;
-  right: 2px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 2px;
-  height: 40px;
-  background: #d1d5db;
-  border-radius: 1px;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-}
-
-.resize-handle:hover::after,
-.resize-handle.active::after {
-  opacity: 1;
-}
-
-/* Header */
 .sidebar-header {
   display: flex;
   align-items: center;
@@ -546,51 +680,12 @@ onUnmounted(() => {
   flex-shrink: 0;
 }
 
-.header-title {
-  font-size: 20px;
-  font-weight: 600;
-  color: #111827;
-  margin: 0;
-  letter-spacing: -0.025em;
-}
-
-.close-button {
-  padding: 8px;
-  background: #f3f4f6;
-  border: none;
-  border-radius: 8px;
-  color: #6b7280;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  flex-shrink: 0;
-}
-
-.close-button:hover {
-  background: #e5e7eb;
-  color: #111827;
-  transform: scale(1.05);
-}
-
-/* Content */
 .sidebar-content {
   flex: 1;
   padding: 15px;
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: #d1d5db transparent;
-}
-
-.sidebar-content::-webkit-scrollbar {
-  width: 6px;
-}
-
-.sidebar-content::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.sidebar-content::-webkit-scrollbar-thumb {
-  background: #d1d5db;
-  border-radius: 3px;
 }
 
 .sidebar-section {
@@ -601,15 +696,6 @@ onUnmounted(() => {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.sidebar-section:hover {
-  background: transparent;
-}
-
-.sidebar-section.expanded {
-  background: transparent;
-}
-
-/* Section header */
 .section-header {
   padding: 16px 20px;
   cursor: pointer;
@@ -656,7 +742,6 @@ onUnmounted(() => {
   box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
 }
 
-/* Section content */
 .section-content {
   animation: expandDown 0.3s ease-out;
   border-top: 1px solid #f3f4f6;
@@ -667,15 +752,34 @@ onUnmounted(() => {
   text-align: center;
 }
 
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.loading-spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid #e5e7eb;
+  border-top: 2px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.loading-message,
 .empty-message {
   color: #6b7280;
   font-size: 14px;
-  font-style: italic;
   margin: 0;
+}
+
+.empty-message {
+  font-style: italic;
   line-height: 1.5;
 }
 
-/* File grid */
 .file-grid {
   padding: 12px;
 }
@@ -727,6 +831,11 @@ onUnmounted(() => {
   box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
 }
 
+.file-icon.green-gradient {
+  background: linear-gradient(135deg, #10b981, #059669);
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
 .file-icon.default-color {
   background: #f3f4f6;
 }
@@ -751,9 +860,9 @@ onUnmounted(() => {
   color: #6b7280;
 }
 
-.file-count {
-  background: #f3f4f6;
-  color: #374151;
+.file-revision {
+  background: #dcfce7;
+  color: #166534;
   padding: 4px 8px;
   border-radius: 8px;
   font-size: 12px;
@@ -783,7 +892,6 @@ onUnmounted(() => {
   transform: scale(1.1);
 }
 
-/* Context menu */
 .context-overlay {
   position: fixed;
   top: 0;
@@ -821,7 +929,6 @@ onUnmounted(() => {
   color: #111827;
 }
 
-/* Modal */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -903,6 +1010,11 @@ onUnmounted(() => {
 .preview-icon.blue-gradient {
   background: linear-gradient(135deg, #60a5fa, #3b82f6);
   box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
+}
+
+.preview-icon.green-gradient {
+  background: linear-gradient(135deg, #10b981, #059669);
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
 }
 
 .preview-icon.default-color {
@@ -992,7 +1104,7 @@ onUnmounted(() => {
   box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
 }
 
-/* Animations */
+/* 애니메이션 */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -1046,88 +1158,108 @@ onUnmounted(() => {
   }
 }
 
-/* Responsive Design */
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* 스크롤바 */
+.sidebar-content::-webkit-scrollbar {
+  width: 6px;
+}
+.sidebar-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+.sidebar-content::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+.sidebar-content::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* 포커스 스타일 */
+.modal-close:focus-visible,
+.menu-button:focus-visible,
+.btn-primary:focus-visible,
+.btn-secondary:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+.file-item:focus-visible,
+.section-header:focus-visible,
+.context-menu-item:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: -2px;
+}
+
+/* 반응형 (최소한만 유지) */
 @media (max-width: 767px) {
   .modern-sidebar {
     width: 100vw !important;
     max-width: none !important;
   }
-
   .sidebar-header {
     padding: 20px;
   }
-
-  .header-title {
-    font-size: 18px;
-  }
-
   .sidebar-content {
     padding: 16px;
   }
-
   .section-header {
     padding: 14px 16px;
   }
-
   .file-grid {
     padding: 8px;
   }
-
   .file-item {
     padding: 14px;
     margin-bottom: 6px;
   }
-
   .file-icon {
     width: 28px;
     height: 28px;
     font-size: 14px;
   }
-
   .file-name {
     font-size: 13px;
   }
-
   .file-date {
     font-size: 10px;
   }
-
   .context-menu {
     min-width: 160px;
   }
-
   .context-menu-item {
     padding: 14px;
     font-size: 13px;
   }
-
   .modal {
     width: 95%;
     margin: 16px;
   }
-
   .modal-header,
   .modal-content,
   .modal-footer {
     padding: 20px;
   }
-
   .preview-icon {
     width: 56px;
     height: 56px;
     font-size: 28px;
   }
-
   .preview-name {
     font-size: 16px;
   }
-
   .meta-row {
     flex-direction: column;
     align-items: flex-start;
     gap: 4px;
   }
-
   .btn-primary,
   .btn-secondary {
     padding: 12px 18px;
@@ -1135,289 +1267,10 @@ onUnmounted(() => {
   }
 }
 
-@media (min-width: 768px) and (max-width: 1023px) {
-  .sidebar-header {
-    padding: 22px;
-  }
-
-  .sidebar-content {
-    padding: 18px;
-  }
-
-  .file-icon {
-    width: 30px;
-    height: 30px;
-  }
-
-  .context-menu {
-    min-width: 170px;
-  }
-}
-
 @media (min-width: 1024px) {
   .modern-sidebar {
     min-width: 280px;
     max-width: 600px;
-  }
-}
-
-/* Dark mode support (optional) */
-@media (prefers-color-scheme: dark) {
-  .modern-sidebar {
-    background: #1f2937;
-    color: #f9fafb;
-  }
-
-  .sidebar-header {
-    border-bottom-color: #374151;
-  }
-
-  .header-title {
-    color: #f9fafb;
-  }
-
-  .close-button {
-    background: #374151;
-    color: #9ca3af;
-  }
-
-  .close-button:hover {
-    background: #4b5563;
-    color: #f9fafb;
-  }
-
-  .section-header:hover {
-    background: #374151;
-  }
-
-  .section-title {
-    color: #e5e7eb;
-  }
-
-  .expand-icon {
-    color: #9ca3af;
-  }
-
-  .expand-icon.rotated {
-    color: #d1d5db;
-  }
-
-  .file-item {
-    background: #374151;
-  }
-
-  .file-item:hover {
-    background: #4b5563;
-  }
-
-  .file-item.selected {
-    background: rgba(59, 130, 246, 0.2);
-  }
-
-  .file-name {
-    color: #f9fafb;
-  }
-
-  .file-date {
-    color: #9ca3af;
-  }
-
-  .file-count {
-    background: #4b5563;
-    color: #e5e7eb;
-  }
-
-  .menu-button {
-    background: #4b5563;
-    color: #9ca3af;
-  }
-
-  .menu-button:hover {
-    background: #6b7280;
-    color: #f9fafb;
-  }
-
-  .context-menu {
-    background: #1f2937;
-    border-color: #374151;
-  }
-
-  .context-menu-item {
-    color: #e5e7eb;
-  }
-
-  .context-menu-item:hover {
-    background: #374151;
-    color: #f9fafb;
-  }
-
-  .modal {
-    background: #1f2937;
-    border-color: #374151;
-  }
-
-  .modal-header {
-    border-bottom-color: #374151;
-  }
-
-  .modal-header h3 {
-    color: #f9fafb;
-  }
-
-  .modal-close {
-    background: #374151;
-    color: #9ca3af;
-  }
-
-  .modal-close:hover {
-    background: #4b5563;
-    color: #f9fafb;
-  }
-
-  .preview-name {
-    color: #f9fafb;
-  }
-
-  .meta-label {
-    color: #9ca3af;
-  }
-
-  .meta-value {
-    color: #e5e7eb;
-  }
-
-  .modal-footer {
-    background: #111827;
-    border-top-color: #374151;
-  }
-
-  .btn-secondary {
-    background: #374151;
-    color: #e5e7eb;
-  }
-
-  .btn-secondary:hover {
-    background: #4b5563;
-    color: #f9fafb;
-  }
-}
-
-/* High DPI displays */
-@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-  .file-icon,
-  .preview-icon {
-    image-rendering: -webkit-optimize-contrast;
-  }
-}
-
-/* Reduced motion preference */
-@media (prefers-reduced-motion: reduce) {
-  * {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-
-  .expand-icon {
-    transition: none;
-  }
-
-  .sidebar-overlay,
-  .modern-sidebar,
-  .section-content,
-  .context-menu,
-  .modal-overlay,
-  .modal {
-    animation: none;
-  }
-}
-
-/* Print styles */
-@media print {
-  .sidebar-overlay,
-  .modern-sidebar {
-    display: none;
-  }
-}
-
-/* Focus styles for accessibility */
-.close-button:focus-visible,
-.menu-button:focus-visible,
-.modal-close:focus-visible,
-.btn-primary:focus-visible,
-.btn-secondary:focus-visible {
-  outline: 2px solid #3b82f6;
-  outline-offset: 2px;
-}
-
-.file-item:focus-visible {
-  outline: 2px solid #3b82f6;
-  outline-offset: -2px;
-}
-
-.section-header:focus-visible {
-  outline: 2px solid #3b82f6;
-  outline-offset: -2px;
-}
-
-.context-menu-item:focus-visible {
-  outline: 2px solid #3b82f6;
-  outline-offset: -2px;
-  background: #f3f4f6;
-}
-
-/* Custom scrollbar for WebKit browsers */
-.sidebar-content::-webkit-scrollbar {
-  width: 6px;
-}
-
-.sidebar-content::-webkit-scrollbar-track {
-  background: transparent;
-  border-radius: 3px;
-}
-
-.sidebar-content::-webkit-scrollbar-thumb {
-  background: #d1d5db;
-  border-radius: 3px;
-  transition: background 0.2s ease;
-}
-
-.sidebar-content::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
-}
-
-/* Firefox scrollbar */
-.sidebar-content {
-  scrollbar-width: thin;
-  scrollbar-color: #d1d5db transparent;
-}
-
-/* Loading states (for future enhancement) */
-.loading {
-  opacity: 0.6;
-  pointer-events: none;
-}
-
-.loading::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 20px;
-  height: 20px;
-  margin: -10px 0 0 -10px;
-  border: 2px solid #e5e7eb;
-  border-top: 2px solid #3b82f6;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
   }
 }
 </style>

@@ -143,8 +143,12 @@
   <!-- 검색 사이드바 -->
   <SearchRequirementsSidebar v-if="showSidebar" @close="closeSidebar" />
 
-  <!-- 파일 관리 사이드 바 -->
-  <ManageFileSidebar v-if="showFileListSidebar" @close="closeFileListSidebar" />
+  <!-- 파일 관리 사이드 바 (projectId 전달) -->
+  <ManageFileSidebar
+    v-if="showFileListSidebar"
+    :projectId="props.projectId"
+    @close="closeFileListSidebar"
+  />
 
   <!-- 소스 업로드 모달 -->
   <UploadSourceModal
