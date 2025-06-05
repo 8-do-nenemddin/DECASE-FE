@@ -110,6 +110,7 @@
 </template>
 
 <script setup>
+import { useProjectStore } from "/src/stores/projectStore";
 import { defineProps, defineEmits, ref, onMounted } from "vue";
 
   // Props 정의
@@ -129,7 +130,8 @@ const emit = defineEmits(["close", "logout", "withdraw", "goHome"]);
 
 // 프로필 데이터 상태
 const profileData = ref({});
-const memberId = 1; // 하드코딩된 memberId, 추후에는 동적으로 처리 필요
+const projectStore = useProjectStore();
+const memberId = projectStore.userId;
 
 const fetchProfile = async () => {
   try {
@@ -168,12 +170,16 @@ const closeLogoutModal = () => {
   isLogoutModalVisible.value = false;
 };
 
+import { useRouter } from "vue-router";
+const router = useRouter();
+
 const confirmLogout = () => {
   console.log("로그아웃 확인");
   emit("logout");
-  emit("goHome"); // 홈으로 이동
+  router.push("/home");
   emit("close");
   closeLogoutModal();
+  projectStore.resetAll();
 };
 
 // 탈퇴 모달 관련

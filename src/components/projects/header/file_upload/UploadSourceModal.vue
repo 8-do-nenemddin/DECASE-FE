@@ -157,7 +157,7 @@ const handleFileSelect = (e) => {
 };
 
 const addFiles = (files) => {
-  const allowed = ['.pdf', '.xlsx', '.xls', '.wav', '.docx'];
+  const allowed = ['.pdf', '.csv', '.xlsx', '.xls', '.wav', '.docx'];
   const validFiles = files.filter((file) =>
     allowed.includes('.' + file.name.split('.').pop().toLowerCase())
   );
@@ -184,8 +184,46 @@ const handleUpload = async () => {
   isUploading.value = true;
 
   try {
-    await new Promise((res) => setTimeout(res, 1500));
-    emit('upload', selectedFiles.value);
+    const formData = new FormData();
+    const types = [];
+
+    selectedFiles.value.forEach((file) => {
+      formData.append('files', file);
+
+      const ext = file.name.split('.').pop().toLowerCase();
+      let type = null;
+
+      switch (ext) {
+        case 'pdf':
+          type = 1; // rfp
+          break;
+        case 'wav':
+          type = 2; // 회의록 음성
+          break;
+        case 'docx':
+          type = 3; // 회의록 문서
+          break;
+        case 'csv':
+        case 'xlsx':
+        case 'xls':
+          type = 5; // 요구사항정의서
+          break;
+      }
+
+      if (type !== null) {
+        types.push(type);
+      }
+    });
+
+    formData.append('types', JSON.stringify(types));
+
+    const memberId = 1;
+    const projectId = 1;
+    await fetch(`http://localhost:8080/api/v1/projects/${projectId}/documents/uploads?memberId=${memberId}`, {
+      method: 'POST',
+      body: formData,
+    });
+
     isUploading.value = false;
     isGenerating.value = true;
     await new Promise((res) => setTimeout(res, 3000));

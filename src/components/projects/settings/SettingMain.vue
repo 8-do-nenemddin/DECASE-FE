@@ -20,6 +20,9 @@
 
         <!-- 권한 관리 -->
         <ManageRight :project-id="projectId" v-if="currentComponent === 'ProjectRight'" />
+
+        <!-- 초대 현황 -->
+        <Invitation :project-id="projectId" v-if="currentComponent === 'Invitation'" />
       </main>
     </div>
   </div>
@@ -32,6 +35,7 @@ import SettingsSidebar from "./SettingsSidebar.vue";
 import EditProjectInfo from "./edit_project/EditProjectInfo.vue";
 import ViewMatrix from "./view_matrix/ViewMatrix.vue";
 import ManageRight from "./manage_right/ManageRight.vue";
+import Invitation from "./invitation/Invitation.vue";
 
 const props = defineProps({
   projectId: {
