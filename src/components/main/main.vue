@@ -40,13 +40,6 @@
               </button>
             </div>
 
-            <select class="dropdown status-dropdown" v-model="statusFilter">
-              <option value="all">모두</option>
-              <option value="not_started">시작 전</option>
-              <option value="in_progress">진행 중</option>
-              <option value="done">완료</option>
-            </select>
-
             <select class="dropdown sort-dropdown" v-model="sortOption">
               <option value="date,desc">날짜 (최신 순)</option>
               <option value="date,asc">날짜 (오래된 순)</option>
@@ -58,24 +51,25 @@
       </div>
 
       <div class="projects-container">
-        <component :is="selectedViewComponent" :projects="sortedProjects" />
-        
+        <component :is="selectedViewComponent" :projects="displayedProjects" />
+      </div>
+      <footer>
         <!-- 수정된 페이지네이션 -->
         <div class="pagination-container" v-if="totalPages > 1">
           <button
             class="pagination-button"
             :disabled="currentPage === 1"
-            @click="handlePageChange(currentPage - 1)"
+            @click="goToPage(currentPage - 1)"
           >
             이전
           </button>
 
           <div class="pagination-pages">
             <button
-              v-for="page in totalPages"
+              v-for="page in paginationPages"
               :key="page"
               :class="['page-button', { active: currentPage === page }]"
-              @click="handlePageChange(page)"
+              @click="goToPage(page)"
             >
               {{ page }}
             </button>
@@ -84,12 +78,12 @@
           <button
             class="pagination-button"
             :disabled="currentPage === totalPages"
-            @click="handlePageChange(currentPage + 1)"
+            @click="goToPage(currentPage + 1)"
           >
             다음
           </button>
         </div>
-      </div>
+      </footer>
     </main>
 
     <CreateProjectModal
@@ -117,37 +111,122 @@ import ProjectList from "./ProjectList.vue";
 import MainHeader from "../main/MainHeader.vue";
 import ProfileBar from "./ProfileBar.vue";
 
+// 상태 변수들
 const showModal = ref(false);
 const router = useRouter();
 const showProfileSidebar = ref(false);
 const currentPage = ref(1);
-const totalPages = ref(1);
+const itemsPerPage = 10;
+const selectedView = ref("gallery");
+const searchQuery = ref("");
+const sortOption = ref("date,desc");
+
 // 프로젝트 데이터
 const projects = ref([]);
 
-const handlePageChange = (page) => {
-  if (page < 1 || page > totalPages.value) return;
-  currentPage.value = page;
-  fetchProjects(); // 페이지 변경 시 데이터 재요청
-};
+// 페이지네이션 관련 computed
+const filteredProjects = computed(() => {
+  let filtered = [...projects.value];
 
+  // 검색 필터
+  if (searchQuery.value) {
+    const keyword = searchQuery.value.toLowerCase();
+    filtered = filtered.filter((project) =>
+      project.name.toLowerCase().includes(keyword)
+    );
+  }
+
+  // 정렬
+  const [field, order] = sortOption.value.split(",");
+  return filtered.sort((a, b) => {
+    if (field === "date") {
+      return order === "asc"
+        ? new Date(a.date) - new Date(b.date)
+        : new Date(b.date) - new Date(a.date);
+    }
+    return order === "asc"
+      ? a.name.localeCompare(b.name)
+      : b.name.localeCompare(a.name);
+  });
+});
+
+const totalPages = computed(() => {
+  return Math.ceil(filteredProjects.value.length / itemsPerPage);
+});
+
+const displayedProjects = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage;
+  const end = start + itemsPerPage;
+  return filteredProjects.value.slice(start, end);
+});
+
+const paginationPages = computed(() => {
+  const pages = [];
+  const total = totalPages.value;
+  const current = currentPage.value;
+  
+  if (total <= 7) {
+    // 총 페이지가 7개 이하면 모두 표시
+    for (let i = 1; i <= total; i++) {
+      pages.push(i);
+    }
+  } else {
+    // 총 페이지가 많으면 현재 페이지 기준으로 표시
+    if (current <= 4) {
+      for (let i = 1; i <= 5; i++) pages.push(i);
+      pages.push('...');
+      pages.push(total);
+    } else if (current >= total - 3) {
+      pages.push(1);
+      pages.push('...');
+      for (let i = total - 4; i <= total; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      pages.push('...');
+      for (let i = current - 1; i <= current + 1; i++) pages.push(i);
+      pages.push('...');
+      pages.push(total);
+    }
+  }
+  
+  return pages;
+});
+
+const selectedViewComponent = computed(() => {
+  return selectedView.value === "gallery" ? ProjectGallery : ProjectList;
+});
+
+// 메서드들
 const fetchProjects = async () => {
   try {
     const memberId = 1;
-    const size = 10;
-    const page = currentPage.value - 1;
-
-    const response = await fetch(`/api/v1/members/${memberId}/projects?page=${page}&size=${size}`);
+    const response = await fetch(`/api/v1/members/${memberId}/projects`);
     const json = await response.json();
-
-    projects.value = json.data;
-    totalPages.value = json.pageInfo.totalPages || 1; // 서버에서 totalPages 같이 와야 함
+    projects.value = json.data || [];
   } catch (error) {
     console.error("프로젝트 데이터를 불러오는 데 실패했습니다:", error);
+    // 테스트용 더미 데이터
+    projects.value = Array.from({ length: 25 }, (_, i) => ({
+      id: i + 1,
+      name: `프로젝트 ${i + 1}`,
+      date: new Date(2024, 0, i + 1).toISOString().split('T')[0],
+      versionInfo: `버전 이력 ${i % 5}개`,
+      status: ["NOT_STARTED", "IN_PROGRESS", "DONE"][i % 3]
+    }));
   }
 };
 
-// 프로필 사이드바 관련 메서드
+const goToPage = (page) => {
+  if (page >= 1 && page <= totalPages.value && page !== '...') {
+    currentPage.value = page;
+  }
+};
+
+const setView = (view) => {
+  selectedView.value = view;
+};
+
+// 프로필 사이드바 관련
 const toggleProfileSidebar = () => {
   showProfileSidebar.value = !showProfileSidebar.value;
 };
@@ -159,16 +238,14 @@ const closeProfileSidebar = () => {
 const handleLogout = () => {
   console.log("로그아웃");
   closeProfileSidebar();
-  // 로그아웃 로직 구현
 };
 
 const handleWithdraw = () => {
   console.log("탈퇴하기");
   closeProfileSidebar();
-  // 탈퇴 로직 구현
 };
 
-// 모달 관련 메서드
+// 모달 관련
 const openModal = () => {
   showModal.value = true;
 };
@@ -179,101 +256,38 @@ const closeModal = () => {
 
 const handleCreateProject = (newProjectName) => {
   console.log(`새 프로젝트 '${newProjectName}'가 생성되었습니다.`);
-
-  // 새 프로젝트를 projects 배열에 추가
+  
   const newProject = {
-    id: newProjectName.id,
+    id: Date.now(),
     name: newProjectName,
-    date: new Date().toISOString().split('T')[0].replace(/-/g, '.'),
+    date: new Date().toISOString().split('T')[0],
     versionInfo: "버전 이력 0개",
     status: "NOT_STARTED",
   };
+  
   projects.value.unshift(newProject);
-
   closeModal();
-  router.push({ name: "ProjectMain", params: { projectId: newProjectName.id } });
+  currentPage.value = 1;
+  
+  if (newProjectName.id) {
+    router.push({ name: "ProjectMain", params: { projectId: newProjectName.id } });
+  }
 };
 
+// 라이프사이클
 onMounted(() => {
   fetchProjects();
-});
-
-// 뷰 및 필터 관련
-const selectedView = ref("gallery");
-const searchQuery = ref("");
-const sortOption = ref("date,desc");
-const statusFilter = ref("all");
-
-const setView = (view) => {
-  selectedView.value = view;
-};
-
-const selectedViewComponent = computed(() => {
-  return selectedView.value === "gallery" ? ProjectGallery : ProjectList;
-});
-
-const sortedProjects = computed(() => {
-  const [field, order] = sortOption.value.split(",");
-  let filtered = projects.value;
-
-  // 검색
-  if (searchQuery.value) {
-    const keyword = searchQuery.value.toLowerCase();
-    filtered = filtered.filter((project) =>
-      project.name.toLowerCase().includes(keyword)
-    );
-  }
-
-  // 상태 필터
-  if (statusFilter.value !== "all") {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);  // 시간 초기화
-
-  filtered = filtered.filter((project) => {
-    const startDate = new Date(project.startDate);
-    startDate.setHours(0, 0, 0, 0);
-
-    const endDate = new Date(project.endDate);
-    endDate.setHours(23, 59, 59, 999);  // 오늘 끝까지 포함
-
-    let status;
-    if (today < startDate) status = "not_started";
-    else if (today <= endDate) status = "in_progress";
-    else status = "done";
-
-    return status === statusFilter.value;
-  });
-}
-
-  // 정렬
-  const sorted = [...filtered].sort((a, b) => {
-    let comparison = 0;
-    if (field === "date") {
-      comparison = new Date(a.date) - new Date(b.date);
-    } else {
-      comparison = a.name.localeCompare(b.name);
-    }
-    return order === "asc" ? comparison : -comparison;
-  });
-
-  // 페이지 분할 (slice)
-  const pageSize = 10;
-  const start = (currentPage.value - 1) * pageSize;
-  const end = start + pageSize;
-  return sorted.slice(start, end);
 });
 </script>
 
 <style scoped>
 * {
   box-sizing: border-box;
-  /* 모든 애니메이션 완전 제거 (모달 제외) */
   animation: none !important;
   transition: none !important;
   transform: none !important;
 }
 
-/* 모달은 예외 처리 - 표시되도록 허용 */
 .modal-overlay,
 .modal-content {
   animation: initial !important;
@@ -283,7 +297,6 @@ const sortedProjects = computed(() => {
   display: flex !important;
 }
 
-/* 필요한 호버 효과만 허용 */
 .profile-icon:hover,
 .new-project-button:hover,
 .search-container:focus-within,
@@ -305,22 +318,21 @@ const sortedProjects = computed(() => {
   flex-direction: column;
 }
 
-/* Header Styles - 높이 줄이고 애니메이션 효과 제거 */
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 50px; /* 35px에서 20px로 줄임 */
+  padding: 20px 50px;
   background-color: #ffffff;
   position: relative;
-  min-height: 90px; /* 130px에서 90px로 줄임 */
+  min-height: 90px;
   width: 100%;
   flex-shrink: 0;
 }
 
 .logo-container {
   flex-shrink: 0;
-  width: 200px; /* 250px에서 200px로 줄임 */
+  width: 200px;
   display: flex;
   justify-content: flex-start;
   align-items: center;
@@ -330,7 +342,6 @@ const sortedProjects = computed(() => {
   height: 50px;
   width: auto;
   display: block;
-  /* 로고 애니메이션 완전 제거 */
   animation: none !important;
   transform: none !important;
   transition: none !important;
@@ -351,7 +362,6 @@ const sortedProjects = computed(() => {
   margin: 0;
   color: #1a202c;
   letter-spacing: -0.5px;
-  /* 환영 메시지 애니메이션 완전 제거 */
   animation: none !important;
   transition: none !important;
   opacity: 1 !important;
@@ -359,7 +369,7 @@ const sortedProjects = computed(() => {
 
 .profile-section {
   flex-shrink: 0;
-  width: 200px; /* 250px에서 200px로 줄임 */
+  width: 200px;
   display: flex;
   justify-content: flex-end;
   align-items: center;
@@ -379,7 +389,6 @@ const sortedProjects = computed(() => {
   font-weight: 500;
   cursor: pointer;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  /* 프로필 아이콘 애니메이션 완전 제거, 호버만 허용 */
   animation: none !important;
   transform: none !important;
 }
@@ -391,16 +400,14 @@ const sortedProjects = computed(() => {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
-/* Main Content */
 .main-content {
   flex: 1;
-  padding: 30px 50px; /* 40px에서 30px로 줄임 */
+  padding: 30px 50px;
   width: 100%;
   display: flex;
   flex-direction: column;
 }
 
-/* Toolbar Styles */
 .toolbar {
   display: flex;
   justify-content: space-between;
@@ -447,7 +454,6 @@ const sortedProjects = computed(() => {
   flex-wrap: wrap;
 }
 
-/* Search Container */
 .search-container {
   display: flex;
   align-items: center;
@@ -484,7 +490,6 @@ const sortedProjects = computed(() => {
   color: #a0aec0;
 }
 
-/* View Options */
 .view-options {
   display: flex;
   align-items: center;
@@ -526,7 +531,6 @@ const sortedProjects = computed(() => {
   font-size: 15px;
 }
 
-/* Dropdown Styles */
 .dropdown {
   padding: 12px 15px;
   border: 1px solid #e2e8f0;
@@ -546,22 +550,16 @@ const sortedProjects = computed(() => {
   background: white;
 }
 
-.status-dropdown {
-  min-width: 130px;
-}
-
 .sort-dropdown {
   min-width: 170px;
 }
 
-/* Projects Container */
 .projects-container {
   flex: 1;
   width: 100%;
   min-height: 400px;
 }
 
-/* 페이지네이션 스타일 */
 .pagination-container {
   display: flex;
   justify-content: center;
@@ -572,48 +570,60 @@ const sortedProjects = computed(() => {
 }
 
 .pagination-button {
-  padding: 8px 14px;
-  background: #e2e8f0;
-  border: none;
+  padding: 10px 16px;
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
   border-radius: 8px;
   cursor: pointer;
   font-weight: 500;
   color: #2d3748;
-  transition: background 0.2s;
+  font-size: 14px;
+  transition: all 0.2s ease;
 }
 
 .pagination-button:hover:not(:disabled) {
-  background: #cbd5e0;
+  background: #edf2f7;
+  border-color: #cbd5e0;
 }
 
 .pagination-button:disabled {
   cursor: not-allowed;
   opacity: 0.5;
+  background: #f7fafc;
 }
 
 .pagination-pages {
   display: flex;
-  gap: 8px;
+  gap: 6px;
+  align-items: center;
 }
 
 .page-button {
-  padding: 6px 12px;
-  background: #edf2f7;
-  border: 1px solid #cbd5e0;
+  padding: 8px 12px;
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
   border-radius: 6px;
   cursor: pointer;
   font-size: 14px;
   color: #2d3748;
+  min-width: 40px;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.page-button:hover {
+  background: #edf2f7;
+  border-color: #cbd5e0;
 }
 
 .page-button.active {
   background: #4a5568;
   color: white;
-  font-weight: bold;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  border-color: #4a5568;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(74, 85, 104, 0.3);
 }
 
-/* 반응형 디자인 */
 @media (max-width: 1200px) {
   .header {
     padding: 15px 40px;
@@ -687,6 +697,20 @@ const sortedProjects = computed(() => {
   .search-input {
     width: 180px;
   }
+  
+  .pagination-container {
+    gap: 8px;
+  }
+  
+  .pagination-pages {
+    gap: 4px;
+  }
+  
+  .page-button {
+    padding: 6px 10px;
+    min-width: 35px;
+    font-size: 12px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -719,6 +743,20 @@ const sortedProjects = computed(() => {
   .dropdown {
     min-width: auto;
     flex: 1;
+  }
+  
+  .pagination-container {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .pagination-pages {
+    order: 2;
+  }
+  
+  .pagination-button {
+    padding: 8px 12px;
+    font-size: 12px;
   }
 }
 </style>

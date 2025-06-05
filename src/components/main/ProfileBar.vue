@@ -88,11 +88,15 @@
 
   // Props 정의
   const props = defineProps({
-    isVisible: {
-      type: Boolean,
-      default: false
-    }
-  });
+  isVisible: {
+    type: Boolean,
+    default: false
+  },
+  profileData: {
+    type: Object,
+    default: () => ({})  // 기본값으로 빈 객체
+  }
+});
 
   // Emits 정의
   const emit = defineEmits(['close', 'logout', 'withdraw', 'goHome']);
