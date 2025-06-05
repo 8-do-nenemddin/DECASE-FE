@@ -59,6 +59,36 @@
 
       <div class="projects-container">
         <component :is="selectedViewComponent" :projects="sortedProjects" />
+        
+        <!-- 수정된 페이지네이션 -->
+        <div class="pagination-container" v-if="totalPages > 1">
+          <button
+            class="pagination-button"
+            :disabled="currentPage === 1"
+            @click="handlePageChange(currentPage - 1)"
+          >
+            이전
+          </button>
+
+          <div class="pagination-pages">
+            <button
+              v-for="page in totalPages"
+              :key="page"
+              :class="['page-button', { active: currentPage === page }]"
+              @click="handlePageChange(page)"
+            >
+              {{ page }}
+            </button>
+          </div>
+
+          <button
+            class="pagination-button"
+            :disabled="currentPage === totalPages"
+            @click="handlePageChange(currentPage + 1)"
+          >
+            다음
+          </button>
+        </div>
       </div>
     </main>
 
@@ -90,6 +120,32 @@ import ProfileBar from "./ProfileBar.vue";
 const showModal = ref(false);
 const router = useRouter();
 const showProfileSidebar = ref(false);
+const currentPage = ref(1);
+const totalPages = ref(1);
+// 프로젝트 데이터
+const projects = ref([]);
+
+const handlePageChange = (page) => {
+  if (page < 1 || page > totalPages.value) return;
+  currentPage.value = page;
+  fetchProjects(); // 페이지 변경 시 데이터 재요청
+};
+
+const fetchProjects = async () => {
+  try {
+    const memberId = 1;
+    const size = 10;
+    const page = currentPage.value - 1;
+
+    const response = await fetch(`/api/v1/members/${memberId}/projects?page=${page}&size=${size}`);
+    const json = await response.json();
+
+    projects.value = json.data;
+    totalPages.value = json.pageInfo.totalPages || 1; // 서버에서 totalPages 같이 와야 함
+  } catch (error) {
+    console.error("프로젝트 데이터를 불러오는 데 실패했습니다:", error);
+  }
+};
 
 // 프로필 사이드바 관련 메서드
 const toggleProfileSidebar = () => {
@@ -126,7 +182,7 @@ const handleCreateProject = (newProjectName) => {
 
   // 새 프로젝트를 projects 배열에 추가
   const newProject = {
-    id: Date.now(),
+    id: newProjectName.id,
     name: newProjectName,
     date: new Date().toISOString().split('T')[0].replace(/-/g, '.'),
     versionInfo: "버전 이력 0개",
@@ -135,29 +191,7 @@ const handleCreateProject = (newProjectName) => {
   projects.value.unshift(newProject);
 
   closeModal();
-  router.push({ name: "ProjectMain", params: { projectId: projectId } });
-};
-
-// 프로젝트 데이터
-const projects = ref([]);
-
-const fetchProjects = async () => {
-  try {
-    const memberId = 1; // 하드코딩된 테스트용 ID
-    const page = 0;
-    const size = 10;
-
-    console.log("요청 보냄");
-
-    const response = await fetch(`/api/v1/members/${memberId}/projects?page=${page}&size=${size}`);
-    const json = await response.json();
-
-    console.log("받은 데이터:", json);
-
-    projects.value = json.data;
-  } catch (error) {
-    console.error("프로젝트 데이터를 불러오는 데 실패했습니다:", error);
-  }
+  router.push({ name: "ProjectMain", params: { projectId: newProjectName.id } });
 };
 
 onMounted(() => {
@@ -182,6 +216,7 @@ const sortedProjects = computed(() => {
   const [field, order] = sortOption.value.split(",");
   let filtered = projects.value;
 
+  // 검색
   if (searchQuery.value) {
     const keyword = searchQuery.value.toLowerCase();
     filtered = filtered.filter((project) =>
@@ -189,24 +224,29 @@ const sortedProjects = computed(() => {
     );
   }
 
+  // 상태 필터
   if (statusFilter.value !== "all") {
-    const today = new Date();
-    filtered = filtered.filter((project) => {
-      const startDate = new Date(project.startDate);
-      const endDate = new Date(project.endDate);
-      let status;
-      if (today < startDate) {
-        status = "not_started";
-      } else if (today <= endDate) {
-        status = "in_progress";
-      } else {
-        status = "done";
-      }
-      return status === statusFilter.value;
-    });
-  }
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);  // 시간 초기화
 
-  return [...filtered].sort((a, b) => {
+  filtered = filtered.filter((project) => {
+    const startDate = new Date(project.startDate);
+    startDate.setHours(0, 0, 0, 0);
+
+    const endDate = new Date(project.endDate);
+    endDate.setHours(23, 59, 59, 999);  // 오늘 끝까지 포함
+
+    let status;
+    if (today < startDate) status = "not_started";
+    else if (today <= endDate) status = "in_progress";
+    else status = "done";
+
+    return status === statusFilter.value;
+  });
+}
+
+  // 정렬
+  const sorted = [...filtered].sort((a, b) => {
     let comparison = 0;
     if (field === "date") {
       comparison = new Date(a.date) - new Date(b.date);
@@ -215,6 +255,12 @@ const sortedProjects = computed(() => {
     }
     return order === "asc" ? comparison : -comparison;
   });
+
+  // 페이지 분할 (slice)
+  const pageSize = 10;
+  const start = (currentPage.value - 1) * pageSize;
+  const end = start + pageSize;
+  return sorted.slice(start, end);
 });
 </script>
 
@@ -513,6 +559,58 @@ const sortedProjects = computed(() => {
   flex: 1;
   width: 100%;
   min-height: 400px;
+}
+
+/* 페이지네이션 스타일 */
+.pagination-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-top: 30px;
+  flex-wrap: wrap;
+}
+
+.pagination-button {
+  padding: 8px 14px;
+  background: #e2e8f0;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  color: #2d3748;
+  transition: background 0.2s;
+}
+
+.pagination-button:hover:not(:disabled) {
+  background: #cbd5e0;
+}
+
+.pagination-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.pagination-pages {
+  display: flex;
+  gap: 8px;
+}
+
+.page-button {
+  padding: 6px 12px;
+  background: #edf2f7;
+  border: 1px solid #cbd5e0;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #2d3748;
+}
+
+.page-button.active {
+  background: #4a5568;
+  color: white;
+  font-weight: bold;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 /* 반응형 디자인 */
