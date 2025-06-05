@@ -361,8 +361,23 @@ async function loadDataFromAPI() {
       );
     }
 
-    const apiData = await response.json();
-    console.log("API 응답 데이터:", apiData);
+    const responseData = await response.json();
+    console.log("API 응답 데이터:", responseData);
+
+    let apiData;
+    if (responseData.data && Array.isArray(responseData.data)) {
+      // 래핑된 응답 구조인 경우
+      apiData = responseData.data;
+      console.log("래핑된 응답에서 data 추출:", apiData);
+    } else if (Array.isArray(responseData)) {
+      // 직접 배열 응답인 경우
+      apiData = responseData;
+      console.log("직접 배열 응답:", apiData);
+    } else {
+      // 예상치 못한 응답 구조
+      console.error("예상치 못한 응답 구조:", responseData);
+      throw new Error("응답 데이터 구조가 올바르지 않습니다.");
+    }
 
     if (!Array.isArray(apiData) || apiData.length === 0) {
       console.warn(
@@ -372,6 +387,7 @@ async function loadDataFromAPI() {
       return;
     }
 
+    console.log("처리할 실제 데이터:", apiData);
     const transformedData = transformApiDataToTableData(apiData);
     rowData.value = transformedData;
     modifiedRows.value.clear();
