@@ -2,12 +2,17 @@
   <!-- 헤더 -->
   <header class="header">
     <div class="header-left">
-      <img
+      <!-- <img
         src="/DECASE-light.png"
         alt="DECASE Logo"
         class="logo-icon"
         @click="handleGoMain"
-      />
+      /> -->
+      <button class="back-button" @click="goToMain">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M19 12H5M12 19L5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+      </button>
     </div>
 
     <div class="header-center">
@@ -265,5 +270,23 @@ const handleGoMain = () => {
   .project-title {
     font-size: 16px;
   }
+}
+.back-button {  
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #6b7280;
+}
+
+.back-button:hover {
+  background: #f7fafc;
+  border-color: #4a5568;
 }
 </style>
