@@ -7,33 +7,18 @@
       :key="project.projectId"
       @click="project.showDropdown ? null : navigateToProject(project.projectId)"
     >
-      <h2 class="project-header">
-        <span class="project-name">{{ project.name }}</span>
-        <div
-          class="project-status-wrapper"
-          @click.stop="toggleDropdown(project)"
-        >
-          <span
-            class="project-status"
-            :class="
-              'status-' + project.status.toLowerCase().replaceAll(' ', '_')
-            "
-          >
-            {{ project.status }}
-          </span>
-          <ul v-if="project.showDropdown" class="status-dropdown">
-            <li
-              v-for="status in statusOptions"
-              :key="status"
-              class="project-status"
-              :class="'status-' + status.toLowerCase().replaceAll(' ', '_')"
-              @click.stop="changeStatus(project, status)"
-            >
-              {{ status }}
-            </li>
-          </ul>
-        </div>
-      </h2>
+    <h2 class="project-header">
+  <span class="project-name">{{ project.name }}</span>
+  <div class="project-status-wrapper">
+    <span
+      class="project-status"
+      :class="'status-' + getProjectStatus(project).toLowerCase().replaceAll(' ', '_')"
+    >
+      {{ getProjectStatus(project) }}
+    </span>
+  </div>
+</h2>
+
       <p>{{ project.startDate }} ~ {{project.endDate}} ・ 버전 이력 {{ project.revisionCount }}개</p>
     </div>
   </div>
@@ -69,19 +54,16 @@ const navigateToProject = (projectId) => {
   router.push({ name: "ProjectMain", params: { projectId: projectId } });
 };
 
-const statusOptions = ["NOT_STARTED", "IN_PROGRESS", "DONE"];
+function getProjectStatus(project) {
+  const today = new Date();
+  const startDate = new Date(project.startDate);
+  const endDate = new Date(project.endDate);
 
-const toggleDropdown = (project) => {
-  localProjects.value.forEach((p) => {
-    if (p !== project) p.showDropdown = false;
-  });
-  project.showDropdown = !project.showDropdown;
-};
+  if (today < startDate) return "not_started";
+  if (today <= endDate) return "in_progress";
+  return "done";
+}
 
-const changeStatus = (project, status) => {
-  project.status = status;
-  project.showDropdown = false;
-};
 </script>
 
 <style scoped>

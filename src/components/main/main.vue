@@ -190,9 +190,20 @@ const sortedProjects = computed(() => {
   }
 
   if (statusFilter.value !== "all") {
-    filtered = filtered.filter(
-      (project) => project.status.toLowerCase() === statusFilter.value
-    );
+    const today = new Date();
+    filtered = filtered.filter((project) => {
+      const startDate = new Date(project.startDate);
+      const endDate = new Date(project.endDate);
+      let status;
+      if (today < startDate) {
+        status = "not_started";
+      } else if (today <= endDate) {
+        status = "in_progress";
+      } else {
+        status = "done";
+      }
+      return status === statusFilter.value;
+    });
   }
 
   return [...filtered].sort((a, b) => {

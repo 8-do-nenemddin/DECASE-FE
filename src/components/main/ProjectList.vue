@@ -18,25 +18,14 @@
 		  <td class="title-cell">{{ project.name }}</td>
 		  <td>버전 이력 {{ project.revisionCount }}개</td>
 		  <td>
-			<div class="status-wrapper" @click.stop="toggleDropdown(project)">
-			  <span
-				class="status-badge"
-				:class="'status-' + project.status.toLowerCase().replaceAll(' ', '_')"
-			  >
-				{{ project.status }}
-			  </span>
-			  <ul v-if="project.showDropdown" class="status-dropdown">
-				<li
-				  v-for="status in statusOptions"
-				  :key="status"
-				  class="status-badge"
-				  :class="'status-' + status.toLowerCase().replaceAll(' ', '_')"
-				  @click.stop="changeStatus(project, status)"
-				>
-				  {{ status }}
-				</li>
-			  </ul>
-			</div>
+        <div class="status-wrapper">
+  <span
+    class="status-badge"
+    :class="'status-' + getProjectStatus(project).toLowerCase().replaceAll(' ', '_')"
+  >
+    {{ getProjectStatus(project) }}
+  </span>
+</div>
 		  </td>
 		  <td>{{ project.startDate }}~{{project.endDate}}</td>
 		</tr>
@@ -69,19 +58,17 @@ watch(
 );
 
 const router = useRouter();
-const statusOptions = ['NOT_STARTED', 'IN_PROGRESS', 'DONE'];
 
-const toggleDropdown = (project) => {
-  localProjects.value.forEach((p) => {
-    if (p !== project) p.showDropdown = false;
-  });
-  project.showDropdown = !project.showDropdown;
-};
+function getProjectStatus(project) {
+  const today = new Date();
+  const startDate = new Date(project.startDate);
+  const endDate = new Date(project.endDate);
 
-const changeStatus = (project, status) => {
-  project.status = status;
-  project.showDropdown = false;
-};
+  if (today < startDate) return "not_started";
+  if (today <= endDate) return "in_progress";
+  return "done";
+}
+
 
 const navigateToProject = (projectId) => {
   router.push({ name: "ProjectMain", params: { projectId: projectId } });
