@@ -13,14 +13,12 @@
           <button
             @click="saveChanges"
             class="save-button"
-            :disabled="modifiedRows.size === 0"
           >
             💾 저장 ({{ modifiedRows.size }})
           </button>
           <button
             @click="cancelChanges"
             class="cancel-button"
-            :disabled="modifiedRows.size === 0"
           >
             ❌취소
           </button>
@@ -35,27 +33,27 @@
 
     <div v-if="loading" class="loading-notice">🔄 데이터를 불러오는 중...</div>
 
-    <div class="grid-wrapper">
-      <ag-grid-vue
-        class="ag-theme-alpine"
-        style="height: 600px; width: 100%"
-        :columnDefs="columnDefs"
-        :rowData="rowData"
-        :defaultColDef="defaultColDef"
-        :gridOptions="gridOptions"
-        @cell-value-changed="onCellValueChanged"
-        @grid-ready="onGridReady"
-      />
-    </div>
+    <ag-grid-vue
+      class="ag-theme-alpine"
+      style="height: 600px; width: 100%"
+      :columnDefs="columnDefs"
+      :rowData="rowData"
+      :defaultColDef="defaultColDef"
+      :gridOptions="gridOptions"
+      @cell-value-changed="onCellValueChanged"
+      @grid-ready="onGridReady"
+    />
   </div>
 </template>
 
 <script setup>
+console.log('컴포넌트 새로 로딩됨')
 import { ref, onMounted } from "vue";
 import { AgGridVue } from "ag-grid-vue3";
 import { ModuleRegistry, AllCommunityModule } from "ag-grid-community";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
+import { useProjectStore} from '../../../stores/projectStore';
 
 // AG Grid 모듈 등록 (필수!)
 ModuleRegistry.registerModules([AllCommunityModule]);
@@ -65,8 +63,9 @@ const loading = ref(false);
 
 // API 설정
 const API_BASE_URL = "http://localhost:8080";
-const projectId = ref(1); // 프로젝트 ID (실제로는 props나 router에서 받아올 수 있음)
-const revisionCount = ref(1); // 리비전 수
+const revisionCount = ref(0); // 리비전 수
+const projectStore = useProjectStore();
+const projectId = projectStore.projectId;
 
 // 컬럼 정의 - API 응답에 맞게 수정
 const columnDefs = ref([
@@ -318,12 +317,13 @@ function transformApiDataToTableData(apiData) {
   });
 }
 
-// API URL 생성 함수
+// API URL 생성 함수 - 수정된 버전
 function buildApiUrl(projectId, revisionCount) {
   const baseUrl = `${API_BASE_URL}/api/projects/${projectId}/requirements/generated`;
   const params = new URLSearchParams();
 
-  if (revisionCount) {
+  // 🔧 수정: revisionCount가 0이어도 파라미터에 추가
+  if (revisionCount !== null && revisionCount !== undefined) {
     params.append("revisionCount", revisionCount);
   }
 
@@ -331,14 +331,15 @@ function buildApiUrl(projectId, revisionCount) {
   return queryString ? `${baseUrl}?${queryString}` : baseUrl;
 }
 
-// API에서 데이터를 로드하는 함수
+// API에서 데이터를 로드하는 함수 - 수정된 버전
 async function loadDataFromAPI() {
   if (!projectId.value || projectId.value < 1) {
     console.error("유효하지 않은 프로젝트 ID:", projectId.value);
     return;
   }
 
-  if (!revisionCount.value || revisionCount.value < 1) {
+  // 🔧 수정: revisionCount는 0 이상이면 유효하도록 변경
+  if (revisionCount.value === null || revisionCount.value === undefined || revisionCount.value < 0) {
     console.error("유효하지 않은 리비전 수:", revisionCount.value);
     return;
   }
@@ -549,9 +550,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.grid-wrapper {
-  padding: 0px 10px;
-}
 .table-container {
   padding: 20px;
   background-color: #ffffff;
