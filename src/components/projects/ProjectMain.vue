@@ -1,15 +1,8 @@
 <template>
   <div class="project-main">
-    <HeaderBar :project-id="projectId" />
-    <!-- 메인 컨텐츠 -->
-    <main class="main-content">
-      <div class="welcome-section">
-        <h2 class="welcome-title">Welcome aboard!</h2>
-        <p class="welcome-title">Let's simplify your projects, together.</p>
-      </div>
-    </main>
+    <HeaderBar :project-id="projectId" @fileSelected="handleFileSelected" />
     <div class="content-wrapper" :class="contentClasses">
-      <ProjectContent />
+      <ProjectContent ref="projectContentRef" :projectId="projectId" />
     </div>
   </div>
 </template>
@@ -31,6 +24,15 @@ const props = defineProps({
   },
 });
 const projectStore = useProjectStore();
+
+const projectContentRef = ref(null);
+
+const handleFileSelected = (fileData) => {
+  // ProjectContent의 handleFileSelected 메서드 호출
+  if (projectContentRef.value) {
+    projectContentRef.value.handleFileSelected(fileData);
+  }
+};
 
 // 사이드바 상태를 전역적으로 감지
 const showSidebar = ref(false);

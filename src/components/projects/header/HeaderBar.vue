@@ -177,7 +177,7 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, defineEmits } from "vue";
 import { useRouter } from "vue-router";
 import SearchRequirementsSidebar from "./search_rd/SearchRequirementsSidebar.vue";
 import ManageFileSidebar from "./files_rd/ManageFileSidebar.vue";
@@ -186,6 +186,9 @@ import DownloadFileModal from "./download_rd/DownloadFileModal.vue";
 import ProfileBar from "../../main/ProfileBar.vue";
 import MockupViewer from "./mockup/MockupViewer.vue";
 import { useProjectStore } from "/src/stores/projectStore";
+
+const emit = defineEmits(["fileSelected"]);
+
 const projectStore = useProjectStore();
 
 const router = useRouter();
@@ -301,6 +304,8 @@ const toggleFileListSidebar = () => {
 // 파일 선택 처리 함수 추가
 const handleFileSelected = (fileData) => {
   console.log("선택된 파일:", fileData);
+
+  emit("fileSelected", fileData);
 
   if (fileData.type === "uploaded") {
     // 업로드한 파일 선택 시 docId 사용
