@@ -47,6 +47,8 @@
 <script setup>
 import { ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
+import { useProjectStore } from '/src/stores/projectStore.js';
+const projectStore = useProjectStore();
 
 const props = defineProps({
   projects: {
@@ -84,7 +86,11 @@ const changeStatus = (project, status) => {
 };
 
 const navigateToProject = (projectId) => {
-  router.push({ name: "ProjectMain", params: { projectId: projectId } });
+  const selectedProject = localProjects.value.find(p => p.projectId === projectId);
+  if (selectedProject) {
+    projectStore.setProject(selectedProject.projectId, selectedProject.name);
+    router.push({ name: "ProjectMain", params: { projectId: selectedProject.projectId } });
+  }
 };
 </script>
 

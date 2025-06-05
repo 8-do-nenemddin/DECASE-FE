@@ -1,6 +1,6 @@
 <template>
   <div class="project-main">
-    <HeaderBar :project-id="projectId"/>
+    <HeaderBar />
     <!-- 메인 컨텐츠 -->
     <!-- <main class="main-content">
       <div class="welcome-section">
@@ -16,19 +16,11 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from "vue";
+import { useProjectStore } from "/src/stores/projectStore";
 import HeaderBar from "./header/HeaderBar.vue";
 import ProjectContent from "./ProjectContent.vue";
 
-const props = defineProps({
-  projectId: {
-    type: String,
-    required: true
-  },
-  projectName: {
-    type: String,
-    required: true,
-  },
-});
+const projectStore = useProjectStore();
 
 // 사이드바 상태를 전역적으로 감지
 const showSidebar = ref(false);
