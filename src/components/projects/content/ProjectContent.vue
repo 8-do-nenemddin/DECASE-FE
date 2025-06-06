@@ -20,6 +20,7 @@
 </template>
 
 <script setup>
+console.log('컴포넌트 새로 로딩됨')
 import { ref, onMounted } from "vue";
 import BasicContent from "./BasicContent.vue";
 import UploadContent from "./UploadContent.vue";
@@ -65,6 +66,7 @@ defineExpose({
   handleFileSelected,
   clearSelection,
 });
+
 
 onMounted(() => {
   console.log("ProjectContent 마운트됨, projectId:", props.projectId);
