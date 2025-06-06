@@ -18,25 +18,12 @@
 		  <td class="title-cell">{{ project.name }}</td>
 		  <td>버전 이력 {{ project.revisionCount }}개</td>
 		  <td>
-			<div class="status-wrapper" @click.stop="toggleDropdown(project)">
-			  <span
-				class="status-badge"
-				:class="'status-' + project.status.toLowerCase().replaceAll(' ', '_')"
-			  >
-				{{ project.status }}
-			  </span>
-			  <ul v-if="project.showDropdown" class="status-dropdown">
-				<li
-				  v-for="status in statusOptions"
-				  :key="status"
-				  class="status-badge"
-				  :class="'status-' + status.toLowerCase().replaceAll(' ', '_')"
-				  @click.stop="changeStatus(project, status)"
-				>
-				  {{ status }}
-				</li>
-			  </ul>
-			</div>
+			<span
+			  class="status-badge"
+			  :class="'status-' + project.status.toLowerCase().replaceAll(' ', '_')"
+			>
+			  {{ project.status }}
+			</span>
 		  </td>
 		  <td>{{ project.startDate }}~{{project.endDate}}</td>
 		</tr>
@@ -71,19 +58,6 @@ watch(
 );
 
 const router = useRouter();
-const statusOptions = ['NOT_STARTED', 'IN_PROGRESS', 'DONE'];
-
-const toggleDropdown = (project) => {
-  localProjects.value.forEach((p) => {
-    if (p !== project) p.showDropdown = false;
-  });
-  project.showDropdown = !project.showDropdown;
-};
-
-const changeStatus = (project, status) => {
-  project.status = status;
-  project.showDropdown = false;
-};
 
 const navigateToProject = (projectId) => {
   const selectedProject = localProjects.value.find(p => p.projectId === projectId);
