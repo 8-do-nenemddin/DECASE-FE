@@ -17,6 +17,7 @@
               <div class="member-header">
                 <span class="member-name">{{ member.name }}</span>
                 <span class="member-department">{{ member.department }}</span>
+                <span class="member-admin">{{ member.isAdmin ? "Admin" : "" }}</span>
               </div>
             </div>
           </div>
@@ -24,7 +25,7 @@
           <div class="member-actions">
             <div class="permission-toggle-container">
               <span class="permission-label">{{ member.permission === 'READ' ? 'Read' : 'Read/Write' }}</span>
-              <div 
+              <div
                 class="permission-toggle"
                 :class="{ 'active': member.permission === 'READ_AND_WRITE' }"
                 @click="showPermissionModal(member)"
@@ -73,7 +74,7 @@
             <span>×</span>
           </button>
         </div>
-        
+
         <div class="modal-body">
           <div class="member-info-modal">
             <div class="avatar-small">
@@ -84,7 +85,7 @@
               <div class="member-department-modal">{{ selectedMember?.department }}</div>
             </div>
           </div>
-          
+
           <div class="permission-change-info">
             <p class="change-message">
               <span class="current-permission">{{ selectedMember?.permission }}</span>
@@ -94,7 +95,7 @@
             <p class="confirm-message">권한을 변경하시겠습니까?</p>
           </div>
         </div>
-        
+
         <div class="modal-footer">
           <button @click="confirmPermissionChange" class="confirm-button">
             변경
@@ -115,7 +116,7 @@
             <span>×</span>
           </button>
         </div>
-        
+
         <div class="modal-body">
           <div class="member-info-modal">
             <div class="avatar-small">
@@ -126,7 +127,7 @@
               <div class="member-department-modal">{{ memberToDelete?.department }}</div>
             </div>
           </div>
-          
+
           <div class="delete-warning">
             <div class="warning-icon">⚠️</div>
             <p class="warning-message">
@@ -135,7 +136,7 @@
             <p class="confirm-message">정말로 삭제하시겠습니까?</p>
           </div>
         </div>
-        
+
         <div class="modal-footer">
           <button @click="confirmDelete" class="delete-confirm-button">
             삭제
@@ -205,7 +206,7 @@ const getNewPermission = (currentPermission) => {
   return currentPermission === 'READ' ? 'READ_AND_WRITE' : 'READ';
 };
 
-// 권한 변경 확인
+// 권한 변경 확인Unresolved variable memberId
 const confirmPermissionChange = async () => {
   if (selectedMember.value) {
     const projectId = props.projectId;
@@ -412,14 +413,24 @@ const handleSuccessClose = () => {
 }
 
 .member-name {
-  font-weight: 600;
+  font-weight: 700;
   color: #111827;
-  font-size: 0.875rem;
+  font-size: 1rem;
 }
 
 .member-department {
   color: #6b7280;
-  font-size: 0.875rem;
+  font-size: 0.8rem;
+}
+
+.member-admin {
+  color: #6aaae6;
+  font-size: 0.7rem;
+  background-color: white;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px; /* 완전한 pill 모양 */
+  border: 1px solid #6aaae6; /* 테두리 추가 (선택사항) */
+  display: inline-block; /* padding과 border-radius를 적용하려면 필요함 */
 }
 
 .member-actions {

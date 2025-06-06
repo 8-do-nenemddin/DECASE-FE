@@ -84,13 +84,21 @@
       class="modal-overlay"
       @click="closeWithdrawModal"
     >
+
       <Transition name="modal-content">
         <div v-if="isWithdrawModalVisible" class="modal-content" @click.stop>
           <div class="modal-header">
             <h3>회원 탈퇴</h3>
           </div>
           <div class="modal-body">
-            <p>정말 탈퇴하시겠습니까?</p>
+            <input
+                type="password"
+                v-model="withdrawPassword"
+                placeholder="비밀번호를 입력하세요"
+                class="withdraw-password-input"
+                required
+            />
+            <p class="confirm-text">정말 탈퇴하시겠습니까?</p>
             <p class="warning-text">
               탈퇴 시 모든 데이터가 삭제되며 복구할 수 없습니다.
             </p>
@@ -110,14 +118,19 @@
 </template>
 
 <script setup>
+import { useProjectStore } from "/src/stores/projectStore";
 import { defineProps, defineEmits, ref, onMounted } from "vue";
 
-// Props 정의
-const props = defineProps({
+  // Props 정의
+  const props = defineProps({
   isVisible: {
     type: Boolean,
-    default: false,
+    default: false
   },
+  profileData: {
+    type: Object,
+    default: () => ({})  // 기본값으로 빈 객체
+  }
 });
 
 // Emits 정의
@@ -125,7 +138,8 @@ const emit = defineEmits(["close", "logout", "withdraw", "goHome"]);
 
 // 프로필 데이터 상태
 const profileData = ref({});
-const memberId = 1; // 하드코딩된 memberId, 추후에는 동적으로 처리 필요
+const projectStore = useProjectStore();
+const memberId = projectStore.userId;
 
 const fetchProfile = async () => {
   try {
@@ -164,12 +178,16 @@ const closeLogoutModal = () => {
   isLogoutModalVisible.value = false;
 };
 
+import { useRouter } from "vue-router";
+const router = useRouter();
+
 const confirmLogout = () => {
   console.log("로그아웃 확인");
   emit("logout");
-  emit("goHome"); // 홈으로 이동
+  router.push("/home");
   emit("close");
   closeLogoutModal();
+  projectStore.resetAll();
 };
 
 // 탈퇴 모달 관련
@@ -181,12 +199,31 @@ const closeWithdrawModal = () => {
   isWithdrawModalVisible.value = false;
 };
 
-const confirmWithdraw = () => {
-  console.log("탈퇴 확인");
-  emit("withdraw");
-  emit("goHome"); // 홈으로 이동
-  emit("close");
-  closeWithdrawModal();
+const withdrawPassword = ref('');
+
+const confirmWithdraw = async () => {
+  try {
+    const response = await fetch(`/api/v1/auth/${memberId}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ password: withdrawPassword.value }),
+    });
+
+    if (response.ok) {
+      console.log("탈퇴 성공");
+      projectStore.resetAll();
+      router.push("/home");
+      closeWithdrawModal();
+    } else {
+      const result = await response.json();
+      throw new Error(result.message || '탈퇴 실패');
+    }
+  } catch (error) {
+    console.error('탈퇴 오류:', error);
+    alert(error.message || '탈퇴 중 오류가 발생했습니다.');
+  }
 };
 </script>
 
@@ -531,4 +568,20 @@ const confirmWithdraw = () => {
     max-width: 350px;
   }
 }
+
+
+.withdraw-password-input {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  font-size: 14px;
+}
+
+.withdraw-password-input:focus {
+  outline: none;
+  border-color: #3182ce;
+}
+
 </style>

@@ -40,6 +40,19 @@
             <span class="nav-text">권한 관리</span>
           </button>
         </li>
+
+        <li class="nav-item">
+          <button
+              :class="[
+              'nav-button',
+              { active: currentComponent === 'Invitation' },
+            ]"
+              @click="$emit('changeComponent', 'Invitation')"
+          >
+            <span class="nav-icon">💌</span>
+            <span class="nav-text">초대 현황</span>
+          </button>
+        </li>
       </ul>
     </nav>
   </aside>
