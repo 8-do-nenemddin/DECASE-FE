@@ -11,7 +11,6 @@
         <span class="project-name">{{ project.name }}</span>
         <div
           class="project-status-wrapper"
-          @click.stop="toggleDropdown(project)"
         >
           <span
             class="project-status"
@@ -21,17 +20,6 @@
           >
             {{ project.status }}
           </span>
-          <ul v-if="project.showDropdown" class="status-dropdown">
-            <li
-              v-for="status in statusOptions"
-              :key="status"
-              class="project-status"
-              :class="'status-' + status.toLowerCase().replaceAll(' ', '_')"
-              @click.stop="changeStatus(project, status)"
-            >
-              {{ status }}
-            </li>
-          </ul>
         </div>
       </h2>
       <p>{{ project.startDate }} ~ {{project.endDate}} ・ 버전 이력 {{ project.revisionCount }}개</p>
@@ -58,7 +46,6 @@ watch(
   (newProjects) => {
     localProjects.value = newProjects.map((p) => ({
       ...p,
-      showDropdown: false,
     }));
   },
   { immediate: true, deep: true }
@@ -78,19 +65,6 @@ const navigateToProject = (projectId) => {
   }
 };
 
-const statusOptions = ["NOT_STARTED", "IN_PROGRESS", "DONE"];
-
-const toggleDropdown = (project) => {
-  localProjects.value.forEach((p) => {
-    if (p !== project) p.showDropdown = false;
-  });
-  project.showDropdown = !project.showDropdown;
-};
-
-const changeStatus = (project, status) => {
-  project.status = status;
-  project.showDropdown = false;
-};
 </script>
 
 <style scoped>
