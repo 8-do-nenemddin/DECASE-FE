@@ -97,7 +97,9 @@
 
                 <button
                   class="menu-button"
-                  @click.stop="showContextMenu($event, file, fileIndex)"
+                  @click.stop="
+                    showContextMenu($event, file, fileIndex, item.type)
+                  "
                 >
                   <svg
                     width="16"
@@ -595,15 +597,16 @@ const selectFile = (file, fileIndex, sectionType) => {
   // 부모 컴포넌트로 선택된 파일 정보 전달
   const fileData = {
     type: sectionType,
-    file: file,
+    file: file, // 파일 객체 전체 전달
     index: fileIndex,
+    docId: file.docId, // docId 직접 추가
   };
 
-  // 업로드한 파일의 경우 docId 전달
+  // 업로드한 파일의 경우 추가 정보
   if (sectionType === "uploaded") {
     fileData.docId = file.docId;
   }
-  // 생성된 파일의 경우 projectId와 revision 전달
+  // 생성된 파일의 경우 추가 정보
   else if (sectionType === "generated") {
     fileData.projectId = props.projectId;
     fileData.revision = file.revision;

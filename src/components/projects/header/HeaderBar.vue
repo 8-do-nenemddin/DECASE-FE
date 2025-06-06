@@ -82,7 +82,7 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, defineEmits } from "vue";
 import { useRouter } from "vue-router";
 import SearchRequirementsSidebar from "./search_rd/SearchRequirementsSidebar.vue";
 import ManageFileSidebar from "./files_rd/ManageFileSidebar.vue";
@@ -91,6 +91,9 @@ import DownloadFileModal from "./download_rd/DownloadFileModal.vue";
 import ProfileBar from "../../main/ProfileBar.vue";
 import MockupViewer from "./mockup/MockupViewer.vue";
 import { useProjectStore } from "/src/stores/projectStore";
+
+const emit = defineEmits(["fileSelected"]);
+
 const projectStore = useProjectStore();
 
 const router = useRouter();
@@ -178,11 +181,7 @@ const toggleFileListSidebar = () => {
 
 const handleFileSelected = (fileData) => {
   console.log("선택된 파일:", fileData);
-  if (fileData.type === "uploaded") {
-    console.log("업로드한 파일 docId:", fileData.docId);
-  } else if (fileData.type === "generated") {
-    console.log("생성된 파일 projectId:", fileData.projectId, "revision:", fileData.revision);
-  }
+  emit("fileSelected", fileData);
 };
 
 const closeFileListSidebar = () => {
