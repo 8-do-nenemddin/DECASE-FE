@@ -1,56 +1,83 @@
 <template>
-	<div class="auth-container">
-	  <AuthLeftPanel />
-	  <div class="auth-right">
-		<div class="form-wrapper">
-		  <h2>Enter your information</h2>
-		  <form @submit.prevent="handleSignup">
-			<input type="text" v-model="userId" placeholder="Input your ID" required />
-			<input type="password" v-model="password" placeholder="Input your pw" required />
-			<input type="email" v-model="email" placeholder="Input your email" required />
-			<input type="text" v-model="company" placeholder="Input your company" />
-			<input type="text" v-model="department" placeholder="Input your department" />
-			<button type="submit" class="submit-button" :disabled="isLoading">
-			  {{ isLoading ? '가입 중...' : '회원가입' }}
-			</button>
-		  </form>
-		</div>
-	  </div>
+  <div class="auth-container">
+    <AuthLeftPanel />
+    <div class="auth-right">
+      <div class="form-wrapper">
+        <h2>Enter your information</h2>
+        <form @submit.prevent="handleSignup">
+          <div class="id-input-group">
+            <input
+              type="text"
+              v-model="userId"
+              :class="['id-input', idCheckStatus === 'valid' ? 'is-valid' : '', idCheckStatus === 'invalid' ? 'is-invalid' : '']"
+              placeholder="Input your ID"
+              required
+            />
+            <button type="button" @click="checkIdDuplicate" class="duplicate-check-btn">중복 확인</button>
+          </div>
+          <div v-if="idCheckStatus === 'valid'" class="valid-feedback" style="margin-bottom: 15px; color: #198754;">
+            사용 가능한 아이디입니다.
+          </div>
+          <div v-if="idCheckStatus === 'invalid'" class="invalid-feedback" style="margin-bottom: 15px; color: #dc3545;">
+            이미 사용 중인 아이디입니다.
+          </div>
+          <input type="text" v-model="userName" placeholder="Input your name" required />
+          <input type="password" v-model="password" placeholder="Input your pw" required />
+          <input type="email" v-model="email" placeholder="Input your email" required />
+          <select v-model="companyId" required @change="handleCompanyChange">
+            <option disabled value="">Select your company</option>
+            <option v-for="company in companies" :key="company.companyId" :value="company.companyId">
+              {{ company.name }}
+            </option>
+          </select>
+          <select v-model="departmentId" required>
+            <option disabled value="">Select your department</option>
+            <option v-for="department in departments" :key="department.departmentId" :value="department.departmentId">
+              {{ department.name }}
+            </option>
+          </select>
 
-	  <!-- 성공 모달 -->
-	  <div v-if="showSuccessModal" class="modal-overlay" @click="closeModal">
-		<div class="modal-content success" @click.stop>
-		  <div class="modal-icon">
-			<svg width="60" height="60" viewBox="0 0 24 24" fill="none">
-			  <circle cx="12" cy="12" r="12" fill="#10B981"/>
-			  <path d="M8 12l2 2 4-4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-			</svg>
-		  </div>
-		  <h3>회원가입 완료!</h3>
-		  <p>환영합니다! 홈화면으로 이동합니다.</p>
-		  <button @click="goToHome" class="modal-button success-button">
-			홈으로 이동
-		  </button>
-		</div>
-	  </div>
+          <button type="submit" class="submit-button" :disabled="isLoading">
+            {{ isLoading ? '가입 중...' : '회원가입' }}
+          </button>
+        </form>
+      </div>
+    </div>
 
-	  <!-- 실패 모달 -->
-	  <div v-if="showErrorModal" class="modal-overlay" @click="closeModal">
-		<div class="modal-content error" @click.stop>
-		  <div class="modal-icon">
-			<svg width="60" height="60" viewBox="0 0 24 24" fill="none">
-			  <circle cx="12" cy="12" r="12" fill="#EF4444"/>
-			  <path d="M12 8v4m0 4h.01" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-			</svg>
-		  </div>
-		  <h3>회원가입 실패</h3>
-		  <p>{{ errorMessage }}</p>
-		  <button @click="closeModal" class="modal-button error-button">
-			다시 시도
-		  </button>
-		</div>
-	  </div>
-	</div>
+    <!-- 성공 모달 -->
+    <div v-if="showSuccessModal" class="modal-overlay" @click="closeModal">
+      <div class="modal-content success" @click.stop>
+        <div class="modal-icon">
+          <svg width="60" height="60" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="12" fill="#10B981"/>
+            <path d="M8 12l2 2 4-4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <h3>회원가입 완료!</h3>
+        <p>환영합니다! 홈화면으로 이동합니다.</p>
+        <button @click="goToHome" class="modal-button success-button">
+          홈으로 이동
+        </button>
+      </div>
+    </div>
+
+    <!-- 실패 모달 -->
+    <div v-if="showErrorModal" class="modal-overlay" @click="closeModal">
+      <div class="modal-content error" @click.stop>
+        <div class="modal-icon">
+          <svg width="60" height="60" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="12" fill="#EF4444"/>
+            <path d="M12 8v4m0 4h.01" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <h3>회원가입 실패</h3>
+        <p>{{ errorMessage }}</p>
+        <button @click="closeModal" class="modal-button error-button">
+          다시 시도
+        </button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -61,10 +88,17 @@ import AuthLeftPanel from './AuthLeftPanel.vue';
 const router = useRouter();
 
 const userId = ref('');
+const idCheckStatus = ref('');
+const userName = ref('');
 const password = ref('');
 const email = ref('');
 const company = ref('');
 const department = ref('');
+
+const companyId = ref('');
+const departmentId = ref('');
+const companies = ref([]);
+const departments = ref([]);
 const isLoading = ref(false);
 const showSuccessModal = ref(false);
 const showErrorModal = ref(false);
@@ -72,46 +106,104 @@ const errorMessage = ref('');
 
 const handleSignup = async () => {
   isLoading.value = true;
-  
+
   try {
-    // 회원가입 데이터 준비
     const signupData = {
-      userId: userId.value,
+      id: userId.value,
       password: password.value,
+      name: userName.value,
       email: email.value,
-      company: company.value,
-      department: department.value,
+      companyId: parseInt(companyId.value),
+      departmentId: parseInt(departmentId.value),
     };
-    
-    console.log('회원가입 요청:', signupData);
-    
-    // 실제 API 호출 예시 (필요에 따라 수정)
-    // const response = await fetch('/api/signup', {
-    //   method: 'POST',
-    //   headers: {
-    //     'Content-Type': 'application/json',
-    //   },
-    //   body: JSON.stringify(signupData),
-    // });
-    
-    // if (!response.ok) {
-    //   const errorData = await response.json();
-    //   throw new Error(errorData.message || '회원가입 실패');
-    // }
-    
-    // 임시로 2초 대기 (실제 API 응답 시뮬레이션)
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // 회원가입 성공 시 성공 모달 표시
-    console.log("회원가입 성공!");
-    showSuccessModal.value = true;
-    
+
+    const response = await fetch('/api/v1/auth/signup', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(signupData),
+    });
+
+    const result = await response.json();
+
+    if (response.status === 201) {
+      console.log("회원가입 성공:", result);
+      showSuccessModal.value = true;
+      router.push('/signin')
+    } else {
+      throw new Error(result.message || '회원가입 실패');
+    }
   } catch (error) {
     console.error('회원가입 중 오류 발생:', error);
     errorMessage.value = error.message || '회원가입 중 오류가 발생했습니다. 다시 시도해주세요.';
     showErrorModal.value = true;
   } finally {
     isLoading.value = false;
+  }
+};
+
+const checkIdDuplicate = async () => {
+  if (!userId.value) {
+    alert("아이디를 입력해주세요.");
+    idCheckStatus.value = 'invalid';
+    return;
+  }
+
+  try {
+    const response = await fetch('/api/v1/auth/check', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ id: userId.value }),
+    });
+    const result = await response.json();
+    if (response.ok && result.data?.result === true) {
+      idCheckStatus.value = 'valid';
+    } else {
+      idCheckStatus.value = 'invalid';
+    }
+  } catch (error) {
+    console.error("아이디 중복 확인 실패:", error);
+    idCheckStatus.value = 'invalid';
+  }
+};
+
+const fetchCompanies = async () => {
+  try {
+    const response = await fetch('/api/v1/companies/search');
+    const result = await response.json();
+    if (response.ok) {
+      companies.value = result.data;
+    }
+  } catch (error) {
+    console.error('회사 정보 불러오기 실패:', error);
+  }
+};
+
+const fetchDepartments = async (companyId) => {
+  try {
+    const response = await fetch(`/api/v1/departments/search?companyId=${companyId}&page=0&size=10`);
+    const result = await response.json();
+    if (response.ok) {
+      departments.value = result.data;
+    }
+  } catch (error) {
+    console.error('부서 정보 불러오기 실패:', error);
+  }
+};
+
+import { onMounted } from 'vue';
+onMounted(() => {
+  fetchCompanies();
+});
+
+const handleCompanyChange = () => {
+  if (companyId.value) {
+    fetchDepartments(parseInt(companyId.value));
+  } else {
+    departments.value = [];
   }
 };
 
@@ -154,11 +246,6 @@ body {
 </style>
 
 <style scoped>
-.submit-button:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
-}
-
 /* 전체 컨테이너 - 완전한 화면 채우기 */
 .auth-container {
   position: fixed;
@@ -226,7 +313,55 @@ form {
   }
 }
 
-/* 인풋 */
+/* 아이디 입력 그룹 - 중복확인 버튼 정렬 개선 */
+.id-input-group {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+  margin-bottom: 15px;
+}
+
+.id-input {
+  flex: 1;
+  padding: 12px 15px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1em;
+  transition: border-color 0.2s ease;
+}
+
+.id-input:focus {
+  outline: none;
+  border-color: #000;
+}
+
+/* 중복확인 버튼 - id-input과 동일한 높이, 패딩, 정렬 */
+.duplicate-check-btn {
+  height: 44px;
+  padding: 0 15px;
+  background-color: #444;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1em;
+  white-space: nowrap;
+  transition: background-color 0.2s ease;
+  min-width: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.duplicate-check-btn:hover {
+  background-color: #333;
+}
+
+.duplicate-check-btn:active {
+  background-color: #222;
+}
+
+/* 일반 인풋 스타일 */
 input {
   padding: 12px 15px;
   margin-bottom: 15px;
@@ -241,7 +376,40 @@ input:focus {
   border-color: #000;
 }
 
-/* 버튼 */
+/* Select 요소 스타일 통일 */
+select {
+  padding: 12px 15px;
+  margin-bottom: 15px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1em;
+  background-color: white;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+  width: 100%;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'><path fill='%23666' d='M2 0L0 2h4zm0 5L0 3h4z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 12px;
+}
+
+select:focus {
+  outline: none;
+  border-color: #000;
+}
+
+select option {
+  padding: 8px 12px;
+  background-color: white;
+  color: #333;
+}
+
+select option:disabled {
+  color: #999;
+}
+
+/* 제출 버튼 */
 .submit-button {
   padding: 15px;
   background-color: black;
@@ -263,29 +431,43 @@ input:focus {
   background-color: #000;
 }
 
+.submit-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
 /* 반응형 디자인 */
 @media (max-width: 768px) {
   .auth-container {
     flex-direction: column;
   }
-  
+
   .auth-right {
     flex: 1;
     padding: 20px;
     min-height: 100vh;
     overflow-y: auto;
   }
-  
+
   .auth-right h2 {
     font-size: 1.5em;
     margin-bottom: 20px;
   }
-  
+
   .form-wrapper {
     max-width: 100%;
   }
-  
-  input {
+
+  .id-input-group {
+    margin-bottom: 12px;
+  }
+
+  .duplicate-check-btn {
+    font-size: 0.8em;
+    padding: 10px 12px;
+  }
+
+  input, select {
     margin-bottom: 12px;
   }
 }
@@ -294,18 +476,29 @@ input:focus {
   .auth-right {
     padding: 15px;
   }
-  
+
   .auth-right h2 {
     font-size: 1.3em;
     margin-bottom: 15px;
   }
-  
-  input {
+
+  .id-input, input, select {
     padding: 10px 12px;
     font-size: 0.9em;
     margin-bottom: 10px;
   }
-  
+
+  .id-input-group {
+    margin-bottom: 10px;
+    gap: 8px;
+  }
+
+  .duplicate-check-btn {
+    padding: 10px;
+    font-size: 0.8em;
+    min-width: 70px;
+  }
+
   .submit-button {
     padding: 12px;
     font-size: 1em;
@@ -319,13 +512,17 @@ input:focus {
     padding-top: 30px;
     padding-bottom: 30px;
   }
-  
+
   .auth-right h2 {
     margin-bottom: 20px;
     font-size: 1.5em;
   }
-  
-  input {
+
+  .id-input-group {
+    margin-bottom: 12px;
+  }
+
+  input, select {
     margin-bottom: 12px;
   }
 }
@@ -413,5 +610,20 @@ input:focus {
 .error-button:hover {
   background-color: #DC2626;
   transform: translateY(-1px);
+}
+
+.is-valid {
+  border-color: #198754;
+}
+
+.is-invalid {
+  border-color: #dc3545;
+}
+
+.valid-feedback,
+.invalid-feedback {
+  font-size: 0.875em;
+  margin-top: -20px;
+  margin-bottom: -20px;
 }
 </style>
