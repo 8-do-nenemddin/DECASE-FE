@@ -464,35 +464,6 @@ const getFileIconByName = (fileName) => {
   return iconMap[extension] || "📁";
 };
 
-const downloadUploadedFile = async (file) => {
-  try {
-    const response = await fetch(
-      `/api/v1/projects/${props.projectId}/document/uploads/${file.docId}/download`
-    );
-    if (!response.ok) throw new Error(`다운로드 실패: ${response.status}`);
-
-    const blob = await response.blob();
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = file.name;
-    link.style.display = "none";
-
-    document.body.appendChild(link);
-    link.click();
-
-    setTimeout(() => {
-      if (link.parentNode) {
-        document.body.removeChild(link);
-      }
-      window.URL.revokeObjectURL(url);
-    }, 100);
-  } catch (error) {
-    console.error("업로드된 파일 다운로드 오류:", error);
-    alert("파일 다운로드에 실패했습니다.");
-  }
-};
-
 const downloadGeneratedFile = async (file) => {
   try {
     const response = await fetch(
@@ -774,13 +745,10 @@ const downloadFile = () => {
   hideContextMenu();
   closeFileInfo();
 };
-
-// AS-IS 파일 다운로드 함수 추가
+// AS-IS 파일 다운로드 함수 수정
 const downloadAsIsFile = async (file) => {
   try {
-    const response = await fetch(
-      `/api/v1/projects/${props.projectId}/documents/as-is/${file.docId}/preview`
-    );
+    const response = await fetch(`/api/v1/documents/${file.docId}/downloads`);
     if (!response.ok) throw new Error(`다운로드 실패: ${response.status}`);
 
     const blob = await response.blob();
@@ -801,6 +769,34 @@ const downloadAsIsFile = async (file) => {
     }, 100);
   } catch (error) {
     console.error("AS-IS 보고서 다운로드 오류:", error);
+    alert("파일 다운로드에 실패했습니다.");
+  }
+};
+
+// 업로드된 파일 다운로드 함수 수정
+const downloadUploadedFile = async (file) => {
+  try {
+    const response = await fetch(`/api/v1/documents/${file.docId}/downloads`);
+    if (!response.ok) throw new Error(`다운로드 실패: ${response.status}`);
+
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = file.name;
+    link.style.display = "none";
+
+    document.body.appendChild(link);
+    link.click();
+
+    setTimeout(() => {
+      if (link.parentNode) {
+        document.body.removeChild(link);
+      }
+      window.URL.revokeObjectURL(url);
+    }, 100);
+  } catch (error) {
+    console.error("업로드된 파일 다운로드 오류:", error);
     alert("파일 다운로드에 실패했습니다.");
   }
 };
