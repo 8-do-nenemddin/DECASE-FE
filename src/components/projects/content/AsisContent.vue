@@ -1,321 +1,321 @@
 <template>
-  <div class="pdf-analyzer">
-    <div class="upload-section">
-      <h2>PDF 분석기</h2>
-
-      <!-- 파일 업로드 영역 -->
-      <div
-        class="upload-area"
-        :class="{ dragover: isDragOver }"
-        @dragover.prevent="isDragOver = true"
-        @dragleave.prevent="isDragOver = false"
-        @drop.prevent="handleFileDrop"
-        @click="$refs.fileInput.click()"
-      >
-        <input
-          ref="fileInput"
-          type="file"
-          accept=".pdf"
-          @change="handleFileSelect"
-          style="display: none"
-        />
-
-        <div v-if="!selectedFile" class="upload-placeholder">
-          <i class="upload-icon">📄</i>
-          <p>PDF 파일을 클릭하거나 드래그하여 업로드하세요</p>
-          <p class="upload-hint">최대 50MB까지 지원됩니다</p>
-        </div>
-
-        <div v-else class="file-info">
-          <i class="file-icon">📋</i>
-          <span>{{ selectedFile.name }}</span>
-          <span class="file-size"
-            >({{ formatFileSize(selectedFile.size) }})</span
-          >
-          <button @click.stop="clearFile" class="clear-btn">✕</button>
-        </div>
+  <div class="upload-content">
+    <div class="content-header">
+      <h2 class="content-title">📄 AS IS 보고서</h2>
+      <div class="file-info">
+        <span class="file-id">문서 ID: {{ docId }}</span>
+        <span v-if="previewData" class="file-name">{{
+          previewData.fileName
+        }}</span>
+        <button
+          @click="refreshPreview"
+          class="refresh-button"
+          :disabled="loading"
+        >
+          {{ loading ? "🔄 로딩중..." : "🔄 새로고침" }}
+        </button>
       </div>
-
-      <!-- 분석 버튼 -->
-      <button
-        @click="analyzeFile"
-        :disabled="!selectedFile || isAnalyzing"
-        class="analyze-btn"
-      >
-        <span v-if="isAnalyzing">분석 중...</span>
-        <span v-else>분석 시작</span>
-      </button>
     </div>
 
-    <!-- 로딩 상태 -->
-    <div v-if="isAnalyzing" class="loading">
-      <div class="spinner"></div>
-      <p>PDF를 분석하고 있습니다. 잠시만 기다려주세요...</p>
+    <div v-if="loading" class="loading-state">
+      <div class="loading-spinner"></div>
+      <p>파일을 불러오는 중...</p>
     </div>
 
-    <!-- 오류 메시지 -->
-    <div v-if="error" class="error">
-      <h3>오류 발생</h3>
+    <div v-else-if="error" class="error-state">
+      <div class="error-icon">❌</div>
+      <h3>파일을 불러올 수 없습니다</h3>
       <p>{{ error }}</p>
-      <button @click="error = null" class="close-btn">닫기</button>
+      <button @click="refreshPreview" class="retry-button">다시 시도</button>
     </div>
 
-    <!-- 마크다운 미리보기 -->
-    <div v-if="markdownContent" class="preview-section">
-      <div class="preview-header">
-        <h3>분석 결과</h3>
-        <div class="preview-controls">
-          <button @click="copyToClipboard" class="copy-btn">복사</button>
-          <button @click="downloadMarkdown" class="download-btn">
-            다운로드
-          </button>
-        </div>
+    <div v-else-if="previewData" class="preview-container">
+      <!-- PDF 미리보기 -->
+      <div v-if="previewData.fileType === 'pdf'" class="pdf-preview">
+        <iframe
+          :src="previewData.previewUrl"
+          class="pdf-iframe"
+          title="PDF 미리보기"
+        ></iframe>
       </div>
 
-      <div class="preview-content">
-        <!-- 마크다운 렌더링 -->
-        <div class="markdown-preview" v-html="renderedMarkdown"></div>
+      <!-- 기타 파일 타입 -->
+      <div v-else class="unsupported-preview">
+        <div class="unsupported-icon">📎</div>
+        <h3>미리보기를 지원하지 않는 파일 형식입니다</h3>
+        <p>파일 타입: {{ previewData.fileType }}</p>
+        <button @click="downloadFile" class="download-button">
+          📥 파일 다운로드
+        </button>
       </div>
     </div>
   </div>
 </template>
 
-<script>
-import { marked } from "marked";
+<script setup>
+import { ref, onMounted, watch, computed } from "vue";
+import { useProjectStore } from "/src/stores/projectStore";
 
-export default {
-  name: "PdfAnalyzer",
-  data() {
-    return {
-      selectedFile: null,
-      isAnalyzing: false,
-      isDragOver: false,
-      markdownContent: "",
-      error: null,
-    };
+const projectStore = useProjectStore();
+
+const props = defineProps({
+  docId: {
+    type: String,
+    required: true,
   },
-  computed: {
-    renderedMarkdown() {
-      if (!this.markdownContent) return "";
-      return marked(this.markdownContent);
-    },
+  file: {
+    type: Object,
+    required: false,
   },
-  methods: {
-    handleFileDrop(event) {
-      this.isDragOver = false;
-      const files = event.dataTransfer.files;
-      if (files.length > 0) {
-        this.selectFile(files[0]);
-      }
-    },
+});
 
-    handleFileSelect(event) {
-      const file = event.target.files[0];
-      if (file) {
-        this.selectFile(file);
-      }
-    },
+// projectId는 store에서 가져오기
+const projectId = computed(() => projectStore.projectId);
 
-    selectFile(file) {
-      if (file.type !== "application/pdf") {
-        this.error = "PDF 파일만 업로드할 수 있습니다.";
-        return;
-      }
+const loading = ref(false);
+const error = ref(null);
+const previewData = ref(null);
 
-      if (file.size > 50 * 1024 * 1024) {
-        // 50MB
-        this.error =
-          "파일 크기가 너무 큽니다. 50MB 이하의 파일을 선택해주세요.";
-        return;
-      }
-
-      this.selectedFile = file;
-      this.error = null;
-      this.markdownContent = "";
-    },
-
-    clearFile() {
-      this.selectedFile = null;
-      this.markdownContent = "";
-      this.error = null;
-      this.$refs.fileInput.value = "";
-    },
-
-    async analyzeFile() {
-      if (!this.selectedFile) return;
-
-      this.isAnalyzing = true;
-      this.error = null;
-
-      const formData = new FormData();
-      formData.append("file", this.selectedFile);
-
-      try {
-        const response = await fetch("http://localhost:8080/api/pdf/analyze", {
-          method: "POST",
-          body: formData,
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-          this.markdownContent = result.markdownContent;
-        } else {
-          this.error = result.message || "분석 중 오류가 발생했습니다.";
-        }
-      } catch (err) {
-        console.error("분석 오류:", err);
-        this.error = "서버와의 통신 중 오류가 발생했습니다.";
-      } finally {
-        this.isAnalyzing = false;
-      }
-    },
-
-    async copyToClipboard() {
-      try {
-        await navigator.clipboard.writeText(this.markdownContent);
-        alert("클립보드에 복사되었습니다!");
-      } catch (err) {
-        console.error("복사 실패:", err);
-        alert("복사에 실패했습니다.");
-      }
-    },
-
-    downloadMarkdown() {
-      const blob = new Blob([this.markdownContent], { type: "text/markdown" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${this.selectedFile.name.replace(".pdf", "")}.md`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    },
-
-    formatFileSize(bytes) {
-      if (bytes === 0) return "0 Bytes";
-      const k = 1024;
-      const sizes = ["Bytes", "KB", "MB", "GB"];
-      const i = Math.floor(Math.log(bytes) / Math.log(k));
-      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
-    },
-  },
+// 파일 확장자 추출 함수
+const getFileExtension = (fileName) => {
+  if (!fileName) return "";
+  return fileName.split(".").pop().toLowerCase();
 };
+
+// API에서 파일 미리보기 데이터 로드
+const loadPreview = async () => {
+  if (!props.docId || !projectId.value) {
+    error.value = "프로젝트 ID 또는 문서 ID가 없습니다.";
+    return;
+  }
+
+  loading.value = true;
+  error.value = null;
+  previewData.value = null;
+
+  try {
+    console.log("AS IS 보고서 미리보기 로드:", {
+      projectId: projectId.value,
+      docId: props.docId,
+    });
+
+    // props에서 파일 정보가 있다면 사용
+    let fileName = "";
+    if (props.file && props.file.name) {
+      fileName = props.file.name;
+      console.log("파일명:", fileName);
+    }
+
+    // AS IS 보고서는 항상 PDF로 처리
+    previewData.value = {
+      fileType: "pdf",
+      fileName: fileName || `as-is-report-${props.docId}.pdf`,
+      previewUrl: `/api/v1/projects/${projectId.value}/documents/as-is/${props.docId}/preview`,
+    };
+
+    console.log("AS IS 보고서 미리보기 URL:", previewData.value.previewUrl);
+  } catch (err) {
+    console.error("미리보기 로드 오류:", err);
+    error.value = err.message || "파일을 불러오는 중 오류가 발생했습니다.";
+  } finally {
+    loading.value = false;
+  }
+};
+
+// 미리보기 새로고침
+const refreshPreview = () => {
+  loadPreview();
+};
+
+// 파일 다운로드
+const downloadFile = async () => {
+  if (!projectId.value || !props.docId) {
+    alert("프로젝트 ID 또는 문서 ID가 없습니다.");
+    return;
+  }
+
+  try {
+    const downloadUrl = `/api/v1/projects/${projectId.value}/documents/as-is/${props.docId}/preview`;
+    console.log("다운로드 URL:", downloadUrl);
+
+    const response = await fetch(downloadUrl);
+    if (!response.ok) throw new Error("다운로드 실패");
+
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download =
+      previewData.value?.fileName || `as-is-report-${props.docId}.pdf`;
+    link.style.display = "none";
+
+    document.body.appendChild(link);
+    link.click();
+
+    setTimeout(() => {
+      if (link.parentNode) {
+        document.body.removeChild(link);
+      }
+      window.URL.revokeObjectURL(url);
+    }, 100);
+  } catch (error) {
+    console.error("파일 다운로드 오류:", error);
+    alert("파일 다운로드에 실패했습니다.");
+  }
+};
+
+// props와 projectId 변경 감지
+watch(
+  [() => props.docId, projectId],
+  ([newDocId, newProjectId]) => {
+    if (newDocId && newProjectId) {
+      loadPreview();
+    }
+  },
+  { immediate: true }
+);
+
+onMounted(() => {
+  if (props.docId && projectId.value) {
+    loadPreview();
+  }
+});
 </script>
 
 <style scoped>
-.pdf-analyzer {
-  max-width: 1200px;
-  margin: 0 auto;
+/* 기존 스타일과 동일 */
+.upload-content {
   padding: 20px;
-  font-family: "Noto Sans KR", sans-serif;
+  height: calc(100vh - 64px);
+  overflow-y: auto;
+  background-color: #f8f9fa;
+  font-family: "Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, sans-serif;
 }
 
-.upload-section {
-  margin-bottom: 30px;
-}
-
-.upload-section h2 {
-  color: #333;
+.content-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 20px;
+  padding: 20px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.upload-area {
-  border: 2px dashed #ddd;
-  border-radius: 8px;
-  padding: 40px;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  background: #fafafa;
-}
-
-.upload-area:hover,
-.upload-area.dragover {
-  border-color: #007bff;
-  background: #f0f8ff;
-}
-
-.upload-placeholder {
-  color: #666;
-}
-
-.upload-icon {
-  font-size: 48px;
-  display: block;
-  margin-bottom: 10px;
-}
-
-.upload-hint {
-  font-size: 14px;
-  color: #999;
-  margin-top: 5px;
+.content-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
 }
 
 .file-info {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 10px;
-  color: #333;
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
-.file-icon {
-  font-size: 24px;
-}
-
-.file-size {
-  color: #666;
+.file-id {
   font-size: 14px;
-}
-
-.clear-btn {
-  background: #ff4757;
-  color: white;
-  border: none;
-  border-radius: 50%;
-  width: 24px;
-  height: 24px;
-  cursor: pointer;
-  font-size: 12px;
-}
-
-.analyze-btn {
-  background: #007bff;
-  color: white;
-  border: none;
-  padding: 12px 24px;
+  color: #6b7280;
+  background: #f3f4f6;
+  padding: 6px 12px;
   border-radius: 6px;
+}
+
+.file-name {
+  font-size: 14px;
+  color: #374151;
+  background: #e5e7eb;
+  padding: 6px 12px;
+  border-radius: 6px;
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.refresh-button {
+  padding: 8px 16px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
   cursor: pointer;
-  font-size: 16px;
-  margin-top: 20px;
-  transition: background 0.3s ease;
+  transition: background-color 0.2s;
 }
 
-.analyze-btn:hover:not(:disabled) {
-  background: #0056b3;
+.refresh-button:hover:not(:disabled) {
+  background: #2563eb;
 }
 
-.analyze-btn:disabled {
-  background: #ccc;
+.refresh-button:disabled {
+  background: #9ca3af;
   cursor: not-allowed;
 }
 
-.loading {
-  text-align: center;
-  padding: 40px;
-  color: #666;
+.loading-state,
+.error-state,
+.unsupported-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.spinner {
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #007bff;
-  border-radius: 50%;
+.loading-spinner {
   width: 40px;
   height: 40px;
+  border: 4px solid #e5e7eb;
+  border-top: 4px solid #3b82f6;
+  border-radius: 50%;
   animation: spin 1s linear infinite;
-  margin: 0 auto 20px;
+  margin-bottom: 16px;
+}
+
+.error-icon,
+.unsupported-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.retry-button,
+.download-button {
+  padding: 10px 20px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  margin-top: 16px;
+  transition: background-color 0.2s;
+}
+
+.retry-button:hover,
+.download-button:hover {
+  background: #2563eb;
+}
+
+.preview-container {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.pdf-iframe {
+  width: 100%;
+  height: calc(100vh - 200px);
+  border: none;
 }
 
 @keyframes spin {
@@ -327,147 +327,35 @@ export default {
   }
 }
 
-.error {
-  background: #fff5f5;
-  border: 1px solid #fed7d7;
-  border-radius: 6px;
-  padding: 20px;
-  margin: 20px 0;
-  color: #c53030;
-}
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .upload-content {
+    padding: 16px;
+  }
 
-.error h3 {
-  margin: 0 0 10px 0;
-}
+  .content-header {
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
+  }
 
-.close-btn {
-  background: #c53030;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-  margin-top: 10px;
-}
+  .file-info {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+    width: 100%;
+  }
 
-.preview-section {
-  margin-top: 30px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  overflow: hidden;
-}
+  .file-name {
+    max-width: 100%;
+  }
 
-.preview-header {
-  background: #f8f9fa;
-  padding: 15px 20px;
-  border-bottom: 1px solid #ddd;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
+  .content-title {
+    font-size: 20px;
+  }
 
-.preview-header h3 {
-  margin: 0;
-  color: #333;
-}
-
-.preview-controls {
-  display: flex;
-  gap: 10px;
-}
-
-.copy-btn,
-.download-btn {
-  background: #28a745;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-}
-
-.download-btn {
-  background: #17a2b8;
-}
-
-.copy-btn:hover {
-  background: #218838;
-}
-
-.download-btn:hover {
-  background: #138496;
-}
-
-.preview-content {
-  max-height: 600px;
-  overflow-y: auto;
-}
-
-.markdown-preview {
-  padding: 20px;
-  line-height: 1.6;
-  color: #333;
-}
-
-.markdown-preview h1,
-.markdown-preview h2,
-.markdown-preview h3,
-.markdown-preview h4,
-.markdown-preview h5,
-.markdown-preview h6 {
-  color: #2c3e50;
-  margin-top: 24px;
-  margin-bottom: 16px;
-}
-
-.markdown-preview p {
-  margin-bottom: 16px;
-}
-
-.markdown-preview pre {
-  background: #f8f9fa;
-  border: 1px solid #e9ecef;
-  border-radius: 4px;
-  padding: 16px;
-  overflow-x: auto;
-}
-
-.markdown-preview code {
-  background: #f8f9fa;
-  padding: 2px 4px;
-  border-radius: 3px;
-  font-size: 0.9em;
-}
-
-.markdown-preview blockquote {
-  border-left: 4px solid #007bff;
-  padding-left: 16px;
-  margin: 16px 0;
-  color: #666;
-}
-
-.markdown-preview ul,
-.markdown-preview ol {
-  padding-left: 20px;
-  margin-bottom: 16px;
-}
-
-.markdown-preview table {
-  border-collapse: collapse;
-  width: 100%;
-  margin-bottom: 16px;
-}
-
-.markdown-preview th,
-.markdown-preview td {
-  border: 1px solid #ddd;
-  padding: 8px 12px;
-  text-align: left;
-}
-
-.markdown-preview th {
-  background: #f8f9fa;
-  font-weight: bold;
+  .pdf-iframe {
+    height: calc(100vh - 300px);
+  }
 }
 </style>
