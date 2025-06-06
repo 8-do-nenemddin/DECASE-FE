@@ -301,12 +301,6 @@ const sidebarStyles = computed(() => {
   };
 });
 
-// State - 각 섹션별로 선택된 파일 인덱스 관리
-const selectedFiles = reactive({
-  uploaded: -1, // 업로드한 파일 선택 인덱스
-  generated: -1, // 생성된 파일 선택 인덱스
-});
-
 const sidebarRef = ref(null);
 const isLoading = ref(false);
 
@@ -330,7 +324,7 @@ const fileInfoModal = reactive({
 const sidebarItems = reactive([
   {
     name: "As-Is 보고서",
-    type: "report",
+    type: "as-is",
     expanded: false,
     files: [],
     count: 0,
@@ -350,6 +344,21 @@ const sidebarItems = reactive([
     count: 0,
   },
 ]);
+
+// loadAllData 함수 수정 - AS-IS 보고서 추가
+const loadAllData = async () => {
+  if (isLoading.value) return;
+  isLoading.value = true;
+  try {
+    await Promise.allSettled([
+      fetchAsIsReports(), // AS-IS 보고서 추가
+      fetchUploadedFiles(),
+      fetchGeneratedFiles(),
+    ]);
+  } finally {
+    isLoading.value = false;
+  }
+};
 
 // API 호출 함수들
 const fetchUploadedFiles = async () => {
@@ -455,30 +464,6 @@ const getFileIconByName = (fileName) => {
   return iconMap[extension] || "📁";
 };
 
-const loadAllData = async () => {
-  if (isLoading.value) return;
-  isLoading.value = true;
-  try {
-    await Promise.allSettled([fetchUploadedFiles(), fetchGeneratedFiles()]);
-  } finally {
-    isLoading.value = false;
-  }
-};
-
-const downloadFile = () => {
-  const file = contextMenu.file || fileInfoModal.file;
-  if (!file) return;
-
-  if (file.type === "uploaded") {
-    downloadUploadedFile(file);
-  } else if (file.type === "generated") {
-    downloadGeneratedFile(file);
-  }
-
-  hideContextMenu();
-  closeFileInfo();
-};
-
 const downloadUploadedFile = async (file) => {
   try {
     const response = await fetch(
@@ -581,51 +566,6 @@ const toggleItem = (index) => {
   sidebarItems[index].expanded = !sidebarItems[index].expanded;
 };
 
-// 파일 선택 함수 수정
-const selectFile = (file, fileIndex, sectionType) => {
-  // 모든 선택 상태 초기화
-  selectedFiles.uploaded = -1;
-  selectedFiles.generated = -1;
-
-  // 해당 섹션만 선택
-  if (sectionType === "uploaded") {
-    selectedFiles.uploaded = fileIndex;
-  } else if (sectionType === "generated") {
-    selectedFiles.generated = fileIndex;
-  }
-
-  // 부모 컴포넌트로 선택된 파일 정보 전달
-  const fileData = {
-    type: sectionType,
-    file: file, // 파일 객체 전체 전달
-    index: fileIndex,
-    docId: file.docId, // docId 직접 추가
-  };
-
-  // 업로드한 파일의 경우 추가 정보
-  if (sectionType === "uploaded") {
-    fileData.docId = file.docId;
-  }
-  // 생성된 파일의 경우 추가 정보
-  else if (sectionType === "generated") {
-    fileData.projectId = props.projectId;
-    fileData.revision = file.revision;
-  }
-
-  emit("fileSelected", fileData);
-  console.log("파일 선택됨:", fileData);
-};
-
-// 선택된 파일인지 확인하는 함수
-const isFileSelected = (fileIndex, sectionType) => {
-  if (sectionType === "uploaded") {
-    return selectedFiles.uploaded === fileIndex;
-  } else if (sectionType === "generated") {
-    return selectedFiles.generated === fileIndex;
-  }
-  return false;
-};
-
 const showContextMenu = (event, file, fileIndex, sectionType) => {
   const rect = sidebarRef.value?.getBoundingClientRect();
   const maxX = rect ? rect.width - 180 : window.innerWidth - 200;
@@ -692,21 +632,197 @@ onMounted(() => {
   }
 });
 
+// AS-IS 보고서 가져오는 함수 추가
+const fetchAsIsReports = async () => {
+  try {
+    const response = await fetch(
+      `/api/v1/projects/${props.projectId}/documents/as-is`,
+      {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+    const responseData = await response.json();
+    console.log(responseData);
+    await nextTick();
+
+    let data;
+    if (responseData.data && Array.isArray(responseData.data)) {
+      data = responseData.data;
+    } else if (Array.isArray(responseData)) {
+      data = responseData;
+    } else {
+      data = [];
+    }
+
+    if (Array.isArray(data)) {
+      const asIsFiles = data.map((item, index) => ({
+        id: `as-is-${item.docId}-${index}`,
+        name: item.name || "이름 없음",
+        icon: "📋", // AS-IS 보고서 아이콘
+        color: "orange-gradient", // 오렌지 그래디언트
+        date: formatDate(item.createdDate),
+        docId: item.docId,
+        type: "as-is",
+        createdBy: item.createdBy,
+      }));
+
+      sidebarItems[0].files = asIsFiles;
+      sidebarItems[0].count = asIsFiles.length;
+    } else {
+      sidebarItems[0].files = [];
+      sidebarItems[0].count = 0;
+    }
+  } catch (error) {
+    console.error("AS-IS 보고서 API 호출 오류:", error);
+    sidebarItems[0].files = [];
+    sidebarItems[0].count = 0;
+  }
+};
+
+// 날짜 포맷팅 함수 추가
+const formatDate = (dateArray) => {
+  if (!Array.isArray(dateArray) || dateArray.length < 3) {
+    return new Date().toISOString().split("T")[0];
+  }
+
+  const [year, month, day] = dateArray;
+  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(
+    2,
+    "0"
+  )}`;
+};
+
+// sidebarItems의 selectedFiles에 as-is 추가
+const selectedFiles = reactive({
+  "as-is": -1, // AS-IS 보고서 선택 인덱스 추가
+  uploaded: -1, // 업로드한 파일 선택 인덱스
+  generated: -1, // 생성된 파일 선택 인덱스
+});
+
+// selectFile 함수 수정
+const selectFile = (file, fileIndex, sectionType) => {
+  // 모든 선택 상태 초기화
+  selectedFiles["as-is"] = -1;
+  selectedFiles.uploaded = -1;
+  selectedFiles.generated = -1;
+
+  // 해당 섹션만 선택
+  if (sectionType === "as-is") {
+    selectedFiles["as-is"] = fileIndex;
+  } else if (sectionType === "uploaded") {
+    selectedFiles.uploaded = fileIndex;
+  } else if (sectionType === "generated") {
+    selectedFiles.generated = fileIndex;
+  }
+
+  // 부모 컴포넌트로 선택된 파일 정보 전달
+  const fileData = {
+    type: sectionType,
+    file: file,
+    index: fileIndex,
+    docId: file.docId,
+  };
+
+  // AS-IS 보고서의 경우
+  if (sectionType === "as-is") {
+    fileData.docId = file.docId;
+    fileData.projectId = props.projectId;
+  }
+  // 업로드한 파일의 경우
+  else if (sectionType === "uploaded") {
+    fileData.docId = file.docId;
+  }
+  // 생성된 파일의 경우
+  else if (sectionType === "generated") {
+    fileData.projectId = props.projectId;
+    fileData.revision = file.revision;
+  }
+
+  emit("fileSelected", fileData);
+  console.log("파일 선택됨:", fileData);
+};
+
+// isFileSelected 함수 수정
+const isFileSelected = (fileIndex, sectionType) => {
+  if (sectionType === "as-is") {
+    return selectedFiles["as-is"] === fileIndex;
+  } else if (sectionType === "uploaded") {
+    return selectedFiles.uploaded === fileIndex;
+  } else if (sectionType === "generated") {
+    return selectedFiles.generated === fileIndex;
+  }
+  return false;
+};
+
+// downloadFile 함수에 as-is 추가
+const downloadFile = () => {
+  const file = contextMenu.file || fileInfoModal.file;
+  if (!file) return;
+
+  if (file.type === "as-is") {
+    downloadAsIsFile(file);
+  } else if (file.type === "uploaded") {
+    downloadUploadedFile(file);
+  } else if (file.type === "generated") {
+    downloadGeneratedFile(file);
+  }
+
+  hideContextMenu();
+  closeFileInfo();
+};
+
+// AS-IS 파일 다운로드 함수 추가
+const downloadAsIsFile = async (file) => {
+  try {
+    const response = await fetch(
+      `/api/v1/projects/${props.projectId}/documents/as-is/${file.docId}/preview`
+    );
+    if (!response.ok) throw new Error(`다운로드 실패: ${response.status}`);
+
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = file.name;
+    link.style.display = "none";
+
+    document.body.appendChild(link);
+    link.click();
+
+    setTimeout(() => {
+      if (link.parentNode) {
+        document.body.removeChild(link);
+      }
+      window.URL.revokeObjectURL(url);
+    }, 100);
+  } catch (error) {
+    console.error("AS-IS 보고서 다운로드 오류:", error);
+    alert("파일 다운로드에 실패했습니다.");
+  }
+};
+
+// onUnmounted에서 선택 상태 초기화에 as-is 추가
 onUnmounted(() => {
   document.removeEventListener("keydown", handleKeydown);
   window.removeEventListener("resize", handleWindowResize);
   hideContextMenu();
   closeFileInfo();
+  selectedFiles["as-is"] = -1;
   selectedFiles.uploaded = -1;
   selectedFiles.generated = -1;
   isLoading.value = false;
 });
 
+// watch에서 프로젝트 변경 시 선택 상태 초기화에 as-is 추가
 watch(
   () => props.projectId,
   (newProjectId, oldProjectId) => {
     if (newProjectId && newProjectId !== oldProjectId) {
-      // 프로젝트 변경 시 선택 상태 초기화
+      selectedFiles["as-is"] = -1;
       selectedFiles.uploaded = -1;
       selectedFiles.generated = -1;
       loadAllData();
@@ -1369,5 +1485,15 @@ watch(
     min-width: 280px;
     max-width: 600px;
   }
+}
+
+.file-icon.orange-gradient {
+  background: linear-gradient(135deg, #fb923c, #f97316);
+  box-shadow: 0 2px 8px rgba(249, 115, 22, 0.3);
+}
+
+.preview-icon.orange-gradient {
+  background: linear-gradient(135deg, #fb923c, #f97316);
+  box-shadow: 0 4px 16px rgba(249, 115, 22, 0.3);
 }
 </style>
