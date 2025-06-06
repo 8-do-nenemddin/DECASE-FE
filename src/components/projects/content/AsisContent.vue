@@ -129,24 +129,37 @@ const refreshPreview = () => {
 
 // 파일 다운로드
 const downloadFile = async () => {
-  if (!projectId.value || !props.docId) {
-    alert("프로젝트 ID 또는 문서 ID가 없습니다.");
+  if (!props.docId) {
+    alert("문서 ID가 없습니다.");
     return;
   }
 
   try {
-    const downloadUrl = `/api/v1/projects/${projectId.value}/documents/as-is/${props.docId}/preview`;
+    // 통합된 다운로드 URL 사용
+    const downloadUrl = `/api/v1/documents/${props.docId}/downloads`;
     console.log("다운로드 URL:", downloadUrl);
 
     const response = await fetch(downloadUrl);
     if (!response.ok) throw new Error("다운로드 실패");
 
+    // Content-Disposition 헤더에서 파일명 추출
+    const contentDisposition = response.headers.get("content-disposition");
+    let fileName = `as-is-report-${props.docId}.pdf`;
+
+    if (contentDisposition) {
+      const fileNameMatch = contentDisposition.match(
+        /filename\*?=['"]?([^'"\s]+)['"]?/
+      );
+      if (fileNameMatch) {
+        fileName = decodeURIComponent(fileNameMatch[1]);
+      }
+    }
+
     const blob = await response.blob();
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download =
-      previewData.value?.fileName || `as-is-report-${props.docId}.pdf`;
+    link.download = fileName;
     link.style.display = "none";
 
     document.body.appendChild(link);

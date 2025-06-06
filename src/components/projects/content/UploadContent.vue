@@ -211,14 +211,28 @@ const refreshPreview = () => {
 // 파일 다운로드
 const downloadFile = async () => {
   try {
-    const response = await fetch(`/api/v1/documents/${props.docId}/preview`);
+    // 통합된 다운로드 URL 사용
+    const response = await fetch(`/api/v1/documents/${props.docId}/downloads`);
     if (!response.ok) throw new Error("다운로드 실패");
+
+    // Content-Disposition 헤더에서 파일명 추출
+    const contentDisposition = response.headers.get("content-disposition");
+    let fileName = previewData.value?.fileName || `document_${props.docId}`;
+
+    if (contentDisposition) {
+      const fileNameMatch = contentDisposition.match(
+        /filename\*?=['"]?([^'"\s]+)['"]?/
+      );
+      if (fileNameMatch) {
+        fileName = decodeURIComponent(fileNameMatch[1]);
+      }
+    }
 
     const blob = await response.blob();
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = previewData.value?.fileName || `document_${props.docId}`;
+    link.download = fileName;
     link.style.display = "none";
 
     document.body.appendChild(link);
