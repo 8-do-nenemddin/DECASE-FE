@@ -10,11 +10,11 @@
         </div>
         <div class="action-buttons">
           <button
-            @click="loadDataFromAPI"
+            @click="downloadRequirements"
             class="load-button"
             :disabled="loading"
           >
-            {{ loading ? "🔄 로딩중..." : "🔄 데이터 새로고침" }}
+            {{ loading ? "🔄 다운로드중..." : "📥 요구사항 정의서 다운로드" }}
           </button>
           <button
             @click="saveChanges"
@@ -527,6 +527,67 @@ function cancelChanges() {
     modifiedRows.value.clear();
     gridApi.refreshCells();
     console.log("모든 변경사항이 취소되었습니다.");
+  }
+}
+
+// API에서 데이터 로드
+async function downloadRequirements() {
+  if (!props.projectId || !props.revision) {
+    error.value = "프로젝트 ID 또는 리비전 정보가 없습니다.";
+    return;
+  }
+
+  loading.value = true;
+  error.value = null;
+
+  try {
+    console.log("요구사항 정의서 다운로드:", {
+      projectId: props.projectId,
+      revision: props.revision,
+    });
+
+    const response = await fetch(
+      `/api/v1/projects/${props.projectId}/requirements/downloads?revisionCount=${props.revision}`,
+      {
+        method: "GET",
+        headers: {
+          Accept: "*/*",
+          "Content-Type": "application/json",
+        },
+        mode: "cors",
+        credentials: "omit",
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(
+        `HTTP error! status: ${response.status} - ${response.statusText}`
+      );
+    }
+
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `DECASE-Requirements-Specification-v${props.revision}.xlsx`;
+    link.style.display = "none";
+
+    document.body.appendChild(link);
+    link.click();
+
+    setTimeout(() => {
+      if (link.parentNode) {
+        document.body.removeChild(link);
+      }
+      window.URL.revokeObjectURL(url);
+    }, 100);
+
+    console.log("다운로드 완료");
+  } catch (err) {
+    console.error("❌ 다운로드 실패:", err);
+    error.value = err.message || "다운로드 중 오류가 발생했습니다.";
+  } finally {
+    loading.value = false;
   }
 }
 
