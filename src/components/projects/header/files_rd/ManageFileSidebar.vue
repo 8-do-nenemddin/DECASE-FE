@@ -402,10 +402,13 @@ const fetchUploadedFiles = async () => {
 
 const fetchGeneratedFiles = async () => {
   try {
-    const response = await fetch(`/api/projects/${props.projectId}/revision`, {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-    });
+    const response = await fetch(
+      `/api/v1/projects/${props.projectId}/revision`,
+      {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      }
+    );
 
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
@@ -466,16 +469,24 @@ const getFileIconByName = (fileName) => {
 
 const downloadGeneratedFile = async (file) => {
   try {
-    const response = await fetch(
-      `/api/projects/${props.projectId}/revision/${file.revision}/download`
+    let response = await fetch(
+      `/api/v1/projects/${props.projectId}/requirements/downloads?revisionCount=${file.revision}`
     );
+
     if (!response.ok) throw new Error(`다운로드 실패: ${response.status}`);
 
     const blob = await response.blob();
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `${file.name}.pdf`;
+
+    // 파일 이름 설정
+    if (file.name.includes("요구사항 정의서")) {
+      link.download = `DECASE-Requirements-Specification-v${file.revision}.xlsx`;
+    } else {
+      link.download = `${file.name}.pdf`;
+    }
+
     link.style.display = "none";
 
     document.body.appendChild(link);
