@@ -36,7 +36,7 @@
 
     <div v-if="modifiedRows.size > 0" class="modification-notice">
       ⚠️ {{ modifiedRows.size }}개의 행이 수정되었습니다. 저장하기 전에 모든
-      수정 이유를 입력해주세요.
+      수정 사유를 입력해주세요. 수정 사유는 변경 이력에 자동 반영됩니다.
     </div>
 
     <div v-if="loading" class="loading-notice">🔄 데이터를 불러오는 중...</div>
@@ -68,6 +68,10 @@ import { AgGridVue } from "ag-grid-vue3";
 import { ModuleRegistry, AllCommunityModule } from "ag-grid-community";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
+import { useProjectStore } from "/src/stores/projectStore.js";
+
+const memberStore = useProjectStore();
+const memberId = memberStore.memberId;
 
 // AG Grid 모듈 등록
 ModuleRegistry.registerModules([AllCommunityModule]);
@@ -199,11 +203,10 @@ const columnDefs = ref([
     headerName: "관리\n구분",
     editable: true,
     cellEditor: "agSelectCellEditor",
-    width: 50,
-    valueFormatter: (params) => {
-      const statusMap = { true: "삭제", false: "등록" };
-      return statusMap[params.value] || params.value;
+    cellEditorParams: {
+      values: ["등록", "삭제"],
     },
+    width: 50,
     cellStyle: (params) => {
       if (params.value === "삭제") {
         return { backgroundColor: "#ffebee", color: "#c62828" };
@@ -434,33 +437,71 @@ function onCellValueChanged(event) {
 function saveChanges() {
   console.log("=== 저장 시도 ===");
   const modifiedRowsData = rowData.value.filter((row) => row.isModified);
+  if (modifiedRowsData.length === 0) {
+    return;
+  }
   saveBulkChanges(modifiedRowsData);
 }
 
 // 일괄 저장 API 호출
 async function saveBulkChanges(modifiedData) {
   try {
-    console.log("백엔드로 전송할 데이터:", modifiedData);
+    // 데이터 변환
+    const transformedData = modifiedData.map((row) => {
+      const priorityMap = { 상: "HIGH", 중: "MIDDLE", 하: "LOW" };
+      const typeMap = { 기능: "FR", 비기능: "NFR" };
 
-    // 시뮬레이션 응답
-    setTimeout(() => {
-      console.log("✅ 일괄 저장 성공 (시뮬레이션)");
+      const transformed = {
+        memberId: 1, //일단 1로 하고 추후 수정
+        reqPk: row._originalApiData.reqPk,
+        type: typeMap[row.type] || row.type,
+        level1: row.level1,
+        level2: row.level2,
+        level3: row.level3,
+        priority: priorityMap[row.priority] || row.priority,
+        difficulty: priorityMap[row.difficulty] || row.difficulty,
+        name: row.name,
+        description: row.description,
+        deleted: row.managementStatus === "삭제",
+        modReason: row.modification_reason,
+      };
 
-      rowData.value.forEach((row) => {
-        if (row.isModified) {
-          row.isModified = false;
-          row.originalData = null;
-          row.modification_reason = "";
-        }
-      });
+      console.log("변환된 행 데이터:", transformed);
+      return transformed;
+    });
 
+    console.log("백엔드로 전송할 데이터:", transformedData);
+
+    const response = await fetch(
+      `/api/v1/projects/${props.projectId}/requirements/${props.revision}/edit`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "*/*",
+        },
+        body: JSON.stringify(transformedData),
+      }
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("서버 응답:", errorText);
+      throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+    }
+
+    const result = await response.json();
+    console.log("서버 응답:", result);
+
+    if (result.status === 200) {
       modifiedRows.value.clear();
-      gridApi.refreshCells();
-      alert("모든 변경사항이 저장되었습니다!");
-    }, 1000);
+      await loadDataFromAPI();
+    } else {
+      throw new Error(result.message || "저장 중 오류가 발생했습니다.");
+    }
   } catch (error) {
     console.error("❌ 일괄 저장 실패:", error);
-    alert("저장 중 오류가 발생했습니다. 다시 시도해주세요.");
+    alert(error.message || "저장 중 오류가 발생했습니다. 다시 시도해주세요.");
   }
 }
 
