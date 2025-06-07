@@ -8,11 +8,11 @@
           previewData.fileName
         }}</span>
         <button
-          @click="refreshPreview"
+          @click="downloadFile"
           class="refresh-button"
           :disabled="loading"
         >
-          {{ loading ? "🔄 로딩중..." : "🔄 새로고침" }}
+          {{ loading ? "🔄 다운로드중..." : "📥 다운로드" }}
         </button>
       </div>
     </div>
@@ -210,9 +210,19 @@ const refreshPreview = () => {
 
 // 파일 다운로드
 const downloadFile = async () => {
+  if (!props.docId) {
+    alert("문서 ID가 없습니다.");
+    return;
+  }
+
+  loading.value = true;
+  error.value = null;
+
   try {
-    // 통합된 다운로드 URL 사용
-    const response = await fetch(`/api/v1/documents/${props.docId}/downloads`);
+    const downloadUrl = `/api/v1/documents/${props.docId}/downloads`;
+    console.log("다운로드 URL:", downloadUrl);
+
+    const response = await fetch(downloadUrl);
     if (!response.ok) throw new Error("다운로드 실패");
 
     // Content-Disposition 헤더에서 파일명 추출
@@ -247,6 +257,8 @@ const downloadFile = async () => {
   } catch (error) {
     console.error("파일 다운로드 오류:", error);
     alert("파일 다운로드에 실패했습니다.");
+  } finally {
+    loading.value = false;
   }
 };
 
