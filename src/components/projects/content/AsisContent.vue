@@ -8,11 +8,11 @@
           previewData.fileName
         }}</span>
         <button
-          @click="refreshPreview"
+          @click="downloadFile"
           class="refresh-button"
           :disabled="loading"
         >
-          {{ loading ? "🔄 로딩중..." : "🔄 새로고침" }}
+          {{ loading ? "🔄 다운로드중..." : "📥 다운로드" }}
         </button>
       </div>
     </div>
@@ -134,8 +134,10 @@ const downloadFile = async () => {
     return;
   }
 
+  loading.value = true;
+  error.value = null;
+
   try {
-    // 통합된 다운로드 URL 사용
     const downloadUrl = `/api/v1/documents/${props.docId}/downloads`;
     console.log("다운로드 URL:", downloadUrl);
 
@@ -174,6 +176,8 @@ const downloadFile = async () => {
   } catch (error) {
     console.error("파일 다운로드 오류:", error);
     alert("파일 다운로드에 실패했습니다.");
+  } finally {
+    loading.value = false;
   }
 };
 
