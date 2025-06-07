@@ -342,7 +342,7 @@ async function loadDataFromAPI() {
       revision: props.revision,
     });
 
-    const apiUrl = `/api/projects/${props.projectId}/requirements/generated?revisionCount=${props.revision}`;
+    const apiUrl = `/api/v1/projects/${props.projectId}/requirements/generated?revisionCount=${props.revision}`;
     console.log("API URL:", apiUrl);
 
     const response = await fetch(apiUrl, {
