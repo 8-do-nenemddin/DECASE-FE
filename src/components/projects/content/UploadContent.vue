@@ -225,24 +225,11 @@ const downloadFile = async () => {
     const response = await fetch(downloadUrl);
     if (!response.ok) throw new Error("다운로드 실패");
 
-    // Content-Disposition 헤더에서 파일명 추출
-    const contentDisposition = response.headers.get("content-disposition");
-    let fileName = previewData.value?.fileName || `document_${props.docId}`;
-
-    if (contentDisposition) {
-      const fileNameMatch = contentDisposition.match(
-        /filename\*?=['"]?([^'"\s]+)['"]?/
-      );
-      if (fileNameMatch) {
-        fileName = decodeURIComponent(fileNameMatch[1]);
-      }
-    }
-
     const blob = await response.blob();
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = fileName;
+    link.download = props.file?.name || `document_${props.docId}`;
     link.style.display = "none";
 
     document.body.appendChild(link);
