@@ -106,12 +106,12 @@
 import { ref, computed } from 'vue'
 import { useRouter } from "vue-router";
 import SuccessCreateProject from "./ProjectCreationSuccessModal.vue";
-import { useProjectStore } from '/src/stores/projectStore.js';
-
-const projectStore = useProjectStore();
+import { useProjectStore } from '../../stores/projectStore';
 
 const router = useRouter();
 const emit = defineEmits(["close", "createProject"]);
+const projectStore = useProjectStore();
+const userId = computed(() => projectStore.userId);
 
 const isLoading = ref(false);
 const showSuccessModal = ref(false);
@@ -152,7 +152,7 @@ function onInput(event) {
   
   // 1경(10,000조) = 10^16 = 10000000000000000 (16자리)
   // 9,999조 = 9999000000000000 (최대 13자리)
-  const maxValue = 9999000000000000; // 9,999조
+  const maxValue = 9999000000000000n; // 9,999조
   
   if (raw) {
     const numValue = Number(raw);
@@ -196,7 +196,7 @@ const handleCreateProject = async () => {
       endDate: formData.value.endDate,
       description: formData.value.description,
       proposalPM: formData.value.proposalPM,
-      creatorMemberId: 1 // 실제 로그인한 유저 ID로 대체
+      creatorMemberId: userId.value
     };
 
     const response = await fetch("/api/v1/projects", {
@@ -215,6 +215,8 @@ const handleCreateProject = async () => {
 
     // 성공적으로 생성된 프로젝트 정보
     const newProject = result.data;
+    projectStore.setProject(newProject.projectId, newProject.name);
+
     console.log(result.data)
 
     const now = new Date();
@@ -230,7 +232,7 @@ const handleCreateProject = async () => {
 
     showSuccessModal.value = true;
     closeModal();
-    router.push(`/projects/${newProject.projectId}`);
+    router.push(`/projects/${projectStore.projectId}`);
   } catch (error) {
     console.error("프로젝트 생성 중 오류:", error);
     alert(error.message || "알 수 없는 오류가 발생했습니다.");
