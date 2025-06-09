@@ -18,6 +18,7 @@
 		  <td class="title-cell">{{ project.name }}</td>
 		  <td>버전 이력 {{ project.revisionCount }}개</td>
 		  <td>
+
         <div class="status-wrapper">
   <span
     class="status-badge"
@@ -73,7 +74,6 @@ function getProjectStatus(project) {
   if (today <= endDate) return "in_progress";
   return "done";
 }
-
 
 const navigateToProject = (projectId) => {
   const selectedProject = localProjects.value.find(p => p.projectId === projectId);

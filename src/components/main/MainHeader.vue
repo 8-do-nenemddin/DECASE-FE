@@ -15,7 +15,6 @@
     <!-- 분리된 프로필 사이드바 컴포넌트 사용 -->
     <ProfileBar
       :isVisible="showProfileSidebar"
-      :profileData="profileData"
       @close="closeProfileSidebar"
       @logout="handleLogout"
       @withdraw="handleWithdraw"
@@ -29,7 +28,6 @@ import ProfileBar from "./ProfileBar.vue"; // 분리된 컴포넌트 import
 import { useProjectStore } from "../../stores/projectStore";
 
 const showProfileSidebar = ref(false);
-
 const profileData = ref({});
 const projectStore = useProjectStore();
 const memberId = computed(() => projectStore.userId);
@@ -109,10 +107,10 @@ const handleWithdraw = () => {
 }
 
 .logo {
-  height: 50px;
-  width: 60px;
+  height: 60px;
+  width: auto;
   display: block;
-  margin-top: 30px;
+  margin-top: 5%;
   /* 로고 애니메이션 완전 제거 */
   animation: none !important;
   transform: none !important;
