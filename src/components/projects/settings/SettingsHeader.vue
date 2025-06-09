@@ -2,37 +2,51 @@
   <!-- 헤더 -->
   <header class="header">
     <div class="header-left">
-      <!-- <img
-        src="/DECASE-light.png"
-        alt="DECASE Logo"
-        class="logo-icon"
-        @click="handleGoMain"
-      /> -->
-      <button class="back-button" @click="goToMain">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M19 12H5M12 19L5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>
-      </button>
+      <div class="back-button-container">
+        <button class="back-button" @click="goToMain" title="돌아가기">
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M19 12H5M12 19L5 12L12 5" />
+          </svg>
+        </button>
+      </div>
     </div>
 
     <div class="header-center">
-      <h1 class="project-title" @click="goToMain">{{ projectStore.projectName }}</h1>
+      <div class="project-title-container" @click="goToMain">
+        <h1 class="project-title">{{ projectStore.projectName }}</h1>
+        <div class="project-status">Active Project</div>
+      </div>
     </div>
+
     <div class="header-right">
-      <!-- 사용자 버튼에 프로필 바 토글 기능 추가 -->
-      <button class="icon-button" @click="toggleProfileSidebar" title="사용자">
-        <svg
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
+      <div class="action-buttons">
+        <button
+          class="icon-button profile-btn"
+          @click="toggleProfileSidebar"
+          title="사용자"
         >
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-          <circle cx="12" cy="7" r="4"></circle>
-        </svg>
-      </button>
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+        </button>
+      </div>
     </div>
   </header>
 
@@ -46,11 +60,11 @@
 </template>
 
 <script setup>
-import {onMounted, ref} from "vue";
-import { computed } from 'vue';
+import { onMounted, ref } from "vue";
+import { computed } from "vue";
 import { useRouter } from "vue-router";
 import ProfileBar from "../../main/ProfileBar.vue";
-import { useProjectStore } from '/src/stores/projectStore';
+import { useProjectStore } from "/src/stores/projectStore";
 
 const projectStore = useProjectStore();
 
@@ -58,12 +72,11 @@ const router = useRouter();
 const showSidebar = ref(false);
 const showProfileSidebar = ref(false);
 
-
 const goToMain = () => {
   if (projectStore.projectId) {
     router.push(`/projects/${projectStore.projectId}`);
   }
-}
+};
 
 // 프로필 사이드바 관련 메서드
 const toggleProfileSidebar = () => {
@@ -100,193 +113,319 @@ const handleGoMain = () => {
 <style scoped>
 .project-main {
   min-height: 100vh;
-  background-color: #ffffff;
-  font-family: "Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI",
-    Roboto, sans-serif;
+  background-color: #fafbfc;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", sans-serif;
 }
 
 /* 헤더 스타일 */
 .header {
   display: flex;
   align-items: center;
-  justify-content: center; /* 중앙 정렬 */
-  padding: 0 40px;
-  height: 64px;
-  border-bottom: 1px solid #e5e7eb;
-  background: white;
+  justify-content: space-between;
+  padding: 0 32px;
+  height: 72px;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
   position: relative;
-  z-index: 10;
-  gap: 40px; /* 좌우 간격 */
-  isolation: isolate;
-  animation: none !important;
-  transition: none !important;
-  transform: none !important;
+  z-index: 50;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
 }
 
-.header-left,
-.header-right {
-  flex: 0 0 auto; /* 고정 크기 */
+.header-left {
   display: flex;
   align-items: center;
-  gap: 16px;
-  transform: none !important;
+  gap: 24px;
+  min-width: 0;
 }
 
 .header-center {
-  flex: 1 1 auto; /* 공간 채움 */
-  text-align: center;
-  position: static; /* 절대 위치 제거 */
-  transform: none;
-  transform: none !important;
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  min-width: 0;
 }
 
-.logo-icon {
-  width: auto;
-  height: 45px;
-  background: linear-gradient(135deg, #e53e3e 0%, #ff6b35 100%);
-  border-radius: 6px;
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+/* 뒤로가기 버튼 스타일 */
+.back-button-container {
+  display: flex;
+  align-items: center;
+  background: rgba(248, 250, 252, 0.8);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-radius: 16px;
+  padding: 4px;
+  backdrop-filter: blur(8px);
+}
+
+.back-button {
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: transparent;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  font-weight: 700;
-  font-size: 16px;
   cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  color: #64748b;
+  position: relative;
+  overflow: hidden;
 }
 
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.back-button::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(59, 130, 246, 0.1);
+  border-radius: 12px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
+.back-button:hover {
+  color: #3b82f6;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+.back-button:hover::before {
+  opacity: 1;
+}
+
+.back-button:active {
+  transform: translateY(0);
+}
+
+/* 아이콘 버튼 스타일 */
 .icon-button {
   width: 40px;
   height: 40px;
   border: none;
   background: transparent;
-  border-radius: 8px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
-  color: #6b7280;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  color: #64748b;
+  position: relative;
+  overflow: hidden;
+}
+
+.icon-button::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(59, 130, 246, 0.1);
+  border-radius: 12px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
 .icon-button:hover {
-  background: #f3f4f6;
-  color: #374151;
+  color: #3b82f6;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
 }
 
-/* 활성 상태 표시 (사이드바가 열려있을 때) */
-.icon-button.active {
-  background: #f3f4f6;
-  color: #374151;
+.icon-button:hover::before {
+  opacity: 1;
 }
 
-.project-title {
-  font-size: 30px;
-  font-weight: 700;
-  color: #111827;
+.icon-button:active {
+  transform: translateY(0);
 }
 
-.header-right {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+.profile-btn:hover {
+  color: #f59e0b;
 }
 
-.download-button {
-  background: #000000;
-  color: white;
-  border: none;
-  padding: 8px 30px;
-  border-radius: 20px;
-  font-size: 14px;
-  font-weight: 500;
+/* 프로젝트 타이틀 */
+.project-title-container {
+  text-align: center;
   cursor: pointer;
-  transition: all 0.2s ease;
+  padding: 8px 16px;
+  border-radius: 12px;
+  transition: all 0.3s ease;
 }
 
-.download-button:hover {
-  background: #1f2937;
+.project-title-container:hover {
+  background: rgba(59, 130, 246, 0.05);
   transform: translateY(-1px);
 }
 
+.project-title {
+  font-size: 28px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #1e293b 0%, #3b82f6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.project-status {
+  font-size: 11px;
+  font-weight: 500;
+  color: #10b981;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 2px;
+}
+
+/* 액션 버튼 그룹 */
+.action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(248, 250, 252, 0.8);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-radius: 16px;
+  padding: 4px;
+  backdrop-filter: blur(8px);
+}
+
 /* 반응형 디자인 */
+@media (max-width: 1024px) {
+  .header {
+    padding: 0 24px;
+    gap: 16px;
+  }
+
+  .project-title {
+    font-size: 24px;
+  }
+}
+
 @media (max-width: 768px) {
   .header {
     padding: 0 16px;
-    justify-content: space-between; /* 좌우 분리 */
+    height: 64px;
+    flex-wrap: nowrap;
   }
 
   .header-left {
-    order: 1;
+    gap: 12px;
+    min-width: auto;
   }
 
   .header-center {
     flex: none;
-    order: 2;
-    position: static;
-    transform: none;
-    text-align: center;
-    margin: 0 auto;
+    min-width: 0;
   }
 
   .header-right {
-    order: 3;
+    gap: 8px;
+    min-width: auto;
   }
 
   .project-title {
-    font-size: 18px;
+    font-size: 20px;
   }
 
-  .download-button {
-    padding: 6px 12px;
-    font-size: 13px;
+  .project-status {
+    display: none;
+  }
+
+  .back-button-container {
+    padding: 2px;
+    gap: 2px;
+  }
+
+  .action-buttons {
+    padding: 2px;
+    gap: 2px;
+  }
+
+  .icon-button,
+  .back-button {
+    width: 36px;
+    height: 36px;
   }
 }
 
 @media (max-width: 480px) {
   .header {
     padding: 0 12px;
-  }
-
-  .header-actions {
-    gap: 4px;
-  }
-
-  .icon-button {
-    width: 36px;
-    height: 36px;
-  }
-
-  .download-button {
-    padding: 6px 12px;
-    font-size: 13px;
+    height: 60px;
   }
 
   .project-title {
-    font-size: 16px;
+    font-size: 18px;
+  }
+
+  .back-button-container {
+    gap: 1px;
+  }
+
+  .action-buttons {
+    gap: 1px;
+  }
+
+  .icon-button,
+  .back-button {
+    width: 32px;
+    height: 32px;
   }
 }
-.back-button {  
-  width: 40px;
-  height: 40px;
-  border: none;
-  background: transparent;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  color: #6b7280;
+
+/* 다크 모드 지원 */
+@media (prefers-color-scheme: dark) {
+  .header {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    border-bottom-color: rgba(148, 163, 184, 0.2);
+  }
+
+  .project-title {
+    background: linear-gradient(135deg, #f1f5f9 0%, #3b82f6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .icon-button,
+  .back-button {
+    color: #94a3b8;
+  }
+
+  .back-button-container,
+  .action-buttons {
+    background: rgba(15, 23, 42, 0.8);
+    border-color: rgba(148, 163, 184, 0.2);
+  }
 }
 
-.back-button:hover {
-  background: #f7fafc;
-  border-color: #4a5568;
+/* 스크롤 시 헤더 효과 */
+.header.scrolled {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(20px);
+}
+
+/* 애니메이션 */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.header {
+  animation: fadeInUp 0.6s ease-out;
 }
 </style>
