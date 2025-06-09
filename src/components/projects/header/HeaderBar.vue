@@ -378,12 +378,20 @@ const handleGoSettings = (projectId) => {
   cursor: pointer;
   padding: 8px 12px;
   border-radius: 16px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-bottom: 5px;
 }
 
 .logo-container:hover {
   background: rgba(0, 0, 0, 0.03);
   transform: translateY(-1px);
+}
+
+.logo-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  width: 36px;
 }
 
 .logo {
@@ -395,6 +403,10 @@ const handleGoSettings = (projectId) => {
   align-items: center;
   justify-content: center;
   object-fit: contain;
+  margin-top: 30px !important; /* 로고 이미지만 추가로 아래로 */
+  animation: none !important;
+  transform: none !important;
+  transition: none !important;
 }
 
 .logo-text {
@@ -402,8 +414,8 @@ const handleGoSettings = (projectId) => {
   font-weight: 800;
   color: #000000;
   letter-spacing: 0.02em;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui,
-    sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  margin-top: 5px !important; /* 로고 텍스트도 아래로 */
 }
 
 /* 헤더 액션 버튼들 */
