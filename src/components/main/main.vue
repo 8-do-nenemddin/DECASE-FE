@@ -110,6 +110,7 @@ import ProjectGallery from "./ProjectGallery.vue";
 import ProjectList from "./ProjectList.vue";
 import MainHeader from "../main/MainHeader.vue";
 import ProfileBar from "./ProfileBar.vue";
+import { useProjectStore } from '/src/stores/projectStore.js';
 
 // 상태 변수들
 const showModal = ref(false);
@@ -199,7 +200,8 @@ const selectedViewComponent = computed(() => {
 // 메서드들
 const fetchProjects = async () => {
   try {
-    const memberId = 1;
+    const memberStore = useProjectStore();
+    const memberId = memberStore.userId;
     const response = await fetch(`/api/v1/members/${memberId}/projects`);
     const json = await response.json();
     projects.value = json.data || [];
