@@ -77,8 +77,15 @@ function getProjectStatus(project) {
 
 const navigateToProject = (projectId) => {
   const selectedProject = localProjects.value.find(p => p.projectId === projectId);
+
+  if (start > now || end < now) {
+    selectedProject.status = "INACTIVE";
+  } else {
+    selectedProject.status = "ACTIVE";
+  }
+
   if (selectedProject) {
-    projectStore.setProject(selectedProject.projectId, selectedProject.name);
+    projectStore.setProject(selectedProject.projectId, selectedProject.name, selectedProject.status);
     router.push({ name: "ProjectMain", params: { projectId: selectedProject.projectId } });
   }
 };
