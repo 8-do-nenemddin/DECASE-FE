@@ -196,7 +196,7 @@ const showFileListSidebar = ref(false);
 const showSourceUploadModal = ref(false);
 const showDownloadFileModal = ref(false);
 const showProfileSidebar = ref(false);
-const showMockupViewer = ref(false);
+const showMockupSidebar = ref(false);
 
 const goToMain = () => {
   if (projectId) {
@@ -418,6 +418,8 @@ const handleGoSettings = () => {
   font-weight: 800;
   color: #000000;
   letter-spacing: 0.02em;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  margin-top: 5px !important; /* 로고 텍스트도 아래로 */
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
   margin-top: 5px !important; /* 로고 텍스트도 아래로 */
 }
