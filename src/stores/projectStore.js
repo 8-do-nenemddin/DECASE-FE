@@ -4,12 +4,14 @@ export const useProjectStore = defineStore('projectStore', {
     state: () => ({
         projectId: null,
         projectName: null,
+        status: null,
         userId: null,
     }),
     actions: {
-        setProject(projectId, projectName) {
+        setProject(projectId, projectName, status) {
             this.projectId = projectId;
             this.projectName = projectName;
+            this.status = status
         },
         setUser(userId) {
             this.userId = userId;
@@ -17,11 +19,13 @@ export const useProjectStore = defineStore('projectStore', {
         resetProject() {
             this.projectId = null;
             this.projectName = null;
+            this.status = null;
         },
         resetAll() {
             this.userId = null;
             this.projectId = null;
             this.projectName = null;
+            this.status = null;
         },
     },
     persist: true,
