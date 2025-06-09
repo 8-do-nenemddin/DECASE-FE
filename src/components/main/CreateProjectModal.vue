@@ -219,6 +219,17 @@ const handleCreateProject = async () => {
 
     console.log(result.data)
 
+    const now = new Date();
+    const start = new Date(newProject.startDate);
+    const end = new Date(newProject.endDate);
+
+    if (start > now || end < now) {
+      newProject.status = "INACTIVE";
+    } else {
+      newProject.status = "ACTIVE";
+    }
+    projectStore.setProject(newProject.projectId, newProject.name, newProject.status, newProject.isAdmin);
+
     showSuccessModal.value = true;
     closeModal();
     router.push(`/projects/${projectStore.projectId}`);
