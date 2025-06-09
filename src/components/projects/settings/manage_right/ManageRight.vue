@@ -17,7 +17,7 @@
               <div class="member-header">
                 <span class="member-name">{{ member.name }}</span>
                 <span class="member-department">{{ member.department }}</span>
-                <span class="member-admin">{{ member.isAdmin ? "Admin" : "" }}</span>
+                <span v-if="member.isAdmin" class="member-admin">Admin</span>
               </div>
             </div>
           </div>
