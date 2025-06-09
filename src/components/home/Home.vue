@@ -2,7 +2,7 @@
   <div class="background">
     <div class="header">
       <button class="nav-button" @click="goToSignup">회원가입</button>
-      <button class="nav-button" @click="goToSignIn">로그인</button>
+      <button class="nav-button" @click="goToLogin">로그인</button>
     </div>
     <div class="content">
       <img src="/DECASE-dark.png" alt="Logo" class="logo" />
@@ -19,8 +19,8 @@ const goToSignup= () => {
   router.push('/signup');
 };
 
-const goToSignIn = () => {
-  router.push('/signin');
+const goToLogin = () => {
+  router.push('/login');
 };
 </script>
 

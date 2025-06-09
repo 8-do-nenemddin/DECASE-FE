@@ -6,7 +6,7 @@ import ProjectInfo from "../components/projects/settings/edit_project/EditProjec
 import ProjectMatrix from "../components/projects/settings/view_matrix/ViewMatrix.vue";
 import ProjectRight from "../components/projects/settings/manage_right/ManageRight.vue";
 import Home from "../components/home/Home.vue";
-import SignIn from "../components/home/Signin.vue";
+import Login from "../components/home/Login.vue";
 import Signup from "../components/home/SignUp.vue";
 import inviteMember from "../components/projects/invitations/inviteMember.vue";
 
@@ -52,9 +52,9 @@ const routes = [
     component: Home,
   },
   {
-    path: "/signin",
-    name: "SignIn",
-    component: SignIn,
+    path: "/login",
+    name: "Login",
+    component: Login,
   },
   {
     path: "/signup",

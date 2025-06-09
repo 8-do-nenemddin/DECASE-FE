@@ -133,21 +133,8 @@
             <circle cx="12" cy="7" r="4"></circle>
           </svg>
         </button>
-        <button
-          class="icon-button settings-btn"
-          @click="handleGoSettings(projectId)"
-          title="설정"
-        >
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
+        <button class="icon-button settings-btn" @click="handleGoSettings" title="설정">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />
             <path
               d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09c.7 0 1.3-.4 1.51-1a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06c.46.46 1.12.61 1.82.33.61-.26 1-.86 1-1.51V3a2 2 0 1 1 4 0v.09c0 .7.4 1.3 1 1.51.7.28 1.36.13 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82c.26.61.86 1 1.51 1H21a2 2 0 1 1 0 4h-.09c-.7 0-1.3.4-1.51 1z"
@@ -160,28 +147,11 @@
 
   <MockupViewer v-if="showMockupViewer" @close="closeMockupViewer" />
   <SearchRequirementsSidebar v-if="showSidebar" @close="closeSidebar" />
-  <ManageFileSidebar
-    v-if="showFileListSidebar"
-    :projectId="props.projectId"
-    @close="closeFileListSidebar"
-    @fileSelected="handleFileSelected"
-  />
-  <UploadSourceModal
-    v-if="showSourceUploadModal"
-    @close="closeSourceUploadModal"
-    @createProject="handleUploadSource"
-  />
-  <DownloadFileModal
-    v-if="showDownloadFileModal"
-    @close="closeDownloadFileModal"
-    @createProject="handleDownloadSource"
-  />
-  <ProfileBar
-    :isVisible="showProfileSidebar"
-    @close="closeProfileSidebar"
-    @logout="handleLogout"
-    @withdraw="handleWithdraw"
-  />
+  <ManageFileSidebar v-if="showFileListSidebar" @close="closeFileListSidebar" @fileSelected="handleFileSelected" />
+  <UploadSourceModal v-if="showSourceUploadModal" @close="closeSourceUploadModal" @createProject="handleUploadSource" />
+  <DownloadFileModal v-if="showDownloadFileModal" @close="closeDownloadFileModal" @createProject="handleDownloadSource" />
+  <ProfileBar :isVisible="showProfileSidebar" @close="closeProfileSidebar" @logout="handleLogout" @withdraw="handleWithdraw" />
+  <!-- <SettingsHeader /> -->
 </template>
 
 <script setup>
@@ -208,12 +178,6 @@ const showDownloadFileModal = ref(false);
 const showProfileSidebar = ref(false);
 const showMockupViewer = ref(false);
 
-const props = defineProps({
-  projectId: {
-    type: String,
-    required: true,
-  },
-});
 
 const goToMain = () => {
   if (projectStore.projectId) {
@@ -320,9 +284,10 @@ const handleGoMain = () => {
   router.push({ name: "MainView" });
 };
 
-const handleGoSettings = (projectId) => {
+const handleGoSettings = () => {
+  const projectId = projectStore.projectId;
   console.log(`'${projectId}' 세팅`);
-  router.push({ name: "ProjectSetting", params: { projectId: projectId } });
+  router.push({ name: "ProjectSetting", params: { projectId } });
 };
 </script>
 

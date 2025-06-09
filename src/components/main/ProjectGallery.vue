@@ -7,6 +7,7 @@
       :key="project.projectId"
       @click="project.showDropdown ? null : navigateToProject(project.projectId)"
     >
+
     <h2 class="project-header">
   <span class="project-name">{{ project.name }}</span>
   <div class="project-status-wrapper">
@@ -43,7 +44,6 @@ watch(
   (newProjects) => {
     localProjects.value = newProjects.map((p) => ({
       ...p,
-      showDropdown: false,
     }));
   },
   { immediate: true, deep: true }
