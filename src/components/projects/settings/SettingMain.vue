@@ -7,92 +7,202 @@
       <!-- 사이드바 컴포넌트 - 고정 폭으로 유지 -->
       <SettingsSidebar
         :current-component="currentComponent"
+        :is-admin="isAdmin"
         @change-component="handleChangeComponent"
       />
 
       <!-- 메인 콘텐츠 -->
       <main class="content-area">
         <!-- 프로젝트 정보 수정 -->
-        <EditProjectInfo v-if="currentComponent === 'ProjectInfo'" />
+        <EditProjectInfo 
+          v-if="currentComponent === 'ProjectInfo'" 
+          :project-id="projectId"
+        />
 
         <!-- 요구사항 추적 매트릭스 -->
-        <ViewMatrix v-if="currentComponent === 'ProjectMatrix'" />
+        <ViewMatrix 
+          v-if="currentComponent === 'ProjectMatrix'" 
+          :project-id="projectId"
+        />
 
-        <!-- 권한 관리 -->
-        <ManageRight :project-id="projectId" v-if="currentComponent === 'ProjectRight'" />
+        <!-- 권한 관리 - admin만 접근 가능 -->
+        <ManageRight 
+          v-if="currentComponent === 'ProjectRight' && isAdmin" 
+          :project-id="projectId" 
+        />
 
-        <!-- 초대 현황 -->
-        <Invitation :project-id="projectId" v-if="currentComponent === 'Invitation'" />
+        <!-- 초대 현황 - admin만 접근 가능 -->
+        <Invitation 
+          v-if="currentComponent === 'Invitation' && isAdmin" 
+          :project-id="projectId"
+          @send-invitations="handleSendInvitations"
+        />
+
+        <!-- 권한 없음 메시지 -->
+        <div 
+          v-if="(currentComponent === 'ProjectRight' || currentComponent === 'Invitation') && !isAdmin" 
+          class="no-permission-message"
+        >
+          <div class="permission-card">
+            <div class="permission-icon">🔒</div>
+            <h3 class="permission-title">접근 권한이 없습니다</h3>
+            <p class="permission-description">
+              이 기능은 관리자만 사용할 수 있습니다. 프로젝트 관리자에게 문의하세요.
+            </p>
+          </div>
+        </div>
+
+        <!-- 로딩 상태 -->
+        <div v-if="isLoading" class="loading-message">
+          <div class="loading-spinner"></div>
+          <p>권한을 확인하는 중...</p>
+        </div>
+
+        <!-- 에러 상태 -->
+        <div v-if="error" class="error-message">
+          <div class="error-card">
+            <div class="error-icon">⚠️</div>
+            <h3 class="error-title">오류가 발생했습니다</h3>
+            <p class="error-description">{{ error }}</p>
+            <button @click="retryPermissionCheck" class="retry-button">
+              다시 시도
+            </button>
+          </div>
+        </div>
       </main>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted, computed } from "vue";
 import SettingsHeader from "./SettingsHeader.vue";
 import SettingsSidebar from "./SettingsSidebar.vue";
 import EditProjectInfo from "./edit_project/EditProjectInfo.vue";
 import ViewMatrix from "./view_matrix/ViewMatrix.vue";
 import ManageRight from "./manage_right/ManageRight.vue";
 import Invitation from "./invitation/Invitation.vue";
+import { useProjectStore } from "../../../stores/projectStore";
 
-const props = defineProps({
-  projectId: {
-    type: String,
-    required: true
-  }
-});
-
-console.log(props.projectId)
-
+// 반응형 상태
 const currentComponent = ref("ProjectInfo"); // 기본 컴포넌트
+const isAdmin = ref(false); // 관리자 권한 상태
+const isLoading = ref(true); // 로딩 상태
+const error = ref(null); // 에러 상태
 
-const handleChangeComponent = (componentName) => {
-  currentComponent.value = componentName;
+// 스토어에서 필요한 값들 가져오기
+const projectStore = useProjectStore();
+const projectId = computed(() => projectStore.projectId);
+const userId = computed(() => projectStore.userId);
+
+// API 기본 URL
+const API_BASE_URL = 'http://localhost:8080';
+
+// 사용자 권한 확인 함수
+const checkUserPermission = async () => {
+  if (!projectId.value || !userId.value) {
+    error.value = "프로젝트 ID 또는 사용자 ID가 없습니다.";
+    isLoading.value = false;
+    return;
+  }
+
+  try {
+    isLoading.value = true;
+    error.value = null;
+    
+    const response = await fetch(
+      `${API_BASE_URL}/api/v1/projects/${projectId.value}/members/${userId.value}/permission`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          // 필요시 인증 헤더 추가
+          // 'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+    
+    if (!response.ok) {
+      throw new Error(`권한 확인 실패: ${response.status} ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    isAdmin.value = Boolean(data.isAdmin);
+    console.log(isAdmin.value)
+  } catch (err) {
+    console.error('Error checking user permission:', err);
+    error.value = err.message || '권한 확인 중 오류가 발생했습니다.';
+    isAdmin.value = false;
+  } finally {
+    isLoading.value = false;
+  }
 };
 
+// 권한 확인 재시도 함수
+const retryPermissionCheck = () => {
+  checkUserPermission();
+};
+
+// 초대 발송 핸들러
 const handleSendInvitations = async (invitationList) => {
+  // admin 권한 재확인
+  if (!isAdmin.value) {
+    alert('초대 권한이 없습니다.');
+    return;
+  }
+
+  if (!Array.isArray(invitationList) || invitationList.length === 0) {
+    alert('초대할 사용자를 선택해주세요.');
+    return;
+  }
+
   const mappedList = invitationList.map(item => ({
     email: item.email,
-    permission: item.permission === "Read" ? "READ" : "READ_AND_WRITE"
+    permission: item.permission === "Read" ? "READ" : "READ_AND_WRITE",
+    projectId: projectId.value
   }));
 
   try {
-    const response = await fetch('/api/send-invitations', {
+    const response = await fetch(`${API_BASE_URL}/api/v1/invitations`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        // 필요시 인증 헤더 추가
+        // 'Authorization': `Bearer ${token}`
       },
-      body: JSON.stringify(mappedList)
+      body: JSON.stringify({
+        projectId: projectId.value,
+        invitations: mappedList
+      })
     });
+
     if (!response.ok) {
-      throw new Error('Failed to send invitations');
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `초대 발송 실패: ${response.status}`);
     }
-    // handle success
-  } catch (error) {
-    console.error(error);
-    // handle error
+
+    const result = await response.json();
+    alert(`${result.successCount || mappedList.length}명의 사용자에게 초대를 발송했습니다.`);
+    
+    // 초대 현황 새로고침 (필요시 이벤트 발생)
+    // EventBus.$emit('invitation-sent');
+    
+  } catch (err) {
+    console.error('Error sending invitations:', err);
+    alert(err.message || '초대 발송 중 오류가 발생했습니다.');
   }
 };
+
+// 컴포넌트 마운트 시 권한 확인
+onMounted(() => {
+  checkUserPermission();
+});
 </script>
 
-<style>
-/* 글로벌 스타일 */
+<style scoped>
+/* 기존 스타일 유지 */
 * {
   box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  padding: 0;
-  font-family: "Inter", "Pretendard", -apple-system, BlinkMacSystemFont,
-    "Segoe UI", Roboto, sans-serif;
-  background-color: #f8fafc;
-  color: #1f2937;
-  line-height: 1.5;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
 .app-container {
@@ -107,123 +217,108 @@ body {
   display: flex;
   flex: 1;
   height: calc(100vh - 4rem);
-  min-height: 0; /* flexbox 오버플로우 해결 */
+  min-height: 0;
   position: relative;
-  margin: 0; /* 마진 제거 */
-  padding: 0; /* 패딩 제거 */
+  margin: 0;
+  padding: 0;
 }
 
-/* 사이드바 고정 스타일 */
 .main-layout > :first-child {
-  flex-shrink: 0; /* 사이드바 축소 방지 */
-  width: 280px; /* 기본 고정 폭 */
-  min-width: 280px; /* 최소 폭 보장 */
-  min-height: calc(100vh - 4rem); /* 최소 높이 보장 */
-  height: auto; /* 높이 자동 조정 */
-  position: sticky; /* 스티키 포지션 */
-  top: 0; /* 상단에 고정 */
-  align-self: stretch; /* 전체 높이 늘리기 */
-  transition: width 0.3s ease; /* 부드러운 전환 */
-  overflow-y: auto; /* 사이드바 자체 스크롤 */
-  background: white; /* 배경색 보장 */
-  border-right: 1px solid #e5e7eb; /* 구분선 */
-  margin: 0; /* 마진 제거 */
-  padding: 0; /* 패딩 제거 */
+  flex-shrink: 0;
+  width: 280px;
+  min-width: 280px;
+  min-height: calc(100vh - 4rem);
+  height: auto;
+  position: sticky;
+  top: 0;
+  align-self: stretch;
+  transition: width 0.3s ease;
+  overflow-y: auto;
+  background: white;
+  border-right: 1px solid #e5e7eb;
+  margin: 0;
+  padding: 0;
 }
 
 .content-area {
   flex: 1;
-  min-width: 0; /* flexbox에서 내용이 넘칠 때 축소 허용 */
+  min-width: 0;
   padding: 2rem;
   overflow-y: auto;
   background: transparent;
 }
 
-/* 요구사항 매트릭스 스타일 */
-.requirement-matrix {
-  max-width: 800px;
-  margin: 0 auto;
+/* 권한 없음 메시지 스타일 */
+.no-permission-message,
+.loading-message,
+.error-message {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+  padding: 2rem;
 }
 
-.matrix-card {
+.permission-card,
+.error-card {
   background: #ffffff;
   border-radius: 16px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.1);
   border: 1px solid #f3f4f6;
-  overflow: hidden;
-  transition: all 0.3s ease;
-}
-
-.matrix-card:hover {
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08), 0 4px 10px rgba(0, 0, 0, 0.1);
-}
-
-.card-header {
-  padding: 2rem;
-  border-bottom: 1px solid #f3f4f6;
-  display: flex;
-  align-items: flex-start;
-  gap: 1rem;
-}
-
-.header-icon {
-  font-size: 2rem;
-  background: linear-gradient(135deg, #fef3c7, #fbbf24);
-  padding: 0.75rem;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.header-content {
-  flex: 1;
-}
-
-.card-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #111827;
-  margin: 0 0 0.5rem 0;
-  line-height: 1.3;
-}
-
-.card-description {
-  color: #6b7280;
-  font-size: 0.875rem;
-  line-height: 1.5;
-  margin: 0;
-}
-
-.empty-state {
-  padding: 4rem 2rem;
+  padding: 3rem 2rem;
   text-align: center;
+  max-width: 400px;
+  width: 100%;
+  animation: fadeIn 0.6s ease-out;
 }
 
-.empty-icon {
+.permission-icon,
+.error-icon {
   font-size: 4rem;
   margin-bottom: 1.5rem;
   opacity: 0.7;
 }
 
-.empty-title {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #374151;
-  margin: 0 0 0.75rem 0;
+.permission-title,
+.error-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 1rem 0;
+  line-height: 1.3;
 }
 
-.empty-description {
+.permission-description,
+.error-description {
   color: #6b7280;
   font-size: 0.875rem;
   line-height: 1.6;
-  margin: 0 0 2rem 0;
-  max-width: 400px;
-  margin-left: auto;
-  margin-right: auto;
+  margin: 0 0 1.5rem 0;
 }
 
-.add-requirement-button {
+/* 로딩 스타일 */
+.loading-message {
+  flex-direction: column;
+  color: #6b7280;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f4f6;
+  border-top: 4px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 버튼 스타일 */
+.retry-button {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
@@ -239,193 +334,71 @@ body {
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
 }
 
-.add-requirement-button:hover {
+.retry-button:hover {
   background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
   transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(59, 130, 246, 0.25);
 }
 
-.add-requirement-button:active {
+.retry-button:active {
   transform: translateY(0);
 }
 
-.button-icon {
-  font-size: 1rem;
+.retry-button:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
 }
 
-/* 줌 레벨 대응 - 고해상도 화면 */
-@media (min-width: 1920px) {
-  .main-layout > :first-child {
-    width: 320px;
-    min-width: 320px;
-  }
-}
-
-/* 반응형 디자인 - 큰 화면 */
-@media (max-width: 1440px) {
-  .main-layout > :first-child {
-    width: 280px;
-    min-width: 280px;
-  }
-}
-
-/* 반응형 디자인 - 타블릿 */
+/* 반응형 디자인 */
 @media (max-width: 1024px) {
-  .main-layout > :first-child {
-    width: 260px;
-    min-width: 260px;
-  }
-  
   .content-area {
     padding: 1.5rem;
   }
 }
 
-/* 줌 200% 대응 (실제 화면 크기의 절반) */
-@media (max-width: 960px) {
-  .main-layout > :first-child {
-    width: 240px;
-    min-width: 240px;
-  }
-
-  .content-area {
-    padding: 1.25rem;
-  }
-}
-
-/* 반응형 디자인 - 모바일 */
 @media (max-width: 768px) {
-  .main-layout > :first-child {
-    width: 220px;
-    min-width: 220px;
-  }
-
   .content-area {
     padding: 1rem;
   }
 
-  .card-header {
-    padding: 1.5rem;
-    flex-direction: column;
-    text-align: center;
-    gap: 0.75rem;
+  .permission-card,
+  .error-card {
+    padding: 2rem 1.5rem;
   }
 
-  .header-icon {
-    font-size: 1.75rem;
-    padding: 0.5rem;
-    align-self: center;
-  }
-
-  .card-title {
+  .permission-title,
+  .error-title {
     font-size: 1.25rem;
-  }
-
-  .empty-state {
-    padding: 3rem 1.5rem;
-  }
-
-  .empty-icon {
-    font-size: 3rem;
-  }
-
-  .add-requirement-button {
-    width: 100%;
-    justify-content: center;
   }
 }
 
-/* 매우 작은 화면 - 사이드바 더 좁게 */
 @media (max-width: 640px) {
-  .main-layout > :first-child {
-    width: 200px;
-    min-width: 200px;
-  }
-  
   .content-area {
     padding: 0.75rem;
   }
 
-  .card-header {
-    padding: 1rem;
+  .permission-card,
+  .error-card {
+    padding: 1.5rem 1rem;
   }
 
-  .card-title {
+  .permission-title,
+  .error-title {
     font-size: 1.125rem;
   }
 
-  .card-description {
+  .permission-description,
+  .error-description {
     font-size: 0.8125rem;
   }
 
-  .empty-state {
-    padding: 2rem 1rem;
-  }
-
-  .empty-title {
-    font-size: 1.125rem;
-  }
-
-  .empty-description {
-    font-size: 0.8125rem;
-  }
-
-  .add-requirement-button {
+  .retry-button {
     padding: 0.75rem 1.5rem;
     font-size: 0.8125rem;
   }
 }
 
-/* 아주 작은 모바일 화면 */
-@media (max-width: 480px) {
-  .main-layout > :first-child {
-    width: 180px;
-    min-width: 180px;
-  }
-}
-
-/* 매우 작은 화면에서는 사이드바를 접을 수 있게 하는 옵션 */
-@media (max-width: 400px) {
-  .main-layout {
-    position: relative;
-  }
-  
-  .main-layout > :first-child {
-    width: 60px; /* 아이콘만 보이도록 */
-    min-width: 60px;
-    overflow: hidden;
-  }
-  
-  /* 호버시 전체 사이드바 표시 (선택사항) */
-  .main-layout > :first-child:hover {
-    width: 200px;
-    min-width: 200px;
-    position: relative;
-    z-index: 10;
-    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
-  }
-}
-
-/* 줌 300% 이상 대응 */
 @media (max-width: 320px) {
-  .main-layout > :first-child {
-    width: 50px;
-    min-width: 50px;
-    overflow: hidden;
-  }
-  
-  .main-layout > :first-child:hover {
-    width: 180px;
-    min-width: 180px;
-    position: absolute;
-    left: 0;
-    top: 0;
-    height: 100%;
-    z-index: 100;
-    background: white;
-    box-shadow: 2px 0 15px rgba(0, 0, 0, 0.15);
-  }
-  
   .content-area {
     padding: 0.5rem;
   }
@@ -450,12 +423,6 @@ body {
   background: linear-gradient(135deg, #94a3b8, #64748b);
 }
 
-/* 포커스 접근성 개선 */
-.add-requirement-button:focus-visible {
-  outline: 2px solid #3b82f6;
-  outline-offset: 2px;
-}
-
 /* 로딩 애니메이션 */
 @keyframes fadeIn {
   from {
@@ -468,8 +435,8 @@ body {
   }
 }
 
-.matrix-card,
-.permission-card {
+.permission-card,
+.error-card {
   animation: fadeIn 0.6s ease-out;
 }
 </style>

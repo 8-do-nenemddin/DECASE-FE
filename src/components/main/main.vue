@@ -41,8 +41,8 @@
             </div>
 
             <select class="dropdown sort-dropdown" v-model="sortOption">
-              <option value="date,desc">날짜 (최신 순)</option>
-              <option value="date,asc">날짜 (오래된 순)</option>
+              <option value="startDate,desc">날짜 (최신 순)</option>
+              <option value="startDate,asc">날짜 (오래된 순)</option>
               <option value="name,asc">이름 (오름차순)</option>
               <option value="name,desc">이름 (내림차순)</option>
             </select>
@@ -120,7 +120,7 @@ const currentPage = ref(1);
 const itemsPerPage = 10;
 const selectedView = ref("gallery");
 const searchQuery = ref("");
-const sortOption = ref("date,desc");
+const sortOption = ref("startDate,desc");
 
 // 프로젝트 데이터
 const projects = ref([]);
@@ -140,14 +140,16 @@ const filteredProjects = computed(() => {
   // 정렬
   const [field, order] = sortOption.value.split(",");
   return filtered.sort((a, b) => {
-    if (field === "date") {
+    if (field === "startDate") {
+      const dateA = new Date(a.startDate || a.date);
+      const dateB = new Date(b.startDate || b.date);
+      return order === "asc" ? dateA - dateB : dateB - dateA;
+    } else if (field === "name") {
       return order === "asc"
-        ? new Date(a.date) - new Date(b.date)
-        : new Date(b.date) - new Date(a.date);
+        ? a.name.localeCompare(b.name)
+        : b.name.localeCompare(a.name);
     }
-    return order === "asc"
-      ? a.name.localeCompare(b.name)
-      : b.name.localeCompare(a.name);
+    return 0;
   });
 });
 
@@ -208,13 +210,13 @@ const fetchProjects = async () => {
   } catch (error) {
     console.error("프로젝트 데이터를 불러오는 데 실패했습니다:", error);
     // 테스트용 더미 데이터
-    projects.value = Array.from({ length: 25 }, (_, i) => ({
-      id: i + 1,
-      name: `프로젝트 ${i + 1}`,
-      date: new Date(2024, 0, i + 1).toISOString().split('T')[0],
-      versionInfo: `버전 이력 ${i % 5}개`,
-      status: ["NOT_STARTED", "IN_PROGRESS", "DONE"][i % 3]
-    }));
+    // projects.value = Array.from({ length: 25 }, (_, i) => ({
+    //   id: i + 1,
+    //   name: `프로젝트 ${i + 1}`,
+    //   startDate: new Date(2024, 0, i + 1).toISOString().split('T')[0],
+    //   versionInfo: `버전 이력 ${i % 5}개`,
+    //   status: ["NOT_STARTED", "IN_PROGRESS", "DONE"][i % 3]
+    // }));
   }
 };
 
@@ -262,7 +264,7 @@ const handleCreateProject = (newProjectName) => {
   const newProject = {
     id: Date.now(),
     name: newProjectName,
-    date: new Date().toISOString().split('T')[0],
+    startDate: new Date().toISOString().split('T')[0],
     versionInfo: "버전 이력 0개",
     status: "NOT_STARTED",
   };
