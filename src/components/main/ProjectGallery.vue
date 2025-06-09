@@ -7,21 +7,19 @@
       :key="project.projectId"
       @click="project.showDropdown ? null : navigateToProject(project.projectId)"
     >
-      <h2 class="project-header">
-        <span class="project-name">{{ project.name }}</span>
-        <div
-          class="project-status-wrapper"
-        >
-          <span
-            class="project-status"
-            :class="
-              'status-' + project.status.toLowerCase().replaceAll(' ', '_')
-            "
-          >
-            {{ project.status }}
-          </span>
-        </div>
-      </h2>
+
+    <h2 class="project-header">
+  <span class="project-name">{{ project.name }}</span>
+  <div class="project-status-wrapper">
+    <span
+      class="project-status"
+      :class="'status-' + getProjectStatus(project).toLowerCase().replaceAll(' ', '_')"
+    >
+      {{ getProjectStatus(project) }}
+    </span>
+  </div>
+</h2>
+
       <p>{{ project.startDate }} ~ {{project.endDate}} ・ 버전 이력 {{ project.revisionCount }}개</p>
     </div>
   </div>
@@ -64,6 +62,20 @@ const navigateToProject = (projectId) => {
     });
   }
 };
+
+function getProjectStatus(project) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);  // 시간 초기화
+
+  const startDate = new Date(project.startDate);
+  startDate.setHours(0, 0, 0, 0);
+  const endDate = new Date(project.endDate);
+  endDate.setHours(23, 59, 59, 999);  // 오늘 끝까지 포함
+
+  if (today < startDate) return "not_started";
+  if (today <= endDate) return "in_progress";
+  return "done";
+}
 
 </script>
 

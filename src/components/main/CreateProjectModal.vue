@@ -19,7 +19,13 @@
               class="date-input"
             />
             <span class="date-separator">~</span>
-            <input type="date" v-model="formData.endDate" class="date-input" />
+            <input 
+              type="date" 
+              v-model="formData.endDate" 
+              class="date-input"
+              :disabled="!formData.startDate"
+              :class="{ 'input-disabled': !formData.startDate }"
+            />
           </div>
         </div>
 
@@ -27,11 +33,23 @@
         <div class="form-row">
           <div class="form-field">
             <label class="form-label">프로젝트 이름</label>
-            <input type="text" v-model="formData.name" class="form-input" />
+            <input 
+              type="text" 
+              v-model="formData.name" 
+              class="form-input"
+              :disabled="!isDateRangeComplete"
+              :class="{ 'input-disabled': !isDateRangeComplete }"
+            />
           </div>
           <div class="form-field">
             <label class="form-label">제안 PM</label>
-            <input type="text" v-model="formData.proposalPM" class="form-input" />
+            <input 
+              type="text" 
+              v-model="formData.proposalPM" 
+              class="form-input"
+              :disabled="!formData.name.trim()"
+              :class="{ 'input-disabled': !formData.name.trim() }"
+            />
           </div>
         </div>
 
@@ -41,13 +59,24 @@
           <textarea
             v-model="formData.description"
             class="form-textarea"
+            :disabled="!formData.proposalPM.trim()"
+            :class="{ 'input-disabled': !formData.proposalPM.trim() }"
           ></textarea>
         </div>
 
         <!-- 프로젝트 규모 -->
         <div class="form-field full-width">
           <label class="form-label">프로젝트 규모</label>
-          <input type="text" v-model="formData.scale" class="form-input" />
+          <input
+            type="text"
+            :value="displayValue"
+            @input="onInput"
+            class="form-input"
+            placeholder="숫자 입력 (최대 9,999조)"
+            :disabled="!formData.description.trim()"
+            :class="{ 'input-disabled': !formData.description.trim() }"
+          />
+          <div v-if="scaleError" class="error-message">{{ scaleError }}</div>
         </div>
 
         <!-- 생성 버튼 -->
@@ -55,7 +84,7 @@
           <button
             class="submit-button"
             @click="handleCreateProject"
-            :disabled="isLoading"
+            :disabled="isLoading || !isFormComplete"
           >
             <span v-if="isLoading" class="loading"></span>
             <span v-else>생성</span>
@@ -74,16 +103,16 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, computed } from 'vue'
 import { useRouter } from "vue-router";
 import SuccessCreateProject from "./ProjectCreationSuccessModal.vue";
-
 
 const router = useRouter();
 const emit = defineEmits(["close", "createProject"]);
 
 const isLoading = ref(false);
 const showSuccessModal = ref(false);
+const scaleError = ref('');
 
 const today = new Date().toISOString().split("T")[0];
 const formData = ref({
@@ -94,6 +123,49 @@ const formData = ref({
   startDate: today,
   endDate: today,
 });
+
+// 날짜 범위가 완료되었는지 확인
+const isDateRangeComplete = computed(() => {
+  return formData.value.startDate && formData.value.endDate;
+});
+
+// 전체 폼이 완료되었는지 확인
+const isFormComplete = computed(() => {
+  return isDateRangeComplete.value &&
+         formData.value.name.trim() &&
+         formData.value.proposalPM.trim() &&
+         formData.value.description.trim() &&
+         formData.value.scale &&
+         !scaleError.value;
+});
+
+const displayValue = computed(() => {
+  if (!formData.value.scale) return '';
+  return Number(formData.value.scale).toLocaleString();
+});
+
+function onInput(event) {
+  const raw = event.target.value.replace(/\D/g, ''); // 숫자만
+  
+  // 1경(10,000조) = 10^16 = 10000000000000000 (16자리)
+  // 9,999조 = 9999000000000000 (최대 13자리)
+  const maxValue = 9999000000000000; // 9,999조
+  
+  if (raw) {
+    const numValue = Number(raw);
+    if (numValue > maxValue) {
+      scaleError.value = '프로젝트 규모는 9,999조를 초과할 수 없습니다.';
+      return;
+    } else {
+      scaleError.value = '';
+    }
+  } else {
+    scaleError.value = '';
+  }
+  
+  const limited = raw.slice(0, 13); // 13자리 제한 (9,999조까지)
+  formData.value.scale = limited;
+}
 
 const handleOverlayClick = () => {
   if (!showSuccessModal.value) {
@@ -106,8 +178,8 @@ const closeModal = () => {
 };
 
 const handleCreateProject = async () => {
-  if (!formData.value.name.trim()) {
-    alert("프로젝트 이름을 입력해주세요.");
+  if (!isFormComplete.value) {
+    alert("모든 필수 항목을 입력해주세요.");
     return;
   }
 
@@ -141,15 +213,6 @@ const handleCreateProject = async () => {
     // 성공적으로 생성된 프로젝트 정보
     const newProject = result.data;
     console.log(result.data)
-
-    //필요 시 프로젝트 리스트에 추가 (갱신)
-    // projects.value.unshift({
-    //   id: newProject.projectId,
-    //   name: newProject.name,
-    //   date: new Date(newProject.startDate).toISOString().split("T")[0].replace(/-/g, '.'),
-    //   versionInfo: `버전 이력 ${newProject.revisionCount}개`,
-    //   status: newProject.status || "NOT_STARTED",
-    // });
 
     showSuccessModal.value = true;
     closeModal();
@@ -325,6 +388,18 @@ const handleSuccessClose = () => {
   margin: 0 4px;
 }
 
+/* 비활성화된 입력 필드 스타일 */
+.input-disabled {
+  background-color: #f9fafb !important;
+  color: #9ca3af !important;
+  cursor: not-allowed !important;
+  border-color: #e5e7eb !important;
+}
+
+.input-disabled:hover {
+  border-color: #e5e7eb !important;
+}
+
 /* 폼 행 (2열 레이아웃) */
 .form-row {
   display: grid;
@@ -360,13 +435,13 @@ const handleSuccessClose = () => {
   min-height: 40px;
 }
 
-.form-input:focus {
+.form-input:focus:not(:disabled) {
   outline: none;
   border-color: #e53e3e;
   box-shadow: 0 0 0 3px rgba(229, 62, 62, 0.1);
 }
 
-.form-input:hover {
+.form-input:hover:not(:disabled) {
   border-color: #9ca3af;
 }
 
@@ -384,14 +459,21 @@ const handleSuccessClose = () => {
   line-height: 1.5;
 }
 
-.form-textarea:focus {
+.form-textarea:focus:not(:disabled) {
   outline: none;
   border-color: #e53e3e;
   box-shadow: 0 0 0 3px rgba(229, 62, 62, 0.1);
 }
 
-.form-textarea:hover {
+.form-textarea:hover:not(:disabled) {
   border-color: #9ca3af;
+}
+
+/* 에러 메시지 */
+.error-message {
+  font-size: 12px;
+  color: #dc2626;
+  margin-top: 4px;
 }
 
 /* 버튼 섹션 */

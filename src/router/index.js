@@ -8,6 +8,7 @@ import ProjectRight from "../components/projects/settings/manage_right/ManageRig
 import Home from "../components/home/Home.vue";
 import Login from "../components/home/Login.vue";
 import Signup from "../components/home/SignUp.vue";
+import inviteMember from "../components/projects/invitations/inviteMember.vue";
 
 const routes = [
   {
@@ -60,6 +61,12 @@ const routes = [
     name: "Signup",
     component: Signup,
   },
+  {
+    path: "/invite/:token",
+    name: "InviteMember",
+    component: inviteMember,
+    props: true
+  }
 ];
 
 const router = createRouter({

@@ -9,28 +9,78 @@
         <span class="logo-text">DECASE</span>
       </div>
       <div class="header-actions">
-        <button class="icon-button search-btn" @click="toggleSidebar" title="검색">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <button
+          class="icon-button search-btn"
+          @click="toggleSidebar"
+          title="검색"
+        >
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
             <circle cx="11" cy="11" r="8"></circle>
             <path d="m21 21-4.35-4.35"></path>
           </svg>
         </button>
-        <button class="icon-button menu-btn" @click="toggleFileListSidebar" title="메뉴">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <button
+          class="icon-button menu-btn"
+          @click="toggleFileListSidebar"
+          title="메뉴"
+        >
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
             <line x1="3" y1="6" x2="21" y2="6"></line>
             <line x1="3" y1="12" x2="21" y2="12"></line>
             <line x1="3" y1="18" x2="21" y2="18"></line>
           </svg>
         </button>
-        <button class="icon-button upload-btn" @click="openSourceUploadModal" title="파일 업로드">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <button
+          class="icon-button upload-btn"
+          @click="openSourceUploadModal"
+          title="파일 업로드"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
             <polyline points="17 8 12 3 7 8" />
             <line x1="12" y1="3" x2="12" y2="15" />
           </svg>
         </button>
-        <button class="icon-button mockup-btn" @click="toggleMockupViewer" title="목업 뷰어">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <button
+          class="icon-button mockup-btn"
+          @click="toggleMockupViewer"
+          title="목업 뷰어"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
             <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
             <line x1="8" y1="21" x2="16" y2="21" />
             <line x1="12" y1="17" x2="12" y2="21" />
@@ -48,7 +98,16 @@
 
     <div class="header-right">
       <button class="download-button" @click="openDownloadFileModal">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
           <path d="M19 14v6a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-6" />
           <polyline points="12 2 12 14" />
           <polyline points="5 9 12 16 19 9" />
@@ -57,8 +116,19 @@
       </button>
 
       <div class="action-buttons">
-        <button class="icon-button profile-btn" @click="toggleProfileSidebar" title="사용자">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <button
+          class="icon-button profile-btn"
+          @click="toggleProfileSidebar"
+          title="사용자"
+        >
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
             <circle cx="12" cy="7" r="4"></circle>
           </svg>
@@ -66,7 +136,9 @@
         <button class="icon-button settings-btn" @click="handleGoSettings" title="설정">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09c.7 0 1.3-.4 1.51-1a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06c.46.46 1.12.61 1.82.33.61-.26 1-.86 1-1.51V3a2 2 0 1 1 4 0v.09c0 .7.4 1.3 1 1.51.7.28 1.36.13 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82c.26.61.86 1 1.51 1H21a2 2 0 1 1 0 4h-.09c-.7 0-1.3.4-1.51 1z" />
+            <path
+              d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09c.7 0 1.3-.4 1.51-1a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06c.46.46 1.12.61 1.82.33.61-.26 1-.86 1-1.51V3a2 2 0 1 1 4 0v.09c0 .7.4 1.3 1 1.51.7.28 1.36.13 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82c.26.61.86 1 1.51 1H21a2 2 0 1 1 0 4h-.09c-.7 0-1.3.4-1.51 1z"
+            />
           </svg>
         </button>
       </div>
@@ -83,7 +155,7 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, defineEmits } from "vue";
 import { useRouter } from "vue-router";
 import SearchRequirementsSidebar from "./search_rd/SearchRequirementsSidebar.vue";
 import ManageFileSidebar from "./files_rd/ManageFileSidebar.vue";
@@ -92,6 +164,9 @@ import DownloadFileModal from "./download_rd/DownloadFileModal.vue";
 import ProfileBar from "../../main/ProfileBar.vue";
 import MockupViewer from "./mockup/MockupViewer.vue";
 import { useProjectStore } from "/src/stores/projectStore";
+
+const emit = defineEmits(["fileSelected"]);
+
 const projectStore = useProjectStore();
 
 const router = useRouter();
@@ -173,11 +248,7 @@ const toggleFileListSidebar = () => {
 
 const handleFileSelected = (fileData) => {
   console.log("선택된 파일:", fileData);
-  if (fileData.type === "uploaded") {
-    console.log("업로드한 파일 docId:", fileData.docId);
-  } else if (fileData.type === "generated") {
-    console.log("생성된 파일 projectId:", fileData.projectId, "revision:", fileData.revision);
-  }
+  emit("fileSelected", fileData);
 };
 
 const closeFileListSidebar = () => {
@@ -224,7 +295,8 @@ const handleGoSettings = () => {
 .project-main {
   min-height: 100vh;
   background-color: #fafbfc;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", sans-serif;
 }
 
 /* 헤더 스타일 */
@@ -295,7 +367,8 @@ const handleGoSettings = () => {
   font-weight: 800;
   color: #000000;
   letter-spacing: 0.02em;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui,
+    sans-serif;
 }
 
 /* 헤더 액션 버튼들 */
@@ -327,7 +400,7 @@ const handleGoSettings = () => {
 }
 
 .icon-button::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   background: rgba(59, 130, 246, 0.1);
@@ -351,10 +424,18 @@ const handleGoSettings = () => {
 }
 
 /* 특별한 버튼 스타일 */
-.search-btn:hover { color: #10b981; }
-.menu-btn:hover { color: #f59e0b; }
-.upload-btn:hover { color: #8b5cf6; }
-.mockup-btn:hover { color: #ef4444; }
+.search-btn:hover {
+  color: #10b981;
+}
+.menu-btn:hover {
+  color: #f59e0b;
+}
+.upload-btn:hover {
+  color: #8b5cf6;
+}
+.mockup-btn:hover {
+  color: #ef4444;
+}
 
 /* 프로젝트 타이틀 */
 .project-title-container {
@@ -411,10 +492,14 @@ const handleGoSettings = () => {
 }
 
 .download-button::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0) 100%
+  );
   border-radius: 16px;
 }
 
@@ -440,8 +525,12 @@ const handleGoSettings = () => {
   backdrop-filter: blur(8px);
 }
 
-.profile-btn:hover { color: #f59e0b; }
-.settings-btn:hover { color: #64748b; }
+.profile-btn:hover {
+  color: #f59e0b;
+}
+.settings-btn:hover {
+  color: #64748b;
+}
 
 /* 반응형 디자인 */
 @media (max-width: 1024px) {
@@ -599,9 +688,5 @@ const handleGoSettings = () => {
   animation: fadeInUp 0.6s ease-out;
 }
 </style>
-.logo-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 36px;
-}
+.logo-icon { display: flex; align-items: center; justify-content: center;
+height: 36px; }
