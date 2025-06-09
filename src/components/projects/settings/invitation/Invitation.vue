@@ -1,12 +1,13 @@
 <template>
   <div class="invitation-container">
-    <div class="invitation-card">
+    <div class="invitation-card slide-up" :class="{ 'animate': isVisible }">
       <!-- 초대 목록 -->
       <div class="invitation-list">
         <div
             v-for="(invite, index) in invitations"
             :key="invite.email"
-            class="invitation-item"
+            class="invitation-item slide-up-item"
+            :style="{ 'animation-delay': `${index * 0.1}s` }"
         >
           <div class="invitation-info">
             <div class="avatar">
@@ -43,7 +44,7 @@
       </div>
 
       <!-- 초대가 없을 때 표시 -->
-      <div v-if="invitations.length === 0" class="empty-state">
+      <div v-if="invitations.length === 0" class="empty-state slide-up-item">
         <div class="empty-icon">📮</div>
         <h3 class="empty-title">초대가 없습니다</h3>
         <p class="empty-description">아직 보낸 초대가 없습니다.</p>
@@ -51,8 +52,8 @@
     </div>
 
     <!-- 초대 취소 확인 모달 -->
-    <div v-if="showCancelConfirmModal" class="modal-overlay" @click="closeCancelModal">
-      <div class="modal-content cancel-modal" @click.stop>
+    <div v-if="showCancelConfirmModal" class="modal-overlay modal-fade-in" @click="closeCancelModal">
+      <div class="modal-content cancel-modal modal-slide-up" @click.stop>
         <div class="modal-header">
           <h3 class="modal-title">초대 취소 확인</h3>
           <button @click="closeCancelModal" class="close-button">
@@ -98,7 +99,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, nextTick } from 'vue';
 import { useRoute } from 'vue-router';
 
 const route = useRoute();
@@ -108,6 +109,7 @@ const invitations = ref([]);
 const showCancelConfirmModal = ref(false);
 const inviteToCancel = ref(null);
 const inviteIndexToCancel = ref(null);
+const isVisible = ref(false);
 
 const fetchInvitations = async () => {
   try {
@@ -160,12 +162,88 @@ const closeCancelModal = () => {
   inviteIndexToCancel.value = null;
 };
 
-onMounted(() => {
-  fetchInvitations();
+onMounted(async () => {
+  await fetchInvitations();
+  // DOM이 렌더링된 후 애니메이션 시작
+  await nextTick();
+  setTimeout(() => {
+    isVisible.value = true;
+  }, 100);
 });
 </script>
 
 <style scoped>
+/* 슬라이드업 애니메이션 */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUpItem {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+  }
+  to {
+    opacity: 1;
+    backdrop-filter: blur(4px);
+  }
+}
+
+@keyframes modalSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(50px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.slide-up {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.slide-up.animate {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.slide-up-item {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: slideUpItem 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  animation-delay: 0.3s;
+}
+
+.modal-fade-in {
+  animation: modalFadeIn 0.3s ease-out;
+}
+
+.modal-slide-up {
+  animation: modalSlideUp 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
 .invitation-container {
   max-width: 800px;
   margin: 0 auto;

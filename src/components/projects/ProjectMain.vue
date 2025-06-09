@@ -1,8 +1,8 @@
 <template>
   <div class="project-main">
-    <HeaderBar :project-id="projectId" @fileSelected="handleFileSelected" />
+    <HeaderBar @fileSelected="handleFileSelected" />
     <div class="content-wrapper" :class="contentClasses">
-      <ProjectContent ref="projectContentRef" :projectId="projectId" />
+      <ProjectContent ref="projectContentRef" />
     </div>
   </div>
 </template>
@@ -13,17 +13,8 @@ import { useProjectStore } from "/src/stores/projectStore";
 import HeaderBar from "./header/HeaderBar.vue";
 import ProjectContent from "./content/ProjectContent.vue";
 
-const props = defineProps({
-  projectId: {
-    type: String,
-    required: true,
-  },
-  projectName: {
-    type: String,
-    required: true,
-  },
-});
 const projectStore = useProjectStore();
+const projectId = computed(() => projectStore.projectId);
 
 const projectContentRef = ref(null);
 

@@ -266,15 +266,12 @@ import {
   watch,
   nextTick,
 } from "vue";
+import { useProjectStore } from "../../../../stores/projectStore";
+
+const projectStore = useProjectStore();
+const projectId = computed(() => projectStore.projectId);
 
 const emit = defineEmits(["close", "fileSelected"]);
-
-const props = defineProps({
-  projectId: {
-    type: String,
-    required: true,
-  },
-});
 
 // Responsive state
 const windowWidth = ref(window.innerWidth);
@@ -364,7 +361,7 @@ const loadAllData = async () => {
 const fetchUploadedFiles = async () => {
   try {
     const response = await fetch(
-      `/api/v1/projects/${props.projectId}/document/uploads`,
+      `http://localhost:8080/api/v1/projects/${projectId.value}/document/uploads`,
       {
         method: "GET",
         headers: { "Content-Type": "application/json" },
@@ -387,29 +384,30 @@ const fetchUploadedFiles = async () => {
         type: "uploaded",
       }));
 
-      sidebarItems[1].files = uploadedFiles;
-      sidebarItems[1].count = uploadedFiles.length;
+      sidebarItems[2].files = uploadedFiles;
+      sidebarItems[2].count = uploadedFiles.length;
     } else {
-      sidebarItems[1].files = [];
-      sidebarItems[1].count = 0;
+      sidebarItems[2].files = [];
+      sidebarItems[2].count = 0;
     }
   } catch (error) {
     console.error("업로드된 파일 API 호출 오류:", error);
-    sidebarItems[1].files = [];
-    sidebarItems[1].count = 0;
+    sidebarItems[2].files = [];
+    sidebarItems[2].count = 0;
   }
 };
 
 const fetchGeneratedFiles = async () => {
   try {
     const response = await fetch(
-      `/api/v1/projects/${props.projectId}/revision`,
+      `http://localhost:8080/api/v1/projects/${projectId.value}/revision`,
       {
         method: "GET",
         headers: { "Content-Type": "application/json" },
       }
     );
-
+    
+    console.log(response);
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
     const data = await response.json();
@@ -426,16 +424,16 @@ const fetchGeneratedFiles = async () => {
         type: "generated",
       }));
 
-      sidebarItems[2].files = generatedFiles;
-      sidebarItems[2].count = generatedFiles.length;
+      sidebarItems[0].files = generatedFiles;
+      sidebarItems[0].count = generatedFiles.length;
     } else {
-      sidebarItems[2].files = [];
-      sidebarItems[2].count = 0;
+      sidebarItems[0].files = [];
+      sidebarItems[0].count = 0;
     }
   } catch (error) {
     console.error("생성된 파일 API 호출 오류:", error);
-    sidebarItems[2].files = [];
-    sidebarItems[2].count = 0;
+    sidebarItems[0].files = [];
+    sidebarItems[0].count = 0;
   }
 };
 
@@ -470,7 +468,7 @@ const getFileIconByName = (fileName) => {
 const downloadGeneratedFile = async (file) => {
   try {
     let response = await fetch(
-      `/api/v1/projects/${props.projectId}/requirements/downloads?revisionCount=${file.revision}`
+      `http://localhost:8080/api/v1/projects/${projectId.value}/requirements/downloads?revisionCount=${file.revision}`
     );
 
     if (!response.ok) throw new Error(`다운로드 실패: ${response.status}`);
@@ -609,7 +607,7 @@ onMounted(() => {
   document.addEventListener("keydown", handleKeydown);
   window.addEventListener("resize", handleWindowResize);
   handleWindowResize();
-  if (props.projectId) {
+  if (projectId) {
     loadAllData();
   }
 });
@@ -618,7 +616,7 @@ onMounted(() => {
 const fetchAsIsReports = async () => {
   try {
     const response = await fetch(
-      `/api/v1/projects/${props.projectId}/documents/as-is`,
+      `/api/v1/projects/${projectId.value}/documents/as-is`,
       {
         method: "GET",
         headers: { "Content-Type": "application/json" },
@@ -652,16 +650,16 @@ const fetchAsIsReports = async () => {
         createdBy: item.createdBy,
       }));
 
-      sidebarItems[0].files = asIsFiles;
-      sidebarItems[0].count = asIsFiles.length;
+      sidebarItems[1].files = asIsFiles;
+      sidebarItems[1].count = asIsFiles.length;
     } else {
-      sidebarItems[0].files = [];
-      sidebarItems[0].count = 0;
+      sidebarItems[1].files = [];
+      sidebarItems[1].count = 0;
     }
   } catch (error) {
     console.error("AS-IS 보고서 API 호출 오류:", error);
-    sidebarItems[0].files = [];
-    sidebarItems[0].count = 0;
+    sidebarItems[1].files = [];
+    sidebarItems[1].count = 0;
   }
 };
 
@@ -712,7 +710,7 @@ const selectFile = (file, fileIndex, sectionType) => {
   // AS-IS 보고서의 경우
   if (sectionType === "as-is") {
     fileData.docId = file.docId;
-    fileData.projectId = props.projectId;
+    fileData.projectId = projectId;
   }
   // 업로드한 파일의 경우
   else if (sectionType === "uploaded") {
@@ -720,7 +718,7 @@ const selectFile = (file, fileIndex, sectionType) => {
   }
   // 생성된 파일의 경우
   else if (sectionType === "generated") {
-    fileData.projectId = props.projectId;
+    fileData.projectId = projectId;
     fileData.revision = file.revision;
   }
 
@@ -826,7 +824,7 @@ onUnmounted(() => {
 
 // watch에서 프로젝트 변경 시 선택 상태 초기화에 as-is 추가
 watch(
-  () => props.projectId,
+  () => projectId,
   (newProjectId, oldProjectId) => {
     if (newProjectId && newProjectId !== oldProjectId) {
       selectedFiles["as-is"] = -1;

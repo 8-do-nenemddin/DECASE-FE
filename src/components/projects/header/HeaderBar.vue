@@ -162,7 +162,7 @@
   <SearchRequirementsSidebar v-if="showSidebar" @close="closeSidebar" />
   <ManageFileSidebar
     v-if="showFileListSidebar"
-    :projectId="props.projectId"
+    :projectId="projectId"
     @close="closeFileListSidebar"
     @fileSelected="handleFileSelected"
   />
@@ -185,7 +185,7 @@
 </template>
 
 <script setup>
-import { ref, defineEmits } from "vue";
+import { ref, computed } from "vue";
 import { useRouter } from "vue-router";
 import SearchRequirementsSidebar from "./search_rd/SearchRequirementsSidebar.vue";
 import ManageFileSidebar from "./files_rd/ManageFileSidebar.vue";
@@ -198,8 +198,8 @@ import { useProjectStore } from "/src/stores/projectStore";
 const emit = defineEmits(["fileSelected"]);
 
 const projectStore = useProjectStore();
-
 const router = useRouter();
+const projectId = computed(() => projectStore.projectId);
 
 const showSidebar = ref(false);
 const showFileListSidebar = ref(false);
@@ -208,16 +208,9 @@ const showDownloadFileModal = ref(false);
 const showProfileSidebar = ref(false);
 const showMockupViewer = ref(false);
 
-const props = defineProps({
-  projectId: {
-    type: String,
-    required: true,
-  },
-});
-
 const goToMain = () => {
-  if (projectStore.projectId) {
-    router.push(`/projects/${projectStore.projectId}`);
+  if (projectId) {
+    router.push(`/projects/${projectId}`);
     console.log("다시 프로젝트");
   }
 };
