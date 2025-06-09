@@ -91,7 +91,7 @@
     <div class="header-center">
       <div class="project-title-container" @click="goToMain">
         <h1 class="project-title">{{ projectStore.projectName }}</h1>
-        <div class="project-status">Active Project</div>
+        <div class="project-status">{{ projectStore.status }} PROJECT</div>
       </div>
     </div>
 
