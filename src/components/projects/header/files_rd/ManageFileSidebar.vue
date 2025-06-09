@@ -322,6 +322,13 @@ const fileInfoModal = reactive({
 
 // Data
 const sidebarItems = reactive([
+{
+    name: "요구사항 정의서",
+    type: "generated",
+    expanded: false,
+    files: [],
+    count: 0,
+  },
   {
     name: "As-Is 보고서",
     type: "as-is",
@@ -330,19 +337,12 @@ const sidebarItems = reactive([
     count: 0,
   },
   {
-    name: "업로드한 파일",
+    name: "업로드 파일",
     type: "uploaded",
     expanded: true,
     files: [],
     count: 0,
-  },
-  {
-    name: "생성된 파일",
-    type: "generated",
-    expanded: false,
-    files: [],
-    count: 0,
-  },
+  }
 ]);
 
 // loadAllData 함수 수정 - AS-IS 보고서 추가
