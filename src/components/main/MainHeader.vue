@@ -23,18 +23,18 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
-import { onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
 import ProfileBar from "./ProfileBar.vue"; // 분리된 컴포넌트 import
-import { useProjectStore } from '/src/stores/projectStore';
+import { useProjectStore } from "../../stores/projectStore";
 
 const showProfileSidebar = ref(false);
 const profileData = ref({});
 const projectStore = useProjectStore();
+const memberId = computed(() => projectStore.userId);
 
 const fetchProfile = async () => {
   try {
-    const response = await fetch(`/api/v1/members/${projectStore.userId}`);
+    const response = await fetch(`/api/v1/members/${memberId.value}`);
     const result = await response.json();
 
     if (result.status === 200) {

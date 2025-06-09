@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: decase-fe
+  namespace: sk-team-08
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: decase-fe
+  template:
+    metadata:
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '8081'
+        prometheus.io/path: '/actuator/prometheus'
+        update: 918894a63a111334a8ebb58a175c8c6b
+      labels:
+        app: decase-fe
+    spec:
+      serviceAccountName: default
+      containers:
+      - name: decase-fe
+        image: amdp-registry.skala-ai.com/skala25a/sk-team-08-decase-fe:1.0.0-2-c5d74b8333ec
+        imagePullPolicy: Always
+        env:
+        - name: USER_NAME
+          value: sk-team-08
+        - name: NAMESPACE
+          value: sk-team-08

@@ -34,7 +34,7 @@
 			</svg>
 		  </div>
 		  <h3>로그인 성공!</h3>
-		  <p>환영합니다! 홈화면으로 이동합니다.</p>
+		  <p>환영합니다! 홈 화면으로 이동합니다.</p>
 		  <button @click="goToHome" class="modal-button success-button">
 			홈으로 이동
 		  </button>
