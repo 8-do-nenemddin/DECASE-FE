@@ -302,7 +302,13 @@ const handleGoMain = () => {
 const handleGoSettings = () => {
   const projectId = projectStore.projectId;
   console.log(`'${projectId}' 세팅`);
-  router.push({ name: "ProjectSetting", params: { projectId } });
+  if (projectStore.isAdmin) {
+    // 관리자인 경우: 기존 설정 페이지로 이동
+    router.push({ name: "ProjectSetting", params: { projectId } });
+  } else {
+    // 일반 사용자: 프로젝트 상세 페이지로 이동
+    router.push({ name: "ProjectDetail", params: { projectId } });
+  }
 };
 </script>
 

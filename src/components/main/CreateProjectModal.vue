@@ -106,6 +106,9 @@
 import { ref, computed } from 'vue'
 import { useRouter } from "vue-router";
 import SuccessCreateProject from "./ProjectCreationSuccessModal.vue";
+import { useProjectStore } from '/src/stores/projectStore.js';
+
+const projectStore = useProjectStore();
 
 const router = useRouter();
 const emit = defineEmits(["close", "createProject"]);
@@ -213,6 +216,17 @@ const handleCreateProject = async () => {
     // 성공적으로 생성된 프로젝트 정보
     const newProject = result.data;
     console.log(result.data)
+
+    const now = new Date();
+    const start = new Date(newProject.startDate);
+    const end = new Date(newProject.endDate);
+
+    if (start > now || end < now) {
+      newProject.status = "INACTIVE";
+    } else {
+      newProject.status = "ACTIVE";
+    }
+    projectStore.setProject(newProject.projectId, newProject.name, newProject.status, newProject.isAdmin);
 
     showSuccessModal.value = true;
     closeModal();
