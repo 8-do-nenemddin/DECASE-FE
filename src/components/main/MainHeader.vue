@@ -15,7 +15,6 @@
     <!-- 분리된 프로필 사이드바 컴포넌트 사용 -->
     <ProfileBar
       :isVisible="showProfileSidebar"
-      :profileData="profileData"
       @close="closeProfileSidebar"
       @logout="handleLogout"
       @withdraw="handleWithdraw"
@@ -27,15 +26,15 @@
 import { ref } from "vue";
 import { onMounted } from "vue";
 import ProfileBar from "./ProfileBar.vue"; // 분리된 컴포넌트 import
+import { useProjectStore } from '/src/stores/projectStore';
 
 const showProfileSidebar = ref(false);
-
 const profileData = ref({});
-const memberId = 1; // 하드코딩
+const projectStore = useProjectStore();
 
 const fetchProfile = async () => {
   try {
-    const response = await fetch(`/api/v1/members/${memberId}`);
+    const response = await fetch(`/api/v1/members/${projectStore.userId}`);
     const result = await response.json();
 
     if (result.status === 200) {
