@@ -55,6 +55,8 @@ const projectStore = useProjectStore();
 const navigateToProject = (projectId) => {
   const selectedProject = localProjects.value.find(p => p.projectId === projectId);
 
+  console.log(selectedProject)
+
   const now = new Date();
   const start = new Date(selectedProject.startDate);
   const end = new Date(selectedProject.endDate);
@@ -66,7 +68,7 @@ const navigateToProject = (projectId) => {
   }
 
   if (selectedProject) {
-    projectStore.setProject(selectedProject.projectId, selectedProject.name, selectedProject.status);
+    projectStore.setProject(selectedProject.projectId, selectedProject.name, selectedProject.status, selectedProject.isAdmin);
     router.push({
       name: "ProjectMain",
       params: { projectId: selectedProject.projectId },
