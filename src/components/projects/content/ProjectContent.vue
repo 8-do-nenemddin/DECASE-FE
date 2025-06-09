@@ -27,19 +27,15 @@
 </template>
 
 <script setup>
-console.log("컴포넌트 새로 로딩됨");
-import { ref, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
 import BasicContent from "./BasicContent.vue";
 import UploadContent from "./UploadContent.vue";
 import RequirementsContent from "./RequirementsContent.vue";
 import AsIsReportContent from "./AsisContent.vue"; // AS-IS 컴포넌트 추가
+import { useProjectStore } from "../../../stores/projectStore";
 
-const props = defineProps({
-  projectId: {
-    type: String,
-    required: true,
-  },
-});
+const projectStore = useProjectStore();
+const projectId = computed(() => projectStore.projectId);
 
 // 선택된 파일 정보
 const selectedFile = ref(null);
@@ -74,7 +70,7 @@ defineExpose({
 });
 
 onMounted(() => {
-  console.log("ProjectContent 마운트됨, projectId:", props.projectId);
+  console.log("ProjectContent 마운트됨, projectId:", projectId.value);
 });
 </script>
 
