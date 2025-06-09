@@ -152,7 +152,7 @@
   <SearchRequirementsSidebar v-if="showSidebar" @close="closeSidebar" />
   <ManageFileSidebar
     v-if="showFileListSidebar"
-    :projectId="props.projectId"
+    :projectId="projectId"
     @close="closeFileListSidebar"
     @fileSelected="handleFileSelected"
   />
@@ -196,14 +196,7 @@ const showFileListSidebar = ref(false);
 const showSourceUploadModal = ref(false);
 const showDownloadFileModal = ref(false);
 const showProfileSidebar = ref(false);
-const showMockupViewer = ref(false);
-
-const props = defineProps({
-  projectId: {
-    type: String,
-    required: true,
-  },
-});
+const showMockupSidebar = ref(false);
 
 const goToMain = () => {
   if (projectId) {
@@ -419,8 +412,8 @@ const handleGoSettings = () => {
   font-weight: 800;
   color: #000000;
   letter-spacing: 0.02em;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui,
-    sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  margin-top: 5px !important; /* 로고 텍스트도 아래로 */
 }
 
 /* 헤더 액션 버튼들 */
