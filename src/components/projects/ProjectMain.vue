@@ -13,16 +13,6 @@ import { useProjectStore } from "/src/stores/projectStore";
 import HeaderBar from "./header/HeaderBar.vue";
 import ProjectContent from "./content/ProjectContent.vue";
 
-const props = defineProps({
-  projectId: {
-    type: String,
-    required: true,
-  },
-  projectName: {
-    type: String,
-    required: true,
-  },
-});
 const projectStore = useProjectStore();
 
 const projectContentRef = ref(null);
