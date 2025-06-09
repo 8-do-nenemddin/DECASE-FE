@@ -4,7 +4,7 @@
     <SettingsHeader :project-id="projectId" />
 
     <div class="main-layout">
-      <!-- 사이드바 컴포넌트 -->
+      <!-- 사이드바 컴포넌트 - 고정 폭으로 유지 -->
       <SettingsSidebar
         :current-component="currentComponent"
         @change-component="handleChangeComponent"
@@ -100,16 +100,40 @@ body {
   display: flex;
   flex-direction: column;
   background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  position: relative;
 }
 
 .main-layout {
   display: flex;
   flex: 1;
   height: calc(100vh - 4rem);
+  min-height: 0; /* flexbox 오버플로우 해결 */
+  position: relative;
+  margin: 0; /* 마진 제거 */
+  padding: 0; /* 패딩 제거 */
+}
+
+/* 사이드바 고정 스타일 */
+.main-layout > :first-child {
+  flex-shrink: 0; /* 사이드바 축소 방지 */
+  width: 280px; /* 기본 고정 폭 */
+  min-width: 280px; /* 최소 폭 보장 */
+  min-height: calc(100vh - 4rem); /* 최소 높이 보장 */
+  height: auto; /* 높이 자동 조정 */
+  position: sticky; /* 스티키 포지션 */
+  top: 0; /* 상단에 고정 */
+  align-self: stretch; /* 전체 높이 늘리기 */
+  transition: width 0.3s ease; /* 부드러운 전환 */
+  overflow-y: auto; /* 사이드바 자체 스크롤 */
+  background: white; /* 배경색 보장 */
+  border-right: 1px solid #e5e7eb; /* 구분선 */
+  margin: 0; /* 마진 제거 */
+  padding: 0; /* 패딩 제거 */
 }
 
 .content-area {
   flex: 1;
+  min-width: 0; /* flexbox에서 내용이 넘칠 때 축소 허용 */
   padding: 2rem;
   overflow-y: auto;
   background: transparent;
@@ -229,11 +253,51 @@ body {
   font-size: 1rem;
 }
 
-/* 반응형 디자인 */
+/* 줌 레벨 대응 - 고해상도 화면 */
+@media (min-width: 1920px) {
+  .main-layout > :first-child {
+    width: 320px;
+    min-width: 320px;
+  }
+}
+
+/* 반응형 디자인 - 큰 화면 */
+@media (max-width: 1440px) {
+  .main-layout > :first-child {
+    width: 280px;
+    min-width: 280px;
+  }
+}
+
+/* 반응형 디자인 - 타블릿 */
+@media (max-width: 1024px) {
+  .main-layout > :first-child {
+    width: 260px;
+    min-width: 260px;
+  }
+  
+  .content-area {
+    padding: 1.5rem;
+  }
+}
+
+/* 줌 200% 대응 (실제 화면 크기의 절반) */
+@media (max-width: 960px) {
+  .main-layout > :first-child {
+    width: 240px;
+    min-width: 240px;
+  }
+
+  .content-area {
+    padding: 1.25rem;
+  }
+}
+
+/* 반응형 디자인 - 모바일 */
 @media (max-width: 768px) {
-  .main-layout {
-    flex-direction: column;
-    height: auto;
+  .main-layout > :first-child {
+    width: 220px;
+    min-width: 220px;
   }
 
   .content-area {
@@ -271,7 +335,13 @@ body {
   }
 }
 
-@media (max-width: 480px) {
+/* 매우 작은 화면 - 사이드바 더 좁게 */
+@media (max-width: 640px) {
+  .main-layout > :first-child {
+    width: 200px;
+    min-width: 200px;
+  }
+  
   .content-area {
     padding: 0.75rem;
   }
@@ -303,6 +373,61 @@ body {
   .add-requirement-button {
     padding: 0.75rem 1.5rem;
     font-size: 0.8125rem;
+  }
+}
+
+/* 아주 작은 모바일 화면 */
+@media (max-width: 480px) {
+  .main-layout > :first-child {
+    width: 180px;
+    min-width: 180px;
+  }
+}
+
+/* 매우 작은 화면에서는 사이드바를 접을 수 있게 하는 옵션 */
+@media (max-width: 400px) {
+  .main-layout {
+    position: relative;
+  }
+  
+  .main-layout > :first-child {
+    width: 60px; /* 아이콘만 보이도록 */
+    min-width: 60px;
+    overflow: hidden;
+  }
+  
+  /* 호버시 전체 사이드바 표시 (선택사항) */
+  .main-layout > :first-child:hover {
+    width: 200px;
+    min-width: 200px;
+    position: relative;
+    z-index: 10;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  }
+}
+
+/* 줌 300% 이상 대응 */
+@media (max-width: 320px) {
+  .main-layout > :first-child {
+    width: 50px;
+    min-width: 50px;
+    overflow: hidden;
+  }
+  
+  .main-layout > :first-child:hover {
+    width: 180px;
+    min-width: 180px;
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    z-index: 100;
+    background: white;
+    box-shadow: 2px 0 15px rgba(0, 0, 0, 0.15);
+  }
+  
+  .content-area {
+    padding: 0.5rem;
   }
 }
 
