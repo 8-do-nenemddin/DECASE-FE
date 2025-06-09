@@ -2,7 +2,7 @@ import { createRouter, createWebHistory } from "vue-router";
 import Home from "../components/home/Home.vue";
 import Login from "../components/home/Login.vue";
 import Signup from "../components/home/SignUp.vue";
-import MainView from "../components/main/main.vue";
+import MainView from "../components/main/Main.vue";
 import ProjectMain from "../components/projects/ProjectMain.vue";
 import inviteMember from "../components/projects/invitations/InviteMember.vue";
 
