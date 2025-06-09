@@ -1,5 +1,8 @@
 import { createRouter, createWebHistory } from "vue-router";
-import MainView from "../components/main/main.vue";
+import Home from "../components/home/Home.vue";
+import Login from "../components/home/Login.vue";
+import Signup from "../components/home/SignUp.vue";
+import MainView from "../components/main/Main.vue";
 import ProjectMain from "../components/projects/ProjectMain.vue";
 import ProjectSetting from "../components/projects/settings/SettingMain.vue";
 import ProjectInfo from "../components/projects/settings/edit_project/EditProjectInfo.vue";
