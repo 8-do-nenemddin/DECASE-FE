@@ -22,8 +22,8 @@
 
     <div class="header-center">
       <div class="project-title-container" @click="goToMain">
-        <h1 class="project-title">{{ projectStore.projectName }}</h1>
-        <div class="project-status">Active Project</div>
+        <h1 class="project-title">{{ projectName }}</h1>
+        <div class="project-status">{{ status }} PROJECT</div>
       </div>
     </div>
 
@@ -67,14 +67,17 @@ import ProfileBar from "../../main/ProfileBar.vue";
 import { useProjectStore } from "/src/stores/projectStore";
 
 const projectStore = useProjectStore();
+const projectId = computed(() => projectStore.projectId);
+const projectName = computed(() => projectStore.projectName);
+const status = computed(() => projectStore.status);
 
 const router = useRouter();
 const showSidebar = ref(false);
 const showProfileSidebar = ref(false);
 
 const goToMain = () => {
-  if (projectStore.projectId) {
-    router.push(`/projects/${projectStore.projectId}`);
+  if (projectId) {
+    router.push(`/projects/${projectId.value}`);
   }
 };
 
