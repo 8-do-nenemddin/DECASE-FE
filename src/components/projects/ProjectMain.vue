@@ -1,6 +1,10 @@
 <template>
-  <div class="project-main">
-    <HeaderBar @fileSelected="handleFileSelected" @search="handleSearch" />
+  <div class="project-main-container">
+    <HeaderBar
+      @fileSelected="handleFileSelected"
+      @search="handleSearch"
+      @mockupFileSelected="handleMockupFileSelected"
+    />
     <div class="content-wrapper" :class="contentClasses">
       <ProjectContent ref="projectContentRef" />
     </div>
@@ -15,22 +19,20 @@ import ProjectContent from "./content/ProjectContent.vue";
 
 const projectStore = useProjectStore();
 const projectId = computed(() => projectStore.projectId);
+const memberId = computed(() => projectStore.memberId);
 
 const projectContentRef = ref(null);
 
-const handleFileSelected = (fileData) => {
-  // ProjectContent의 handleFileSelected 메서드 호출
-  if (projectContentRef.value) {
-    projectContentRef.value.handleFileSelected(fileData);
-  }
+const handleFileSelected = (file) => {
+  projectContentRef.value?.handleFileSelected(file);
 };
 
-// 검색 이벤트 핸들러
-const handleSearch = (searchParams) => {
-  // ProjectContent의 handleSearch 메서드 호출
-  if (projectContentRef.value) {
-    projectContentRef.value.handleSearch(searchParams);
-  }
+const handleSearch = (searchTerm) => {
+  projectContentRef.value?.handleSearch(searchTerm);
+};
+
+const handleMockupFileSelected = (file) => {
+  projectContentRef.value?.handleMockupFileSelected(file);
 };
 
 // 사이드바 상태를 전역적으로 감지
@@ -62,7 +64,7 @@ const contentClasses = computed(() => ({
 </script>
 
 <style scoped>
-.project-main {
+.project-main-container {
   min-height: 100vh;
   background-color: #ffffff;
   font-family: "Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI",
