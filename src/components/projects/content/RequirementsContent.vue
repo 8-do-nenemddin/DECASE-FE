@@ -10,17 +10,17 @@
         </div>
         <div class="action-buttons">
           <button
-              v-if="mockupExists"
-              @click="viewMockup"
-              class="mockup-button-view"
+            v-if="mockupExists"
+            @click="viewMockup"
+            class="mockup-button-view"
           >
             👀 목업 보러가기
           </button>
           <button
-              v-if="!mockupExists"
-              @click="createMockup"
-              class="mockup-button"
-              :disabled="loading"
+            v-if="!mockupExists"
+            @click="createMockup"
+            class="mockup-button"
+            :disabled="loading"
           >
             🎨 목업 생성
           </button>
@@ -101,6 +101,8 @@ const props = defineProps({
     required: true,
   },
 });
+
+const emit = defineEmits(["mockupFileSelected"]);
 
 // 상태 관리
 const loading = ref(false);
@@ -296,31 +298,42 @@ function onGridReady(params) {
 // API 응답 데이터를 테이블 형태로 변환
 function transformApiDataToTableData(apiData) {
   return apiData.map((item) => {
+    // Handle sources if they exist, otherwise use empty array
     const sourcesDisplay = item.sources
-      .map(
-        (source) =>
-          `${source.docId} (${source.pageNum}페이지)\n${source.relSentence}`
-      )
-      .join("\n\n");
+      ? item.sources
+          .map(
+            (source) =>
+              `${source.docId} (${source.pageNum}페이지)\n${source.relSentence}`
+          )
+          .join("\n\n")
+      : "";
 
-    const sourceIds = item.sources.map((source) => source.sourceId).join(", ");
+    const sourceIds = item.sources
+      ? item.sources.map((source) => source.sourceId).join(", ")
+      : "";
 
-    const modificationHistory = item.modReason
-      .filter((reason) => reason && reason.trim() !== "")
-      .join("\n\n");
+    // Handle modification reasons if they exist, otherwise use empty array
+    const modificationHistory =
+      item.modReason && Array.isArray(item.modReason)
+        ? item.modReason
+            .filter((reason) => reason && reason.trim() !== "")
+            .join("\n\n")
+        : "";
 
-    const lastModifiedDate = item.createdDate.replace(/-/g, ".");
+    const lastModifiedDate = item.createdDate
+      ? item.createdDate.replace(/-/g, ".")
+      : "";
 
     return {
       reqPk: item.reqPk,
       reqIdCode: item.reqIdCode,
       revisionCount: item.revisionCount,
       type: item.type === "FR" ? "기능" : "비기능",
-      level1: item.level1,
-      level2: item.level2,
-      level3: item.level3,
-      name: item.name,
-      description: item.description,
+      level1: item.level1 || "",
+      level2: item.level2 || "",
+      level3: item.level3 || "",
+      name: item.name || "",
+      description: item.description || "",
       priority:
         item.priority === "HIGH"
           ? "상"
@@ -594,6 +607,38 @@ function cancelChanges() {
 //   }
 // }
 
+async function createMockup() {
+  loading.value = true;
+
+  try {
+    const response = await fetch(
+      `/api/v1/projects/${props.projectId}/mockups/${props.revision}?outputFolderName=index.html`,
+      {
+        method: "POST",
+        headers: {
+          Accept: "*/*",
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("목업 생성 요청이 실패했습니다.");
+    }
+
+    // 2초 대기
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    alert("목업 생성이 시작되었습니다. 약 10분 정도 소요될 예정입니다.");
+    mockupExists.value = true;
+  } catch (error) {
+    console.error("목업 생성 실패:", error);
+    alert("목업 생성 중 오류가 발생했습니다.");
+  } finally {
+    loading.value = false;
+  }
+}
+
 // API에서 데이터 로드
 async function downloadRequirements() {
   if (!props.projectId || !props.revision) {
@@ -685,9 +730,18 @@ onMounted(() => {
 defineExpose({
   handleSearch,
 });
+
+// 목업 보기 함수 추가
+const viewMockup = () => {
+  // 부모 컴포넌트에 목업 파일 선택 이벤트 발생
+  emit("mockupFileSelected", {
+    name: "index.html",
+    revision: props.revision,
+  });
+};
 </script>
 <style scoped>
-.project-content {
+.project-main.project-content {
   padding: 20px;
   height: calc(100vh - 64px);
   overflow-y: auto;

@@ -56,7 +56,7 @@
                 class="download-revision-btn"
                 @click.stop="downloadRevision(item)"
                 :disabled="isDownloading[item.revisionNumber]"
-                :title="`리비전 ${item.revisionNumber} 전체 다운로드`"
+                :title="`ver ${item.revisionNumber} 전체 다운로드`"
               >
                 <div
                   v-if="isDownloading[item.revisionNumber]"
@@ -93,7 +93,32 @@
                   "
                 >
                   <div class="file-content">
-                    <div class="file-icon orange-gradient">🖼️</div>
+                    <div class="file-icon">
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 16 16"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.5"
+                      >
+                        <path
+                          d="M14 1H2C1.44772 1 1 1.44772 1 2V14C1 14.5523 1.44772 15 2 15H14C14.5523 15 15 14.5523 15 14V2C15 1.44772 14.5523 1 14 1Z"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        />
+                        <path
+                          d="M5 1V15"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        />
+                        <path
+                          d="M1 5H15"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        />
+                      </svg>
+                    </div>
                     <div class="file-info">
                       <div class="file-name">{{ file.name }}</div>
                     </div>
@@ -164,7 +189,7 @@
             <div class="preview-name">{{ fileInfoModal.file?.name }}</div>
             <div class="preview-meta">
               <div class="meta-row">
-                <span class="meta-label">리비전:</span
+                <span class="meta-label">revision:</span
                 ><span class="meta-value"
                   >v{{ fileInfoModal.file.revision }}</span
                 >
@@ -188,50 +213,21 @@
         @click="hideContextMenu"
       ></div>
     </div>
-    <div class="mockup-viewer-pane" v-if="activeFile">
-      <div class="viewer-header">
-        <h3>{{ activeFile.name }} (v{{ activeFile.revision }})</h3>
-      </div>
-      <div class="viewer-tabs">
-        <button
-          :class="{ active: viewerTab === 'preview' }"
-          @click="viewerTab = 'preview'"
-        >
-          Preview
-        </button>
-        <button
-          :class="{ active: viewerTab === 'code' }"
-          @click="viewerTab = 'code'"
-        >
-          Code
-        </button>
-      </div>
-      <div class="save-button-container" v-if="viewerTab === 'code'">
-        <button class="save-button" @click="saveCode">저장</button>
-      </div>
-      <div class="viewer-content">
-        <iframe
-          v-if="viewerTab === 'preview'"
-          class="preview-iframe"
-          :srcdoc="activeFile.code"
-          sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
-        ></iframe>
-        <textarea
-          v-else
-          class="code-textarea"
-          v-model="activeFile.code"
-          spellcheck="false"
-        ></textarea>
-      </div>
-    </div>
   </div>
 </template>
 
 <script setup>
-
-import { ref, reactive, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
-import { useProjectStore } from '../../../../stores/projectStore';
-import axios from 'axios';
+import {
+  ref,
+  reactive,
+  computed,
+  onMounted,
+  onUnmounted,
+  watch,
+  nextTick,
+} from "vue";
+import { useProjectStore } from "../../../../stores/projectStore";
+import axios from "axios";
 
 const projectStore = useProjectStore();
 const projectId = computed(() => projectStore.projectId);
@@ -240,10 +236,13 @@ const memberId = computed(() => projectStore.userId);
 const saveCode = async () => {
   if (!activeFile.value) return;
   try {
-    await axios.put(`/api/v1/projects/mockups/${projectId.value}/${activeFile.value.revision}/${activeFile.value.name}`, {
-      code: activeFile.value.code
-    });
-    alert('저장되었습니다!');
+    await axios.put(
+      `/api/v1/projects/${projectId.value}/mockups/${activeFile.value.revision}/${activeFile.value.name}`,
+      {
+        code: activeFile.value.code,
+      }
+    );
+    alert("저장되었습니다!");
   } catch (error) {
     console.error(error);
     alert("저장 중 오류가 발생했습니다.");
@@ -289,21 +288,39 @@ const fileInfoModal = reactive({
 
 // --- 데이터 로딩 및 처리 ---
 const loadMockupData = async () => {
-  if (!projectId) return;
+  if (!projectId.value) {
+    console.log("Project ID is not available");
+    return;
+  }
+  console.log("Loading mockup data for project:", projectId.value);
   isLoading.value = true;
   sidebarItems.value = [];
   try {
-    const res = await axios.get(`/api/v1/projects/mockups/${projectId.value}`);
+    const res = await axios.get(`/api/v1/projects/${projectId.value}/mockups`);
+    console.log("Mockup data response:", res.data);
     const groupedMockups = res.data;
 
     const items = Object.entries(groupedMockups).map(([revision, files]) => {
       const type = `mockup-rev-${revision}`;
       selectedFiles[type] = -1;
+      // revisionCount가 undefined일 경우를 대비해 안전하게 처리
+      const currentRevision = projectStore.revisionCount;
+      const isExpanded =
+        currentRevision !== undefined &&
+        revision === currentRevision.toString();
+      console.log(
+        "Processing revision:",
+        revision,
+        "currentRevision:",
+        currentRevision,
+        "isExpanded:",
+        isExpanded
+      );
       return {
-        name: `목업 리비전 ${revision}`,
+        name: `목업 revision ${revision}`,
         type: type,
-        revisionNumber: revision, // 리비전 번호 추가
-        expanded: false,
+        revisionNumber: revision,
+        expanded: isExpanded,
         files: files.map((fileName) => ({
           name: fileName,
           revision: revision,
@@ -316,8 +333,14 @@ const loadMockupData = async () => {
     sidebarItems.value = items.sort(
       (a, b) => Number(b.revisionNumber) - Number(a.revisionNumber)
     );
+    console.log("Final sidebar items:", sidebarItems.value);
   } catch (error) {
     console.error("목업 데이터를 불러오는 중 오류 발생:", error);
+    console.error("Error details:", {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status,
+    });
     sidebarItems.value = [];
   } finally {
     isLoading.value = false;
@@ -327,8 +350,8 @@ const loadMockupData = async () => {
 const downloadMockupFile = async (file) => {
   if (!file) return;
   try {
-    const url = `/api/v1/projects/mockups/${projectId.value}/${file.revision}/${file.name}`;
-    const response = await axios.get(url, { responseType: 'blob' });
+    const url = `/api/v1/projects/${projectId.value}/mockups/${file.revision}/${file.name}`;
+    const response = await axios.get(url, { responseType: "blob" });
 
     const blob = new Blob([response.data]);
     const link = document.createElement("a");
@@ -352,7 +375,7 @@ const downloadRevision = async (item) => {
   isDownloading.value[item.revisionNumber] = true;
 
   try {
-    const url = `/api/v1/projects/mockups/${projectId.value}/${item.revisionNumber}/download`;
+    const url = `/api/v1/projects/${projectId.value}/mockups/${item.revisionNumber}/download`;
     const response = await axios.get(url, {
       responseType: "blob",
       timeout: 60000, // 60초 타임아웃
@@ -395,30 +418,22 @@ const activeFile = ref(null);
 const viewerTab = ref("preview");
 
 const selectFile = async (file, fileIndex, sectionType) => {
-  Object.keys(selectedFiles).forEach((key) => (selectedFiles[key] = -1));
-  selectedFiles[sectionType] = fileIndex;
-
-  emit("fileSelected", {
-    type: "mockup",
-    revision: file.revision,
-    fileName: file.name,
-  });
-
   try {
-    const res = await axios.get(`/api/v1/projects/mockups/${projectId.value}/${file.revision}/${file.name}`);
-    activeFile.value = {
-      ...file,
-      code: await res.data,
+    // 선택된 파일 상태 업데이트
+    Object.keys(selectedFiles).forEach((key) => (selectedFiles[key] = -1));
+    selectedFiles[sectionType] = fileIndex;
+
+    // 필요한 정보만 전달
+    const fileInfo = {
+      name: file.name,
+      revision: file.revision,
     };
+
+    // 부모 컴포넌트에 파일 선택 이벤트 발생
+    emit("fileSelected", fileInfo);
   } catch (error) {
     console.error("파일 불러오기 실패:", error);
-    activeFile.value = {
-      ...file,
-      code: "<!-- 파일을 불러오는 데 실패했습니다. -->",
-    };
   }
-
-  viewerTab.value = "preview";
 };
 
 const isFileSelected = (fileIndex, sectionType) => {
@@ -502,6 +517,10 @@ const handleWindowResize = () => {
 onMounted(() => {
   document.addEventListener("keydown", handleKeydown);
   window.addEventListener("resize", handleWindowResize);
+  console.log("Component mounted, projectStore state:", {
+    projectId: projectId.value,
+    revisionCount: projectStore.revisionCount,
+  });
 });
 onUnmounted(() => {
   document.removeEventListener("keydown", handleKeydown);
@@ -509,19 +528,33 @@ onUnmounted(() => {
 });
 
 watch(
+  () => projectId,
+  (newId) => {
+    console.log("Project ID changed:", newId);
+    if (newId && props.isVisible) {
+      loadMockupData();
+    }
+  }
+);
+
+// Add new watch for projectStore
+watch(
+  () => projectStore.revisionCount,
+  (newCount) => {
+    console.log("Revision count changed:", newCount);
+  }
+);
+
+// Add watch for isVisible
+watch(
   () => props.isVisible,
   (newValue) => {
+    console.log("Sidebar visibility changed:", newValue);
     if (newValue) {
       nextTick(() => {
         loadMockupData();
       });
     }
-  }
-);
-
-watch(() => projectId, (newId) => {
-  if (newId && props.isVisible) {
-    loadMockupData();
   }
 );
 </script>
@@ -683,7 +716,7 @@ watch(() => projectId, (newId) => {
 /* Sidebar Content */
 .sidebar-content {
   flex: 1;
-  padding: 15px;
+  padding: 8px;
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: #d1d5db transparent;
@@ -691,21 +724,21 @@ watch(() => projectId, (newId) => {
 
 /* Sidebar Sections */
 .sidebar-section {
-  margin-bottom: 16px;
+  margin-bottom: 4px;
   background: transparent;
-  border-radius: 12px;
+  border-radius: 4px;
   overflow: hidden;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .section-header {
-  padding: 16px 20px;
+  padding: 8px 12px;
   cursor: pointer;
   transition: all 0.2s ease;
+  border-radius: 4px;
 }
 
 .section-header:hover {
-  background: #f3f4f6;
+  background: rgba(59, 130, 246, 0.08);
 }
 
 .section-header-content {
@@ -715,10 +748,12 @@ watch(() => projectId, (newId) => {
 }
 
 .expand-icon {
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   color: #6b7280;
   display: flex;
   align-items: center;
+  width: 16px;
+  height: 16px;
 }
 
 .expand-icon.rotated {
@@ -729,51 +764,51 @@ watch(() => projectId, (newId) => {
 .section-title {
   flex: 1;
   font-weight: 500;
-  color: #374151;
-  font-size: 15px;
+  color: #1f2937;
+  font-size: 13px;
   letter-spacing: -0.01em;
 }
 
 .count-badge {
-  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-  color: white;
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 600;
-  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+  background: #e5e7eb;
+  color: #4b5563;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  box-shadow: none;
 }
 
 /* Download Button */
 .download-revision-btn {
-  padding: 8px;
-  background: #f3f4f6;
+  padding: 4px;
+  background: transparent;
   border: none;
-  border-radius: 8px;
+  border-radius: 4px;
   color: #6b7280;
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 32px;
-  min-height: 32px;
+  min-width: 24px;
+  min-height: 24px;
 }
 
 .download-revision-btn:hover:not(:disabled) {
-  background: #e5e7eb;
-  color: #111827;
-  transform: scale(1.05);
+  background: rgba(59, 130, 246, 0.08);
+  color: #374151;
+  transform: none;
 }
 
 .download-revision-btn:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
 .download-spinner {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   border: 2px solid #e5e7eb;
   border-top: 2px solid #3b82f6;
   border-radius: 50%;
@@ -781,8 +816,9 @@ watch(() => projectId, (newId) => {
 }
 
 .section-content {
-  animation: expandDown 0.3s ease-out;
-  border-top: 1px solid #f3f4f6;
+  animation: expandDown 0.2s ease-out;
+  border-top: none;
+  padding-left: 12px;
 }
 
 /* Loading and Empty States */
@@ -828,75 +864,54 @@ watch(() => projectId, (newId) => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 16px;
-  margin-bottom: 8px;
-  background: white;
-  border-radius: 10px;
+  padding: 6px 12px;
+  margin-bottom: 2px;
+  background: transparent;
+  border-radius: 4px;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .file-item:hover {
-  background: #f3f4f6;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  background: rgba(59, 130, 246, 0.08);
 }
 
 .file-item.selected {
-  background: rgba(59, 130, 246, 0.1);
-  border-left: 3px solid #3b82f6;
+  background: rgba(59, 130, 246, 0.12);
+  border-left: none;
 }
 
 .file-content {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   flex: 1;
   min-width: 0;
 }
 
 /* File Icons */
 .file-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
+  width: 16px;
+  height: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
+  font-size: 14px;
   flex-shrink: 0;
-}
-
-.file-icon.blue-gradient {
-  background: linear-gradient(135deg, #60a5fa, #3b82f6);
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
-}
-
-.file-icon.green-gradient {
-  background: linear-gradient(135deg, #10b981, #059669);
-  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+  color: #6b7280;
 }
 
 .file-icon.orange-gradient {
-  background: linear-gradient(135deg, #fb923c, #f97316);
-  box-shadow: 0 2px 8px rgba(249, 115, 22, 0.3);
-}
-
-.file-icon.default-color {
-  background: #f3f4f6;
-}
-
-/* File Info */
-.file-info {
-  flex: 1;
-  min-width: 0;
+  background: none;
+  box-shadow: none;
+  color: #f97316;
 }
 
 .file-name {
-  font-weight: 500;
-  color: #111827;
-  font-size: 14px;
-  margin-bottom: 2px;
+  font-weight: 400;
+  color: #374151;
+  font-size: 13px;
+  margin-bottom: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -919,24 +934,24 @@ watch(() => projectId, (newId) => {
 
 .menu-button {
   opacity: 0;
-  padding: 8px;
-  background: #f3f4f6;
+  padding: 4px;
+  background: transparent;
   border: none;
-  border-radius: 6px;
+  border-radius: 4px;
   color: #6b7280;
   cursor: pointer;
   transition: all 0.2s ease;
-  margin-left: 8px;
+  margin-left: 4px;
+}
+
+.menu-button:hover {
+  background: rgba(59, 130, 246, 0.08);
+  color: #374151;
+  transform: none;
 }
 
 .file-item:hover .menu-button {
   opacity: 1;
-}
-
-.menu-button:hover {
-  background: #e5e7eb;
-  color: #111827;
-  transform: scale(1.1);
 }
 
 /* Context Menu */
@@ -1233,7 +1248,7 @@ watch(() => projectId, (newId) => {
 
 /* Scrollbar Styles */
 .sidebar-content::-webkit-scrollbar {
-  width: 6px;
+  width: 4px;
 }
 
 .sidebar-content::-webkit-scrollbar-track {
@@ -1242,7 +1257,7 @@ watch(() => projectId, (newId) => {
 
 .sidebar-content::-webkit-scrollbar-thumb {
   background: #d1d5db;
-  border-radius: 3px;
+  border-radius: 2px;
 }
 
 .sidebar-content::-webkit-scrollbar-thumb:hover {

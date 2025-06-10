@@ -1,0 +1,490 @@
+<template>
+  <div class="mockup-viewer-pane" v-if="activeFile">
+    <div class="viewer-header">
+      <div class="header-content">
+        <h3>{{ activeFile.name }} (v{{ activeFile.revision }})</h3>
+        <div class="view-toggle">
+          <button
+            class="toggle-button"
+            :class="{ active: viewerTab === 'preview' }"
+            @click="viewerTab = 'preview'"
+          >
+            Preview
+          </button>
+          <button
+            class="toggle-button"
+            :class="{ active: viewerTab === 'code' }"
+            @click="viewerTab = 'code'"
+          >
+            Code
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="editor-toolbar" v-if="viewerTab === 'code'">
+      <div class="toolbar-left">
+        <span class="file-type">HTML</span>
+      </div>
+      <div class="toolbar-right">
+        <button class="toolbar-button" @click="copyCode" title="코드 복사">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+            <path
+              d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+            ></path>
+          </svg>
+        </button>
+        <button class="toolbar-button" @click="saveCode" title="저장">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"
+            ></path>
+            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+            <polyline points="7 3 7 8 15 8"></polyline>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <div class="viewer-content">
+      <div v-if="isLoading" class="loading-state">
+        <div class="loading-spinner"></div>
+        <p>로딩 중...</p>
+      </div>
+      <template v-else>
+        <iframe
+          v-if="viewerTab === 'preview'"
+          class="preview-iframe"
+          :srcdoc="code"
+          sandbox="allow-scripts"
+          referrerpolicy="no-referrer"
+        ></iframe>
+        <div v-else class="code-editor">
+          <div class="line-numbers">
+            <div v-for="n in totalLines" :key="n" class="line-number">
+              {{ n }}
+            </div>
+          </div>
+          <textarea
+            class="code-textarea"
+            v-model="code"
+            spellcheck="false"
+            @input="updateLineNumbers"
+            ref="codeTextarea"
+          ></textarea>
+        </div>
+      </template>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed, watch, onMounted } from "vue";
+import axios from "axios";
+import { useProjectStore } from "../../../stores/projectStore";
+
+const props = defineProps({
+  activeFile: {
+    type: Object,
+    required: true,
+  },
+});
+
+const projectStore = useProjectStore();
+const projectId = computed(() => projectStore.projectId);
+const viewerTab = ref("preview");
+const code = ref("");
+const isLoading = ref(false);
+const totalLines = ref(1);
+const codeTextarea = ref(null);
+
+const updateLineNumbers = () => {
+  if (!code.value) {
+    totalLines.value = 1;
+    return;
+  }
+  totalLines.value = code.value.split("\n").length;
+};
+
+const copyCode = async () => {
+  try {
+    await navigator.clipboard.writeText(code.value);
+    alert("코드가 클립보드에 복사되었습니다.");
+  } catch (err) {
+    console.error("코드 복사 실패:", err);
+    alert("코드 복사에 실패했습니다.");
+  }
+};
+
+const fetchCode = async () => {
+  if (!props.activeFile) return;
+  isLoading.value = true;
+  try {
+    const response = await axios.get(
+      `/api/v1/projects/${projectId.value}/mockups/${props.activeFile.revision}/${props.activeFile.name}`
+    );
+    code.value = response.data;
+    updateLineNumbers();
+  } catch (error) {
+    console.error("코드 로딩 실패:", error);
+    code.value = "<!-- 파일을 불러오는 데 실패했습니다. -->";
+    updateLineNumbers();
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+// 컴포넌트가 마운트되거나 activeFile이 변경될 때 코드를 불러옴
+watch(
+  () => props.activeFile,
+  async (newFile) => {
+    if (newFile) {
+      await fetchCode();
+    }
+  },
+  { immediate: true }
+);
+
+const saveCode = async () => {
+  if (!props.activeFile) return;
+  try {
+    await axios.put(
+      `/api/v1/projects/${projectId.value}/mockups/${props.activeFile.revision}/${props.activeFile.name}`,
+      {
+        code: code.value,
+      }
+    );
+    alert("저장되었습니다!");
+  } catch (error) {
+    console.error(error);
+    alert("저장 중 오류가 발생했습니다.");
+  }
+};
+
+// Reset viewer tab when file changes
+watch(
+  () => props.activeFile,
+  () => {
+    viewerTab.value = "preview";
+  }
+);
+
+onMounted(() => {
+  if (codeTextarea.value) {
+    codeTextarea.value.focus();
+  }
+});
+</script>
+
+<style scoped>
+.mockup-viewer-pane {
+  padding: 20px;
+  height: calc(100vh - 64px);
+  background-color: #f8f9fa;
+  font-family: "Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, sans-serif;
+  display: flex;
+  flex-direction: column;
+}
+
+.viewer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 20px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.viewer-header h3 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.view-toggle {
+  display: flex;
+  background: #f3f4f6;
+  border-radius: 8px;
+  padding: 2px;
+  gap: 2px;
+}
+
+.toggle-button {
+  padding: 8px 16px;
+  border: none;
+  background: none;
+  font-size: 14px;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.toggle-button:hover {
+  color: #374151;
+}
+
+.toggle-button.active {
+  background: #fff;
+  color: #3b82f6;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.editor-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  background: white;
+  border-radius: 12px 12px 0 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.file-type {
+  color: #6b7280;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 6px 12px;
+  background: #f3f4f6;
+  border-radius: 6px;
+}
+
+.toolbar-right {
+  display: flex;
+  gap: 8px;
+}
+
+.toolbar-button {
+  padding: 8px 16px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.toolbar-button:hover {
+  background: #2563eb;
+}
+
+.viewer-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: white;
+  border-radius: 0 0 12px 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  min-height: 0;
+  position: relative;
+}
+
+.viewer-content::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 40px;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.9),
+    rgba(255, 255, 255, 0)
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+.viewer-content::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 40px;
+  background: linear-gradient(
+    to top,
+    rgba(255, 255, 255, 0.9),
+    rgba(255, 255, 255, 0)
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+.preview-iframe {
+  width: 100%;
+  height: 100%;
+  min-height: 500px;
+  border: none;
+  flex: 1;
+  background: #fff;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+  margin: 16px;
+  transition: all 0.3s ease;
+}
+
+.code-editor {
+  display: flex;
+  background: #1e1e1e;
+  height: 100%;
+  min-height: 500px;
+  font-family: "Fira Code", "Consolas", monospace;
+  overflow: hidden;
+  position: relative;
+}
+
+.line-numbers {
+  padding: 8px 8px 8px 0;
+  background: #252526;
+  color: #858585;
+  text-align: right;
+  user-select: none;
+  border-right: 1px solid #333;
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 1;
+  overflow: hidden;
+  width: 40px;
+}
+
+.line-number {
+  padding: 0 8px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.code-textarea {
+  flex: 1;
+  background: #1e1e1e;
+  color: #d4d4d4;
+  border: none;
+  padding: 8px 8px 8px 40px;
+  font-family: "Fira Code", "Consolas", monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  resize: none;
+  outline: none;
+  tab-size: 2;
+  overflow-y: auto;
+  overflow-x: auto;
+  width: 100%;
+  height: 100%;
+}
+
+.code-textarea::selection {
+  background: #264f78;
+}
+
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #e5e7eb;
+  border-top: 4px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .mockup-viewer-pane {
+    padding: 16px;
+  }
+
+  .viewer-header {
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
+  }
+
+  .header-content {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+    width: 100%;
+  }
+
+  .viewer-header h3 {
+    font-size: 20px;
+  }
+
+  .view-toggle {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .editor-toolbar {
+    padding: 12px 16px;
+  }
+
+  .toolbar-button {
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+
+  .preview-iframe {
+    margin: 8px;
+    min-height: 400px;
+  }
+}
+</style>
