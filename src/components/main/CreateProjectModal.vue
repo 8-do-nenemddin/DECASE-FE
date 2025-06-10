@@ -19,9 +19,9 @@
               class="date-input"
             />
             <span class="date-separator">~</span>
-            <input 
-              type="date" 
-              v-model="formData.endDate" 
+            <input
+              type="date"
+              v-model="formData.endDate"
               class="date-input"
               :disabled="!formData.startDate"
               :class="{ 'input-disabled': !formData.startDate }"
@@ -33,9 +33,9 @@
         <div class="form-row">
           <div class="form-field">
             <label class="form-label">프로젝트 이름</label>
-            <input 
-              type="text" 
-              v-model="formData.name" 
+            <input
+              type="text"
+              v-model="formData.name"
               class="form-input"
               :disabled="!isDateRangeComplete"
               :class="{ 'input-disabled': !isDateRangeComplete }"
@@ -43,9 +43,9 @@
           </div>
           <div class="form-field">
             <label class="form-label">제안 PM</label>
-            <input 
-              type="text" 
-              v-model="formData.proposalPM" 
+            <input
+              type="text"
+              v-model="formData.proposalPM"
               class="form-input"
               :disabled="!formData.name.trim()"
               :class="{ 'input-disabled': !formData.name.trim() }"
@@ -103,10 +103,10 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed } from "vue";
 import { useRouter } from "vue-router";
 import SuccessCreateProject from "./ProjectCreationSuccessModal.vue";
-import { useProjectStore } from '../../stores/projectStore';
+import { useProjectStore } from "../../stores/projectStore";
 
 const router = useRouter();
 const emit = defineEmits(["close", "createProject"]);
@@ -115,7 +115,7 @@ const userId = computed(() => projectStore.userId);
 
 const isLoading = ref(false);
 const showSuccessModal = ref(false);
-const scaleError = ref('');
+const scaleError = ref("");
 
 const today = new Date().toISOString().split("T")[0];
 const formData = ref({
@@ -134,38 +134,40 @@ const isDateRangeComplete = computed(() => {
 
 // 전체 폼이 완료되었는지 확인
 const isFormComplete = computed(() => {
-  return isDateRangeComplete.value &&
-         formData.value.name.trim() &&
-         formData.value.proposalPM.trim() &&
-         formData.value.description.trim() &&
-         formData.value.scale &&
-         !scaleError.value;
+  return (
+    isDateRangeComplete.value &&
+    formData.value.name.trim() &&
+    formData.value.proposalPM.trim() &&
+    formData.value.description.trim() &&
+    formData.value.scale &&
+    !scaleError.value
+  );
 });
 
 const displayValue = computed(() => {
-  if (!formData.value.scale) return '';
+  if (!formData.value.scale) return "";
   return Number(formData.value.scale).toLocaleString();
 });
 
 function onInput(event) {
-  const raw = event.target.value.replace(/\D/g, ''); // 숫자만
-  
+  const raw = event.target.value.replace(/\D/g, ""); // 숫자만
+
   // 1경(10,000조) = 10^16 = 10000000000000000 (16자리)
   // 9,999조 = 9999000000000000 (최대 13자리)
   const maxValue = 9999000000000000n; // 9,999조
-  
+
   if (raw) {
     const numValue = Number(raw);
     if (numValue > maxValue) {
-      scaleError.value = '프로젝트 규모는 9,999조를 초과할 수 없습니다.';
+      scaleError.value = "프로젝트 규모는 9,999조를 초과할 수 없습니다.";
       return;
     } else {
-      scaleError.value = '';
+      scaleError.value = "";
     }
   } else {
-    scaleError.value = '';
+    scaleError.value = "";
   }
-  
+
   const limited = raw.slice(0, 13); // 13자리 제한 (9,999조까지)
   formData.value.scale = limited;
 }
@@ -196,15 +198,15 @@ const handleCreateProject = async () => {
       endDate: formData.value.endDate,
       description: formData.value.description,
       proposalPM: formData.value.proposalPM,
-      creatorMemberId: userId.value
+      creatorMemberId: userId.value,
     };
 
     const response = await fetch("/api/v1/projects", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify(requestBody)
+      body: JSON.stringify(requestBody),
     });
 
     const result = await response.json();
@@ -215,9 +217,8 @@ const handleCreateProject = async () => {
 
     // 성공적으로 생성된 프로젝트 정보
     const newProject = result.data;
-    projectStore.setProject(newProject.projectId, newProject.name);
 
-    console.log(result.data)
+    console.log(result.data);
 
     const now = new Date();
     const start = new Date(newProject.startDate);
@@ -228,7 +229,14 @@ const handleCreateProject = async () => {
     } else {
       newProject.status = "ACTIVE";
     }
-    projectStore.setProject(newProject.projectId, newProject.name, newProject.status, newProject.isAdmin);
+    projectStore.setProject(
+      newProject.projectId,
+      newProject.name,
+      0,
+      newProject.revisionCount,
+      newProject.status,
+      newProject.isAdmin
+    );
 
     showSuccessModal.value = true;
     closeModal();
