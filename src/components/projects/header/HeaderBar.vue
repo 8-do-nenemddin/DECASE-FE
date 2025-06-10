@@ -199,8 +199,8 @@ const showProfileSidebar = ref(false);
 const showMockupSidebar = ref(false);
 
 const goToMain = () => {
-  if (projectId) {
-    router.push(`/projects/${projectId}`);
+  if (projectId.value) {
+    router.push(`/projects/${projectId.value}`);
     console.log("다시 프로젝트");
   }
 };
