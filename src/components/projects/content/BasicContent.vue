@@ -2,7 +2,7 @@
   <main class="main-content">
     <!-- 추후 수정-->
     <!-- v-if : Project 상태에 따라서 (요구사항 입력 전 / 요구사항 생성중 / 요구사항 생성완료)-->
-    <div class="upload-card" v-if="!projectStore.projectRevision">
+    <div class="upload-card" v-if="projectStore.projectRevision === 0">
       <h2 class="upload-title">RFP 파일 업로드</h2>
       <p class="upload-subtitle">프로젝트 제안 요청서(RFP) 파일을 업로드해주세요.</p>
 
@@ -62,7 +62,7 @@
     <!-- 요구사항정의서 생성 중 화면 -->
     <!-- 추후 수정-->
     <!-- v-if : Project 상태에 따라서 (요구사항 입력 전 / 요구사항 생성중 / 요구사항 생성완료)-->
-    <div class="generating-card" v-if="projectStore.projectRevision">
+    <div class="generating-card" v-if="projectStore.projectRevision === 1">
       <div class="generating-content">
         <div class="generating-icon">
           <div class="spinner"></div>
