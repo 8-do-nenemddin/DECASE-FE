@@ -24,7 +24,6 @@
 
 <script setup>
 import { ref } from "vue";
-import DetailsHeader from "./DetailsHeader.vue";
 import DetailsSidebar from "./DetailsSidebar.vue";
 import ProjectInfo from "./project_detail/ProjectInfo.vue";
 import ViewMatrix from "./view_matrix/ViewMatrix.vue";
