@@ -56,7 +56,7 @@
                 class="download-revision-btn"
                 @click.stop="downloadRevision(item)"
                 :disabled="isDownloading[item.revisionNumber]"
-                :title="`리비전 ${item.revisionNumber} 전체 다운로드`"
+                :title="`ver ${item.revisionNumber} 전체 다운로드`"
               >
                 <div
                   v-if="isDownloading[item.revisionNumber]"
@@ -164,7 +164,7 @@
             <div class="preview-name">{{ fileInfoModal.file?.name }}</div>
             <div class="preview-meta">
               <div class="meta-row">
-                <span class="meta-label">리비전:</span
+                <span class="meta-label">revision:</span
                 ><span class="meta-value"
                   >v{{ fileInfoModal.file.revision }}</span
                 >
@@ -274,7 +274,7 @@ const loadMockupData = async () => {
       const type = `mockup-rev-${revision}`;
       selectedFiles[type] = -1;
       return {
-        name: `목업 리비전 ${revision}`,
+        name: `목업 revision ${revision}`,
         type: type,
         revisionNumber: revision,
         expanded: false,
@@ -374,28 +374,16 @@ const selectFile = async (file, fileIndex, sectionType) => {
     Object.keys(selectedFiles).forEach((key) => (selectedFiles[key] = -1));
     selectedFiles[sectionType] = fileIndex;
 
-    // 파일 데이터 가져오기
-    const response = await axios.get(
-      `/api/v1/projects/${projectId.value}/mockups/${file.revision}/${file.name}`
-    );
-
-    // 선택된 파일 정보 업데이트
-    const selectedFile = {
-      ...file,
-      code: response.data,
+    // 필요한 정보만 전달
+    const fileInfo = {
+      name: file.name,
+      revision: file.revision,
     };
 
-    console.log('Selected mockup file:', selectedFile);
-
     // 부모 컴포넌트에 파일 선택 이벤트 발생
-    emit("fileSelected", selectedFile);
+    emit("fileSelected", fileInfo);
   } catch (error) {
     console.error("파일 불러오기 실패:", error);
-    // 에러 발생 시에도 이벤트 발생
-    emit("fileSelected", {
-      ...file,
-      code: "<!-- 파일을 불러오는 데 실패했습니다. -->",
-    });
   }
 };
 
