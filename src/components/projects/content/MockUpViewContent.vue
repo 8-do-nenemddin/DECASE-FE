@@ -313,6 +313,39 @@ onMounted(() => {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   overflow: hidden;
   min-height: 0;
+  position: relative;
+}
+
+.viewer-content::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 40px;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.9),
+    rgba(255, 255, 255, 0)
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+.viewer-content::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 40px;
+  background: linear-gradient(
+    to top,
+    rgba(255, 255, 255, 0.9),
+    rgba(255, 255, 255, 0)
+  );
+  pointer-events: none;
+  z-index: 1;
 }
 
 .preview-iframe {
@@ -322,6 +355,10 @@ onMounted(() => {
   border: none;
   flex: 1;
   background: #fff;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+  margin: 16px;
+  transition: all 0.3s ease;
 }
 
 .code-editor {
@@ -443,6 +480,11 @@ onMounted(() => {
   .toolbar-button {
     padding: 6px 12px;
     font-size: 13px;
+  }
+
+  .preview-iframe {
+    margin: 8px;
+    min-height: 400px;
   }
 }
 </style>
