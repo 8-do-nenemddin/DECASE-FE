@@ -21,18 +21,25 @@
       <button class="save-button" @click="saveCode">저장</button>
     </div>
     <div class="viewer-content">
-      <iframe
-        v-if="viewerTab === 'preview'"
-        class="preview-iframe"
-        :srcdoc="processedCode"
-        sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
-      ></iframe>
-      <textarea
-        v-else
-        class="code-textarea"
-        v-model="activeFile.code"
-        spellcheck="false"
-      ></textarea>
+      <div v-if="isLoading" class="loading-state">
+        <div class="loading-spinner"></div>
+        <p>로딩 중...</p>
+      </div>
+      <template v-else>
+        <iframe
+          v-if="viewerTab === 'preview'"
+          class="preview-iframe"
+          :srcdoc="code"
+          sandbox="allow-scripts"
+          referrerpolicy="no-referrer"
+        ></iframe>
+        <textarea
+          v-else
+          class="code-textarea"
+          v-model="code"
+          spellcheck="false"
+        ></textarea>
+      </template>
     </div>
   </div>
 </template>
@@ -52,11 +59,37 @@ const props = defineProps({
 const projectStore = useProjectStore();
 const projectId = computed(() => projectStore.projectId);
 const viewerTab = ref("preview");
+const code = ref("");
+const isLoading = ref(false);
 
-const processedCode = computed(() => {
-  if (!props.activeFile?.code) return "";
-  return props.activeFile.code.replace(/```html\n|\n```/g, "");
-});
+// fetchCode 함수를 먼저 선언
+const fetchCode = async () => {
+  if (!props.activeFile) return;
+
+  isLoading.value = true;
+  try {
+    const response = await axios.get(
+      `/api/v1/projects/${projectId.value}/mockups/${props.activeFile.revision}/${props.activeFile.name}`
+    );
+    code.value = response.data;
+  } catch (error) {
+    console.error("코드 로딩 실패:", error);
+    code.value = "<!-- 파일을 불러오는 데 실패했습니다. -->";
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+// 그 다음에 watch 설정
+watch(
+  () => props.activeFile,
+  async (newFile) => {
+    if (newFile) {
+      await fetchCode();
+    }
+  },
+  { immediate: true }
+);
 
 const saveCode = async () => {
   if (!props.activeFile) return;
@@ -64,7 +97,7 @@ const saveCode = async () => {
     await axios.put(
       `/api/v1/projects/${projectId.value}/mockups/${props.activeFile.revision}/${props.activeFile.name}`,
       {
-        code: props.activeFile.code,
+        code: code.value,
       }
     );
     alert("저장되었습니다!");
@@ -222,6 +255,33 @@ watch(
   .code-textarea,
   .preview-iframe {
     min-height: 180px;
+  }
+}
+
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 12px;
+}
+
+.loading-spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid #e5e7eb;
+  border-top: 2px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
   }
 }
 </style>
