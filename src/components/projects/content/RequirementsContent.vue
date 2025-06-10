@@ -607,6 +607,38 @@ function cancelChanges() {
 //   }
 // }
 
+async function createMockup() {
+  loading.value = true;
+
+  try {
+    const response = await fetch(
+      `/api/v1/projects/${props.projectId}/mockups/${props.revision}?outputFolderName=index.html`,
+      {
+        method: "POST",
+        headers: {
+          Accept: "*/*",
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("목업 생성 요청이 실패했습니다.");
+    }
+
+    // 2초 대기
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    alert("목업 생성이 시작되었습니다. 약 10분 정도 소요될 예정입니다.");
+    mockupExists.value = true;
+  } catch (error) {
+    console.error("목업 생성 실패:", error);
+    alert("목업 생성 중 오류가 발생했습니다.");
+  } finally {
+    loading.value = false;
+  }
+}
+
 // API에서 데이터 로드
 async function downloadRequirements() {
   if (!props.projectId || !props.revision) {
