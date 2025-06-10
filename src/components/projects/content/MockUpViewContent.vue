@@ -129,10 +129,8 @@ const copyCode = async () => {
   }
 };
 
-// fetchCode 함수를 먼저 선언
 const fetchCode = async () => {
   if (!props.activeFile) return;
-
   isLoading.value = true;
   try {
     const response = await axios.get(
@@ -149,7 +147,7 @@ const fetchCode = async () => {
   }
 };
 
-// 그 다음에 watch 설정
+// 컴포넌트가 마운트되거나 activeFile이 변경될 때 코드를 불러옴
 watch(
   () => props.activeFile,
   async (newFile) => {
