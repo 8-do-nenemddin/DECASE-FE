@@ -107,6 +107,9 @@
 
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from "vue";
+import { useProjectStore } from "/src/stores/projectStore";
+
+const projectStore = useProjectStore();
 
 const props = defineProps({
   isVisible: {
@@ -196,7 +199,9 @@ const sendInvitations = () => {
 
   console.log("초대 전송:", invitationData);
 
+  const adminId = projectStore.userId;
   const formattedList = emailList.value.map(({ email, permission }) => ({
+    adminId,
     email,
     permission
   }));
