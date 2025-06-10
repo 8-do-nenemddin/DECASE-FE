@@ -43,10 +43,13 @@
             <line x1="3" y1="18" x2="21" y2="18"></line>
           </svg>
         </button>
+        <!-- 추후 수정 -->
+        <!-- disabled 조건 바꾸기 -->
         <button
           class="icon-button upload-btn"
           @click="openSourceUploadModal"
           title="파일 업로드"
+          :disabled="projectStore.projectRevision === 0"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
