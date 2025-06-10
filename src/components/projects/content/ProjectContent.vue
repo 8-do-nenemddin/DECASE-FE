@@ -24,6 +24,7 @@
             ? projectStore.projectRevision
             : selectedFile.revision
         "
+        @mockupFileSelected="handleMockupFileSelected"
       />
 
       <MockUpViewContent
@@ -97,7 +98,7 @@ const handleMockupFileSelected = (file) => {
   selectedFile.value = null; // 기존 선택된 파일 초기화
   activeMockupFile.value = {
     ...file,
-    code: file.code || "",
+    code: "", // 코드는 MockUpViewContent에서 직접 불러올 것입니다
   };
   console.log("Updated activeMockupFile:", activeMockupFile.value); // 디버깅용 로그 추가
 };
