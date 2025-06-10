@@ -300,7 +300,7 @@ const loadMockupData = async () => {
   sidebarItems.value = [];
   try {
     const res = await axios.get(
-      `/api/v1/projects/mockups/${projectStore.projectId}`
+      `/api/v1/projects/${projectStore.projectId}/mockups`
     );
     const groupedMockups = res.data;
 
@@ -311,7 +311,7 @@ const loadMockupData = async () => {
         name: `목업 리비전 ${revision}`,
         type: type,
         revisionNumber: revision, // 리비전 번호 추가
-        expanded: true,
+        expanded: false,
         files: files.map((fileName) => ({
           name: fileName,
           revision: revision,
