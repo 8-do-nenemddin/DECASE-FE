@@ -210,10 +210,8 @@ const handleSubmit = async () => {
 
 <style scoped>
 .main-content {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
+  width: 100%;
+  min-height: calc(80vh);
   padding: 40px;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     "Helvetica Neue", Arial, sans-serif;
@@ -229,11 +227,17 @@ const handleSubmit = async () => {
   padding: 60px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
   text-align: center;
-  transition: all 0.3s ease;
+
+  /* display: flex; 제거 */
+  /* flex-direction: column; 제거 */
+  /* align-items: center; 제거 */
+  /* justify-content: center; 제거 */
 }
 
-.upload-card:hover {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.06);
+.welcome-section {
+  max-width: 800px; /* 필요시 최대 너비 설정 */
+  margin: 0 auto; /* 중앙 정렬 */
+  padding-top: 20vh; /* 수직 중앙 정렬을 위한 상단 패딩 */
 }
 
 .upload-title {
@@ -298,13 +302,11 @@ const handleSubmit = async () => {
   margin: 0;
 }
 
-.upload-placeholder small {
-  display: block;
-  margin-top: 8px;
-  font-size: 0.875rem;
-  color: #9ca3af;
-  font-weight: 400;
-}
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .welcome-section {
+    padding: 30px 20px;
+  }
 
 .file-preview {
   display: flex;

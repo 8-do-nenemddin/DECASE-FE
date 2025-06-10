@@ -228,28 +228,22 @@
 </template>
 
 <script setup>
-import {
-  ref,
-  reactive,
-  computed,
-  onMounted,
-  onUnmounted,
-  watch,
-  nextTick,
-} from "vue";
-import { useProjectStore } from "/src/stores/projectStore";
-import axios from "axios";
-// Save code for active file
+
+import { ref, reactive, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
+import { useProjectStore } from '../../../../stores/projectStore';
+import axios from 'axios';
+
+const projectStore = useProjectStore();
+const projectId = computed(() => projectStore.projectId);
+const memberId = computed(() => projectStore.userId);
+
 const saveCode = async () => {
   if (!activeFile.value) return;
   try {
-    await axios.put(
-      `/api/v1/projects/mockups/${projectStore.projectId}/${activeFile.value.revision}/${activeFile.value.name}`,
-      {
-        code: activeFile.value.code,
-      }
-    );
-    alert("저장되었습니다!");
+    await axios.put(`/api/v1/projects/mockups/${projectId.value}/${activeFile.value.revision}/${activeFile.value.name}`, {
+      code: activeFile.value.code
+    });
+    alert('저장되었습니다!');
   } catch (error) {
     console.error(error);
     alert("저장 중 오류가 발생했습니다.");
@@ -266,8 +260,6 @@ const handleOverlayClick = (event) => {
   if (headerEl && headerEl.contains(event.target)) return;
   emit("close");
 };
-
-const projectStore = useProjectStore();
 
 // --- 상태 변수 (State) ---
 const windowWidth = ref(window.innerWidth);
@@ -297,13 +289,11 @@ const fileInfoModal = reactive({
 
 // --- 데이터 로딩 및 처리 ---
 const loadMockupData = async () => {
-  if (!projectStore.projectId) return;
+  if (!projectId) return;
   isLoading.value = true;
   sidebarItems.value = [];
   try {
-    const res = await axios.get(
-      `/api/v1/projects/${projectStore.projectId}/mockups`
-    );
+    const res = await axios.get(`/api/v1/projects/mockups/${projectId.value}`);
     const groupedMockups = res.data;
 
     const items = Object.entries(groupedMockups).map(([revision, files]) => {
@@ -337,8 +327,8 @@ const loadMockupData = async () => {
 const downloadMockupFile = async (file) => {
   if (!file) return;
   try {
-    const url = `/api/v1/projects/mockups/${projectStore.projectId}/${file.revision}/${file.name}`;
-    const response = await axios.get(url, { responseType: "blob" });
+    const url = `/api/v1/projects/mockups/${projectId.value}/${file.revision}/${file.name}`;
+    const response = await axios.get(url, { responseType: 'blob' });
 
     const blob = new Blob([response.data]);
     const link = document.createElement("a");
@@ -356,13 +346,13 @@ const downloadMockupFile = async (file) => {
 
 // 리비전 전체 다운로드 함수 추가
 const downloadRevision = async (item) => {
-  if (!item.revisionNumber || !projectStore.projectId) return;
+  if (!item.revisionNumber || !projectId) return;
 
   // 다운로드 상태 설정
   isDownloading.value[item.revisionNumber] = true;
 
   try {
-    const url = `/api/v1/projects/mockups/${projectStore.projectId}/${item.revisionNumber}/download`;
+    const url = `/api/v1/projects/mockups/${projectId.value}/${item.revisionNumber}/download`;
     const response = await axios.get(url, {
       responseType: "blob",
       timeout: 60000, // 60초 타임아웃
@@ -415,9 +405,7 @@ const selectFile = async (file, fileIndex, sectionType) => {
   });
 
   try {
-    const res = await axios.get(
-      `/api/v1/projects/mockups/${projectStore.projectId}/${file.revision}/${file.name}`
-    );
+    const res = await axios.get(`/api/v1/projects/mockups/${projectId.value}/${file.revision}/${file.name}`);
     activeFile.value = {
       ...file,
       code: await res.data,
@@ -531,12 +519,9 @@ watch(
   }
 );
 
-watch(
-  () => projectStore.projectId,
-  (newId) => {
-    if (newId && props.isVisible) {
-      loadMockupData();
-    }
+watch(() => projectId, (newId) => {
+  if (newId && props.isVisible) {
+    loadMockupData();
   }
 );
 </script>

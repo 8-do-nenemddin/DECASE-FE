@@ -74,10 +74,10 @@ defineEmits(["changeComponent"]);
   width: 16rem;
   background: #ffffff;
   border-right: 1px solid #e5e7eb;
-  height: calc(100vh - 4rem);
+  height: 100vh;
   overflow-y: auto;
   position: sticky;
-  top: 4rem;
+  top: 0;
   transition: all 0.3s ease;
 }
 
