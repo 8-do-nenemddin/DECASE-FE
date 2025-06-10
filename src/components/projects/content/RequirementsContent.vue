@@ -296,31 +296,42 @@ function onGridReady(params) {
 // API 응답 데이터를 테이블 형태로 변환
 function transformApiDataToTableData(apiData) {
   return apiData.map((item) => {
+    // Handle sources if they exist, otherwise use empty array
     const sourcesDisplay = item.sources
-      .map(
-        (source) =>
-          `${source.docId} (${source.pageNum}페이지)\n${source.relSentence}`
-      )
-      .join("\n\n");
+      ? item.sources
+          .map(
+            (source) =>
+              `${source.docId} (${source.pageNum}페이지)\n${source.relSentence}`
+          )
+          .join("\n\n")
+      : "";
 
-    const sourceIds = item.sources.map((source) => source.sourceId).join(", ");
+    const sourceIds = item.sources
+      ? item.sources.map((source) => source.sourceId).join(", ")
+      : "";
 
-    const modificationHistory = item.modReason
-      .filter((reason) => reason && reason.trim() !== "")
-      .join("\n\n");
+    // Handle modification reasons if they exist, otherwise use empty array
+    const modificationHistory =
+      item.modReason && Array.isArray(item.modReason)
+        ? item.modReason
+            .filter((reason) => reason && reason.trim() !== "")
+            .join("\n\n")
+        : "";
 
-    const lastModifiedDate = item.createdDate.replace(/-/g, ".");
+    const lastModifiedDate = item.createdDate
+      ? item.createdDate.replace(/-/g, ".")
+      : "";
 
     return {
       reqPk: item.reqPk,
       reqIdCode: item.reqIdCode,
       revisionCount: item.revisionCount,
       type: item.type === "FR" ? "기능" : "비기능",
-      level1: item.level1,
-      level2: item.level2,
-      level3: item.level3,
-      name: item.name,
-      description: item.description,
+      level1: item.level1 || "",
+      level2: item.level2 || "",
+      level3: item.level3 || "",
+      name: item.name || "",
+      description: item.description || "",
       priority:
         item.priority === "HIGH"
           ? "상"
