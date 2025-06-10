@@ -15,7 +15,6 @@
 
     <!-- 프로젝트 정보 폼 -->
     <template v-else>
-      <Transition name="slide-up" appear>
         <div class="form-card">
           <!-- 프로젝트 기간 -->
           <div class="form-section">
@@ -101,10 +100,9 @@
             </button>
           </div>
         </div>
-      </Transition>
 
       <!-- 프로젝트 삭제 -->
-      <Transition name="slide-up" appear>
+      <Transition name="slide-up">
         <div class="delete-section">
           <button @click="showDeleteModal = true" class="delete-button">
             프로젝트 삭제
@@ -640,7 +638,6 @@ const confirmDelete = async () => {
   cursor: pointer;
   padding: 0.5rem 1rem;
   border-radius: 8px;
-  transition: all 0.3s ease;
 }
 
 .delete-button:hover {

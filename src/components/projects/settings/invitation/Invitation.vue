@@ -1,13 +1,12 @@
 <template>
   <div class="invitation-container">
-    <div class="invitation-card slide-up" :class="{ 'animate': isVisible }">
+    <div class="invitation-card">
       <!-- 초대 목록 -->
       <div class="invitation-list">
         <div
             v-for="(invite, index) in invitations"
             :key="invite.email"
-            class="invitation-item slide-up-item"
-            :style="{ 'animation-delay': `${index * 0.1}s` }"
+            class="invitation-item"
         >
           <div class="invitation-info">
             <div class="avatar">
@@ -44,16 +43,91 @@
       </div>
 
       <!-- 초대가 없을 때 표시 -->
-      <div v-if="invitations.length === 0" class="empty-state slide-up-item">
+      <div v-if="invitations.length === 0" class="empty-state">
         <div class="empty-icon">📮</div>
         <h3 class="empty-title">초대가 없습니다</h3>
         <p class="empty-description">아직 보낸 초대가 없습니다.</p>
       </div>
     </div>
 
+    <!-- 전송 중 모달 -->
+    <div v-if="showSendingModal" class="modal-overlay">
+      <div class="modal-content sending-modal">
+        <div class="modal-body">
+          <div class="sending-content">
+            <div class="loading-spinner">
+              <div class="spinner"></div>
+            </div>
+            <h3 class="sending-title">초대를 전송하고 있습니다...</h3>
+            <p class="sending-description">잠시만 기다려 주세요.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 성공 모달 -->
+    <div v-if="showSuccessModal" class="modal-overlay" @click="closeSuccessModal">
+      <div class="modal-content success-modal" @click.stop>
+        <div class="modal-header success-header">
+          <h3 class="modal-title">초대 완료</h3>
+          <button @click="closeSuccessModal" class="close-button">
+            <span>×</span>
+          </button>
+        </div>
+
+        <div class="modal-body">
+          <div class="success-content">
+            <div class="success-icon">✅</div>
+            <h3 class="success-title">초대가 완료되었습니다!</h3>
+            <p class="success-description">
+              초대 메일이 성공적으로 전송되었습니다.<br>
+              상대방이 초대를 수락하면 프로젝트에 참여할 수 있습니다.
+            </p>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button @click="closeSuccessModal" class="success-button">
+            확인
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 실패 모달 -->
+    <div v-if="showFailModal" class="modal-overlay" @click="closeFailModal">
+      <div class="modal-content fail-modal" @click.stop>
+        <div class="modal-header fail-header">
+          <h3 class="modal-title">초대 실패</h3>
+          <button @click="closeFailModal" class="close-button">
+            <span>×</span>
+          </button>
+        </div>
+
+        <div class="modal-body">
+          <div class="fail-content">
+            <div class="fail-icon">❌</div>
+            <h3 class="fail-title">초대 전송에 실패했습니다</h3>
+            <p class="fail-description">
+              {{ failMessage || '네트워크 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.' }}
+            </p>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button @click="closeFailModal" class="retry-button">
+            다시 시도
+          </button>
+          <button @click="closeFailModal" class="close-fail-button">
+            닫기
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- 초대 취소 확인 모달 -->
-    <div v-if="showCancelConfirmModal" class="modal-overlay modal-fade-in" @click="closeCancelModal">
-      <div class="modal-content cancel-modal modal-slide-up" @click.stop>
+    <div v-if="showCancelConfirmModal" class="modal-overlay" @click="closeCancelModal">
+      <div class="modal-content cancel-modal" @click.stop>
         <div class="modal-header">
           <h3 class="modal-title">초대 취소 확인</h3>
           <button @click="closeCancelModal" class="close-button">
@@ -99,7 +173,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useProjectStore } from "/src/stores/projectStore";
 
@@ -112,7 +186,12 @@ const invitations = ref([]);
 const showCancelConfirmModal = ref(false);
 const inviteToCancel = ref(null);
 const inviteIndexToCancel = ref(null);
-const isVisible = ref(false);
+
+// 새로 추가된 모달 상태들
+const showSendingModal = ref(false);
+const showSuccessModal = ref(false);
+const showFailModal = ref(false);
+const failMessage = ref('');
 
 const fetchInvitations = async () => {
   try {
@@ -124,6 +203,51 @@ const fetchInvitations = async () => {
   } catch (error) {
     console.error('초대 목록을 불러오는 중 오류 발생:', error);
   }
+};
+
+// 멤버 초대 함수 (부모 컴포넌트에서 호출)
+const sendInvitation = async (invitationData) => {
+  showSendingModal.value = true;
+  
+  try {
+    const response = await fetch(`/api/v1/projects/${projectId}/members/invitation`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(invitationData)
+    });
+
+    const result = await response.json();
+    
+    // 전송 중 모달 닫기
+    showSendingModal.value = false;
+    
+    if (response.ok && result.status === 200) {
+      // 성공 모달 표시
+      showSuccessModal.value = true;
+      // 초대 목록 새로고침
+      await fetchInvitations();
+    } else {
+      // 실패 모달 표시
+      failMessage.value = result.message || '초대 전송에 실패했습니다.';
+      showFailModal.value = true;
+    }
+  } catch (error) {
+    console.error('초대 전송 실패:', error);
+    showSendingModal.value = false;
+    failMessage.value = '네트워크 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.';
+    showFailModal.value = true;
+  }
+};
+
+// 성공 모달 닫기
+const closeSuccessModal = () => {
+  showSuccessModal.value = false;
+};
+
+// 실패 모달 닫기
+const closeFailModal = () => {
+  showFailModal.value = false;
+  failMessage.value = '';
 };
 
 // 취소 모달 표시
@@ -140,7 +264,7 @@ const confirmCancel = async () => {
       const response = await fetch(`/api/v1/projects/${projectId}/members/invitation/cancel`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ adminId: projectStore.userId, email:inviteToCancel.value.email })
+        body: JSON.stringify({ adminId: projectStore.userId, email: inviteToCancel.value.email })
       });
 
       if (!response.ok) {
@@ -165,86 +289,21 @@ const closeCancelModal = () => {
   inviteIndexToCancel.value = null;
 };
 
+// 부모 컴포넌트에서 사용할 수 있도록 expose
+defineExpose({
+  sendInvitation
+});
+
 onMounted(async () => {
   await fetchInvitations();
-  // DOM이 렌더링된 후 애니메이션 시작
-  await nextTick();
-  setTimeout(() => {
-    isVisible.value = true;
-  }, 100);
 });
 </script>
 
 <style scoped>
-/* 슬라이드업 애니메이션 */
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes slideUpItem {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes modalFadeIn {
-  from {
-    opacity: 0;
-    backdrop-filter: blur(0px);
-  }
-  to {
-    opacity: 1;
-    backdrop-filter: blur(4px);
-  }
-}
-
-@keyframes modalSlideUp {
-  from {
-    opacity: 0;
-    transform: translateY(50px) scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-.slide-up {
-  opacity: 0;
-  transform: translateY(30px);
-  transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
-
-.slide-up.animate {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.slide-up-item {
-  opacity: 0;
-  transform: translateY(20px);
-  animation: slideUpItem 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-  animation-delay: 0.3s;
-}
-
-.modal-fade-in {
-  animation: modalFadeIn 0.3s ease-out;
-}
-
-.modal-slide-up {
-  animation: modalSlideUp 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+/* 로딩 스피너 애니메이션만 유지 */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 .invitation-container {
@@ -447,7 +506,7 @@ onMounted(async () => {
 
 .empty-description {
   font-size: 0.875rem;
-  margin: 0;
+  align-items: center;
   opacity: 0.8;
 }
 
@@ -515,6 +574,157 @@ onMounted(async () => {
   padding: 1.5rem;
 }
 
+/* 전송 중 모달 스타일 */
+.sending-modal .modal-body {
+  padding: 2rem;
+}
+
+.sending-content {
+  text-align: center;
+}
+
+.loading-spinner {
+  margin-bottom: 1.5rem;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f4f6;
+  border-top: 4px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto;
+}
+
+.sending-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 0.5rem 0;
+}
+
+.sending-description {
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+/* 성공 모달 스타일 */
+.success-header {
+  border-bottom-color: #bbf7d0;
+}
+
+.success-content {
+  text-align: center;
+  padding: 1rem;
+}
+
+.success-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.success-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #059669;
+  margin: 0 0 1rem 0;
+}
+
+.success-description {
+  color: #374151;
+  font-size: 0.875rem;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.success-button {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.success-button:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+}
+
+/* 실패 모달 스타일 */
+.fail-header {
+  border-bottom-color: #fecaca;
+}
+
+.fail-content {
+  text-align: center;
+  padding: 1rem;
+}
+
+.fail-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.fail-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #dc2626;
+  margin: 0 0 1rem 0;
+}
+
+.fail-description {
+  color: #374151;
+  font-size: 0.875rem;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.retry-button {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.retry-button:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+}
+
+.close-fail-button {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.close-fail-button:hover {
+  background: #e5e7eb;
+  border-color: #9ca3af;
+}
+
+/* 기존 취소 모달 스타일들 */
 .invitation-info-modal {
   display: flex;
   align-items: center;
@@ -576,7 +786,6 @@ onMounted(async () => {
   color: #059669;
 }
 
-/* 취소 모달 특별 스타일 */
 .cancel-modal .modal-header {
   border-bottom-color: #fed7d7;
 }
@@ -656,79 +865,66 @@ onMounted(async () => {
 @media (max-width: 768px) {
   .invitation-container {
     padding: 1rem;
+    padding-top: 1rem;
   }
-
+  
   .invitation-item {
     flex-direction: column;
     gap: 1rem;
     align-items: stretch;
   }
-
+  
   .invitation-info {
-    justify-content: flex-start;
-  }
-
-  .invitation-actions {
-    justify-content: space-between;
-    width: 100%;
-  }
-
-  .permission-display {
     flex-direction: column;
-    gap: 0.5rem;
     align-items: flex-start;
+    gap: 0.5rem;
   }
-
-  .permission-label {
-    text-align: left;
-    min-width: auto;
-  }
-
-  .modal-content {
-    margin: 1rem;
-    max-width: none;
-  }
-}
-
-@media (max-width: 480px) {
-  .invitation-container {
-    padding: 0.75rem;
-  }
-
-  .invitation-list {
-    padding: 1rem;
-    gap: 0.75rem;
-  }
-
-  .invitation-item {
-    padding: 1rem;
-  }
-
+  
   .invitation-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.5rem;
   }
-
+  
   .invitation-actions {
-    flex-direction: row;
     justify-content: space-between;
-    align-items: center;
-  }
-
-  .permission-display {
-    flex-direction: row;
-    gap: 0.5rem;
-    align-items: center;
-  }
-
-  .modal-footer {
-    flex-direction: column;
-  }
-
-  .keep-button,
-  .cancel-confirm-button {
     width: 100%;
+  }
+  
+  .permission-display {
+    order: 1;
+  }
+  
+  .cancel-button {
+    order: 2;
+  }
+  
+  .modal-content {
+    margin: 1rem;
+    width: calc(100% - 2rem);
+  }
+}
+
+@media (max-width: 480px) {
+  .invitation-header {
+    gap: 0.25rem;
+  }
+  
+  .invitation-email {
+    font-size: 0.8rem;
+  }
+  
+  .permission-label {
+    font-size: 0.8rem;
+    min-width: 70px;
+  }
+  
+  .modal-header {
+    padding: 1rem;
+  }
+  
+  .modal-body {
+    padding: 1rem;
   }
 }
 </style>
