@@ -101,9 +101,12 @@
 <script setup>
 import { ref, onMounted, nextTick } from 'vue';
 import { useRoute } from 'vue-router';
+import { useProjectStore } from "/src/stores/projectStore";
+
+const projectStore = useProjectStore();
 
 const route = useRoute();
-const projectId = route.params.projectId || 1;
+const projectId = route.params.projectId;
 
 const invitations = ref([]);
 const showCancelConfirmModal = ref(false);
@@ -137,7 +140,7 @@ const confirmCancel = async () => {
       const response = await fetch(`/api/v1/projects/${projectId}/members/invitation/cancel`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ adminId: 1, email:inviteToCancel.value.email })
+        body: JSON.stringify({ adminId: projectStore.userId, email:inviteToCancel.value.email })
       });
 
       if (!response.ok) {
