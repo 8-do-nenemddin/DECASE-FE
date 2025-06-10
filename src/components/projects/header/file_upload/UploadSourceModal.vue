@@ -104,8 +104,12 @@ import { defineEmits } from 'vue';
 import CommonModal from '../../../util/CommonModal.vue';
 import LoadingModal from './LoadingModal.vue';
 import SuccessUploadFileModal from './SuccessUploadFileModal.vue';
+import { useProjectStore } from '../../../../stores/projectStore';
 
 const emit = defineEmits(['close', 'upload']);
+const projectStore = useProjectStore();
+const projectId = computed(() => projectStore.projectId);
+const memberId = computed(() => projectStore.userId);
 
 const modalClass = computed(() => '');
 const closeButtonClass = computed(() => '');
@@ -217,12 +221,12 @@ const handleUpload = async () => {
 
     formData.append('types', JSON.stringify(types));
 
-    const memberId = 1;
-    const projectId = 1;
-    await fetch(`http://localhost:8080/api/v1/projects/${projectId}/documents/uploads?memberId=${memberId}`, {
+    await fetch(`http://localhost:8080/api/v1/projects/${projectId.value}/documents/uploads?memberId=${memberId.value}`, {
       method: 'POST',
       body: formData,
     });
+
+    console.log(formData);
 
     isUploading.value = false;
     isGenerating.value = true;
