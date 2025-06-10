@@ -126,6 +126,13 @@ import axios from "axios";
 
 const emit = defineEmits(["close", "search"]);
 
+const props = defineProps({
+  selectedRevision: {
+    type: Number,
+    default: null,
+  },
+});
+
 const searchQuery = ref("");
 const categories = reactive({
   대분류: [],
@@ -223,8 +230,11 @@ watch(
 const fetchCategories = async () => {
   try {
     const projectId = 1; // TODO: Get actual project ID from props or route
+    if (!props.selectedRevision) {
+      return; // Don't fetch if no revision is selected
+    }
     const response = await axios.get(
-      `/api/v1/projects/${projectId}/documents/categories`
+      `/api/v1/projects/${projectId}/documents/${props.selectedRevision}/categories`
     );
     Object.assign(categories, response.data);
   } catch (error) {
@@ -232,8 +242,20 @@ const fetchCategories = async () => {
   }
 };
 
+// Watch for changes in selectedRevision
+watch(
+  () => props.selectedRevision,
+  (newRevision) => {
+    if (newRevision) {
+      fetchCategories();
+    }
+  }
+);
+
 onMounted(() => {
-  fetchCategories();
+  if (props.selectedRevision) {
+    fetchCategories();
+  }
 });
 </script>
 
