@@ -188,42 +188,6 @@
         @click="hideContextMenu"
       ></div>
     </div>
-    <div class="mockup-viewer-pane" v-if="activeFile">
-      <div class="viewer-header">
-        <h3>{{ activeFile.name }} (v{{ activeFile.revision }})</h3>
-      </div>
-      <div class="viewer-tabs">
-        <button
-          :class="{ active: viewerTab === 'preview' }"
-          @click="viewerTab = 'preview'"
-        >
-          Preview
-        </button>
-        <button
-          :class="{ active: viewerTab === 'code' }"
-          @click="viewerTab = 'code'"
-        >
-          Code
-        </button>
-      </div>
-      <div class="save-button-container" v-if="viewerTab === 'code'">
-        <button class="save-button" @click="saveCode">저장</button>
-      </div>
-      <div class="viewer-content">
-        <iframe
-          v-if="viewerTab === 'preview'"
-          class="preview-iframe"
-          :srcdoc="activeFile.code"
-          sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
-        ></iframe>
-        <textarea
-          v-else
-          class="code-textarea"
-          v-model="activeFile.code"
-          spellcheck="false"
-        ></textarea>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -237,14 +201,18 @@ import {
   watch,
   nextTick,
 } from "vue";
-import { useProjectStore } from "/src/stores/projectStore";
+import { useProjectStore } from "../../../../stores/projectStore";
 import axios from "axios";
-// Save code for active file
+
+const projectStore = useProjectStore();
+const projectId = computed(() => projectStore.projectId);
+const memberId = computed(() => projectStore.userId);
+
 const saveCode = async () => {
   if (!activeFile.value) return;
   try {
     await axios.put(
-      `/api/v1/projects/mockups/${projectStore.projectId}/${activeFile.value.revision}/${activeFile.value.name}`,
+      `/api/v1/projects/${projectId.value}/mockups/${activeFile.value.revision}/${activeFile.value.name}`,
       {
         code: activeFile.value.code,
       }
@@ -299,9 +267,7 @@ const loadMockupData = async () => {
   isLoading.value = true;
   sidebarItems.value = [];
   try {
-    const res = await axios.get(
-      `/api/v1/projects/${projectStore.projectId}/mockups`
-    );
+    const res = await axios.get(`/api/v1/projects/${projectId.value}/mockups`);
     const groupedMockups = res.data;
 
     const items = Object.entries(groupedMockups).map(([revision, files]) => {
@@ -310,7 +276,7 @@ const loadMockupData = async () => {
       return {
         name: `목업 리비전 ${revision}`,
         type: type,
-        revisionNumber: revision, // 리비전 번호 추가
+        revisionNumber: revision,
         expanded: false,
         files: files.map((fileName) => ({
           name: fileName,
@@ -335,7 +301,7 @@ const loadMockupData = async () => {
 const downloadMockupFile = async (file) => {
   if (!file) return;
   try {
-    const url = `/api/v1/projects/mockups/${projectStore.projectId}/${file.revision}/${file.name}`;
+    const url = `/api/v1/projects/${projectId.value}/mockups/${file.revision}/${file.name}`;
     const response = await axios.get(url, { responseType: "blob" });
 
     const blob = new Blob([response.data]);
@@ -360,7 +326,7 @@ const downloadRevision = async (item) => {
   isDownloading.value[item.revisionNumber] = true;
 
   try {
-    const url = `/api/v1/projects/mockups/${projectId.value}/${item.revisionNumber}/download`;
+    const url = `/api/v1/projects/${projectId.value}/mockups/${item.revisionNumber}/download`;
     const response = await axios.get(url, {
       responseType: "blob",
       timeout: 60000, // 60초 타임아웃
@@ -403,32 +369,34 @@ const activeFile = ref(null);
 const viewerTab = ref("preview");
 
 const selectFile = async (file, fileIndex, sectionType) => {
-  Object.keys(selectedFiles).forEach((key) => (selectedFiles[key] = -1));
-  selectedFiles[sectionType] = fileIndex;
-
-  emit("fileSelected", {
-    type: "mockup",
-    revision: file.revision,
-    fileName: file.name,
-  });
-
   try {
-    const res = await axios.get(
-      `/api/v1/projects/mockups/${projectStore.projectId}/${file.revision}/${file.name}`
+    // 선택된 파일 상태 업데이트
+    Object.keys(selectedFiles).forEach((key) => (selectedFiles[key] = -1));
+    selectedFiles[sectionType] = fileIndex;
+
+    // 파일 데이터 가져오기
+    const response = await axios.get(
+      `/api/v1/projects/${projectId.value}/mockups/${file.revision}/${file.name}`
     );
-    activeFile.value = {
+
+    // 선택된 파일 정보 업데이트
+    const selectedFile = {
       ...file,
-      code: await res.data,
+      code: response.data,
     };
+
+    console.log('Selected mockup file:', selectedFile);
+
+    // 부모 컴포넌트에 파일 선택 이벤트 발생
+    emit("fileSelected", selectedFile);
   } catch (error) {
     console.error("파일 불러오기 실패:", error);
-    activeFile.value = {
+    // 에러 발생 시에도 이벤트 발생
+    emit("fileSelected", {
       ...file,
       code: "<!-- 파일을 불러오는 데 실패했습니다. -->",
-    };
+    });
   }
-
-  viewerTab.value = "preview";
 };
 
 const isFileSelected = (fileIndex, sectionType) => {
@@ -530,7 +498,7 @@ watch(
 );
 
 watch(
-  () => projectStore.projectId,
+  () => projectId,
   (newId) => {
     if (newId && props.isVisible) {
       loadMockupData();
