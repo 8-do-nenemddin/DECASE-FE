@@ -2,7 +2,10 @@
   <main class="main-content">
     <!-- 추후 수정-->
     <!-- v-if : Project 상태에 따라서 (요구사항 입력 전 / 요구사항 생성중 / 요구사항 생성완료)-->
-    <div class="upload-card" v-if="projectStore.projectRevision === 0">
+    <div
+      class="upload-card"
+      v-if="projectStore.projectRevision === 0 && !isGenerating"
+    >
       <h2 class="upload-title">RFP 파일 업로드</h2>
       <p class="upload-subtitle">
         프로젝트 제안 요청서(RFP) 파일을 업로드해주세요.
@@ -196,7 +199,6 @@ const handleSubmit = async () => {
 
     const data = await response.json();
 
-    alert(`'${selectedFile.value.name}' 파일이 성공적으로 업로드되었습니다!`);
     clearFile();
     isGenerating.value = true;
   } catch (error) {
