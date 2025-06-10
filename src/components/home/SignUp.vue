@@ -130,7 +130,6 @@ const handleSignup = async () => {
     if (response.status === 200) {
       console.log("회원가입 성공:", result);
       showSuccessModal.value = true;
-      router.push('/signin')
     } else {
       throw new Error(result.message || '회원가입 실패');
     }
@@ -209,7 +208,7 @@ const handleCompanyChange = () => {
 
 const goToHome = () => {
   showSuccessModal.value = false;
-  router.push('/home');
+  router.push('/');
 };
 
 const closeModal = () => {

@@ -18,7 +18,7 @@ import ProjectDetailMatrix from "../components/projects/details/view_matrix/View
 
 const routes = [
   {
-    path: "/",
+    path: "/main",
     name: "MainView",
     component: MainView,
   },
@@ -71,7 +71,7 @@ const routes = [
     // props: true, // 라우트 파라미터를 props로 전달
   },
   {
-    path: "/home",
+    path: "/",
     name: "Home",
     component: Home,
   },
