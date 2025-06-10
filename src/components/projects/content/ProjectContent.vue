@@ -76,8 +76,12 @@ onMounted(() => {
 <style scoped>
 .project-content {
   width: 100%;
-  min-height: calc(100vh - 64px);
-  padding: 2rem 0; /* 좌우 패딩을 0으로 */
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0;
+  margin: 0;
   box-sizing: border-box;
 }
 
