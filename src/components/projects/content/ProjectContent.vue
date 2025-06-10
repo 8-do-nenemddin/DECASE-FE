@@ -1,7 +1,7 @@
 <template>
-  <div class="project-content-container">
+  <div class="m-project-content-container">
     <!-- 각 컴포넌트를 wrapper로 감싸서 전체 너비 보장 -->
-    <div class="content-wrapper">
+    <div class="m-content-wrapper">
       <BasicContent v-if="!selectedFile && !activeMockupFile" />
 
       <AsIsReportContent
@@ -117,19 +117,26 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.project-content-container {
-  width: 100vw;
+.m-project-content-container {
+  width: 100%;
   height: 100vh;
-  /* display: flex; */
-  /* justify-content: center; */
-  /* align-items: center; */
-  overflow-x: hidden;
+  overflow: hidden;
   padding: 0;
   margin: 0;
   box-sizing: border-box;
 }
 
-.project-content.with-sidebar {
+/* Hide scrollbar for all browsers */
+::-webkit-scrollbar {
+  display: none;
+}
+
+* {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.m-project-content.with-sidebar {
   margin-left: 260px;
 }
 </style>
