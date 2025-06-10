@@ -193,36 +193,38 @@ onMounted(() => {
 
 <style scoped>
 .mockup-viewer-pane {
-  /* position: fixed; */
-  top: 0;
-  left: 340px;
-  height: 100vh;
-  /* width: calc(100vw - 340px); */
-  background: #f9fafb;
-  box-shadow: -2px 0 24px rgba(0, 0, 0, 0.06);
-  z-index: 120;
+  padding: 20px;
+  height: calc(100vh - 64px);
+  background-color: #f8f9fa;
+  font-family: "Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, sans-serif;
   display: flex;
   flex-direction: column;
-  animation: slideInLeft 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .viewer-header {
-  padding: 24px 32px 12px 32px;
-  border-bottom: 1px solid #e5e7eb;
-  background: #fff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 20px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .header-content {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  width: 100%;
 }
 
 .viewer-header h3 {
   margin: 0;
-  font-size: 20px;
+  font-size: 24px;
   font-weight: 600;
-  color: #111827;
+  color: #1f2937;
 }
 
 .view-toggle {
@@ -234,7 +236,7 @@ onMounted(() => {
 }
 
 .toggle-button {
-  padding: 6px 12px;
+  padding: 8px 16px;
   border: none;
   background: none;
   font-size: 14px;
@@ -251,7 +253,7 @@ onMounted(() => {
 
 .toggle-button.active {
   background: #fff;
-  color: #2563eb;
+  color: #3b82f6;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
@@ -259,9 +261,11 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 16px;
-  background: #1e1e1e;
-  border-bottom: 1px solid #333;
+  padding: 12px 20px;
+  background: white;
+  border-radius: 12px 12px 0 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .toolbar-left {
@@ -271,12 +275,12 @@ onMounted(() => {
 }
 
 .file-type {
-  color: #9cdcfe;
-  font-size: 12px;
+  color: #6b7280;
+  font-size: 14px;
   font-weight: 500;
-  padding: 2px 6px;
-  background: rgba(156, 220, 254, 0.1);
-  border-radius: 4px;
+  padding: 6px 12px;
+  background: #f3f4f6;
+  border-radius: 6px;
 }
 
 .toolbar-right {
@@ -285,43 +289,51 @@ onMounted(() => {
 }
 
 .toolbar-button {
-  padding: 6px;
-  background: none;
+  padding: 8px 16px;
+  background: #3b82f6;
+  color: white;
   border: none;
-  color: #9cdcfe;
+  border-radius: 6px;
+  font-size: 14px;
   cursor: pointer;
-  border-radius: 4px;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .toolbar-button:hover {
-  background: rgba(156, 220, 254, 0.1);
+  background: #2563eb;
 }
 
 .viewer-content {
   flex: 1;
   display: flex;
   flex-direction: column;
-  background: #f9fafb;
-  min-height: 0;
+  background: white;
+  border-radius: 0 0 12px 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   overflow: hidden;
+  min-height: 0;
 }
 
 .preview-iframe {
   width: 100%;
   height: 100%;
+  min-height: 500px;
   border: none;
   flex: 1;
   background: #fff;
-  min-height: 400px;
 }
 
 .code-editor {
   display: flex;
   background: #1e1e1e;
   height: 100%;
+  min-height: 500px;
   font-family: "Fira Code", "Consolas", monospace;
   overflow: hidden;
+  position: relative;
 }
 
 .line-numbers {
@@ -331,10 +343,13 @@ onMounted(() => {
   text-align: right;
   user-select: none;
   border-right: 1px solid #333;
-  position: sticky;
+  position: absolute;
   left: 0;
+  top: 0;
+  bottom: 0;
   z-index: 1;
   overflow: hidden;
+  width: 40px;
 }
 
 .line-number {
@@ -348,7 +363,7 @@ onMounted(() => {
   background: #1e1e1e;
   color: #d4d4d4;
   border: none;
-  padding: 8px;
+  padding: 8px 8px 8px 40px;
   font-family: "Fira Code", "Consolas", monospace;
   font-size: 14px;
   line-height: 1.5;
@@ -357,64 +372,12 @@ onMounted(() => {
   tab-size: 2;
   overflow-y: auto;
   overflow-x: auto;
+  width: 100%;
+  height: 100%;
 }
 
 .code-textarea::selection {
   background: #264f78;
-}
-
-.save-button-container {
-  padding: 8px 16px;
-  text-align: right;
-}
-
-.save-button {
-  padding: 6px 12px;
-  background-color: #1d4ed8;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.save-button:hover {
-  background-color: #174cb3;
-}
-
-@keyframes slideInLeft {
-  from {
-    transform: translateX(-100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-@media (max-width: 767px) {
-  .mockup-viewer-pane {
-    left: 0;
-    top: unset;
-    bottom: 0;
-    width: 100vw;
-    height: 60vh;
-    min-height: 320px;
-    max-height: 80vh;
-    border-radius: 18px 18px 0 0;
-    box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.1);
-  }
-
-  .viewer-header,
-  .viewer-tabs {
-    padding-left: 16px !important;
-    padding-right: 16px !important;
-  }
-
-  .code-textarea,
-  .preview-iframe {
-    min-height: 180px;
-  }
 }
 
 .loading-state {
@@ -422,17 +385,20 @@ onMounted(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100%;
-  gap: 12px;
+  min-height: 400px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .loading-spinner {
-  width: 24px;
-  height: 24px;
-  border: 2px solid #e5e7eb;
-  border-top: 2px solid #3b82f6;
+  width: 40px;
+  height: 40px;
+  border: 4px solid #e5e7eb;
+  border-top: 4px solid #3b82f6;
   border-radius: 50%;
   animation: spin 1s linear infinite;
+  margin-bottom: 16px;
 }
 
 @keyframes spin {
@@ -441,6 +407,44 @@ onMounted(() => {
   }
   100% {
     transform: rotate(360deg);
+  }
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .mockup-viewer-pane {
+    padding: 16px;
+  }
+
+  .viewer-header {
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
+  }
+
+  .header-content {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+    width: 100%;
+  }
+
+  .viewer-header h3 {
+    font-size: 20px;
+  }
+
+  .view-toggle {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .editor-toolbar {
+    padding: 12px 16px;
+  }
+
+  .toolbar-button {
+    padding: 6px 12px;
+    font-size: 13px;
   }
 }
 </style>
