@@ -104,11 +104,14 @@ body {
   background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
 }
 
-.main-layout {
-  display: flex !important;
-  flex: 1;
-  height: calc(100vh - 4rem);
-  gap: 0 !important; /* 사이드바와 메인 콘텐츠 사이 간격 제거 */
+.main-layout > *:first-child {
+  flex: 0 0 280px;
+  width: 280px;
+  min-width: 280px;
+  max-width: 280px;
+  flex-shrink: 0;
+  flex-grow: 0;
+  margin-right: 0;
 }
 
 /* 사이드바 강제 고정 */
@@ -127,7 +130,7 @@ body {
   flex: 1;
   display: flex;
   justify-content: center;
-  align-items: flex-start;
+  align-items: center;
   padding: 2rem;
   overflow-y: auto;
   background: transparent;
@@ -139,7 +142,7 @@ body {
   max-width: 1200px;
   display: flex;
   justify-content: center;
-  align-items: flex-start;
+  align-items: center;
 }
 
 .content-wrapper > * {
