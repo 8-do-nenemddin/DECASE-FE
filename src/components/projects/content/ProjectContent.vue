@@ -1,28 +1,27 @@
 <template>
   <div class="project-content">
-    <!-- 기본 화면 -->
-    <BasicContent v-if="!selectedFile" />
-
-    <!-- AS-IS 보고서 선택 시 -->
-    <AsIsReportContent
-      v-else-if="selectedFile.type === 'as-is'"
-      :docId="selectedFile.docId"
-      :file="selectedFile.file"
-    />
-
-    <!-- 업로드 파일 선택 시 -->
-    <UploadContent
-      v-else-if="selectedFile.type === 'uploaded'"
-      :docId="selectedFile.docId"
-      :file="selectedFile.file"
-    />
-
-    <!-- 생성된 파일 선택 시 -->
-    <RequirementsContent
-      v-else-if="selectedFile.type === 'generated'"
-      :projectId="selectedFile.projectId"
-      :revision="selectedFile.revision"
-    />
+    <!-- 각 컴포넌트를 wrapper로 감싸서 전체 너비 보장 -->
+    <div class="content-wrapper">
+      <BasicContent v-if="!selectedFile" />
+      
+      <AsIsReportContent
+        v-else-if="selectedFile.type === 'as-is'"
+        :docId="selectedFile.docId"
+        :file="selectedFile.file"
+      />
+      
+      <UploadContent
+        v-else-if="selectedFile.type === 'uploaded'"
+        :docId="selectedFile.docId"
+        :file="selectedFile.file"
+      />
+      
+      <RequirementsContent
+        v-else-if="selectedFile.type === 'generated'"
+        :projectId="selectedFile.projectId"
+        :revision="selectedFile.revision"
+      />
+    </div>
   </div>
 </template>
 
@@ -77,7 +76,12 @@ onMounted(() => {
 <style scoped>
 .project-content {
   width: 100%;
-  height: 100%;
-  min-height: calc(100vh - 64px); /* 헤더 높이 제외 */
+  min-height: calc(100vh - 64px);
+  padding: 2rem 0; /* 좌우 패딩을 0으로 */
+  box-sizing: border-box;
+}
+
+.project-content.with-sidebar {
+  margin-left: 260px;
 }
 </style>
