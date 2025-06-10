@@ -13,17 +13,22 @@
       <!-- 메인 콘텐츠 -->
       <main class="content-area">
         <div class="content-wrapper">
-          <!-- 프로젝트 정보 수정 -->
-          <EditProjectInfo v-if="currentComponent === 'ProjectInfo'" />
+          <!-- 컴포넌트 전환 애니메이션 적용 -->
+          <Transition name="slide-up" mode="out-in">
+            <div :key="currentComponent">
+              <!-- 프로젝트 정보 수정 -->
+              <EditProjectInfo v-if="currentComponent === 'ProjectInfo'" />
 
-          <!-- 요구사항 추적 매트릭스 -->
-          <ViewMatrix v-if="currentComponent === 'ProjectMatrix'" />
+              <!-- 요구사항 추적 매트릭스 -->
+              <ViewMatrix v-if="currentComponent === 'ProjectMatrix'" />
 
-          <!-- 권한 관리 -->
-          <ManageRight :project-id="projectId" v-if="currentComponent === 'ProjectRight'" />
+              <!-- 권한 관리 -->
+              <ManageRight :project-id="projectId" v-if="currentComponent === 'ProjectRight'" />
 
-          <!-- 초대 현황 -->
-          <Invitation :project-id="projectId" v-if="currentComponent === 'Invitation'" />
+              <!-- 초대 현황 -->
+              <Invitation :project-id="projectId" v-if="currentComponent === 'Invitation'" />
+            </div>
+          </Transition>
         </div>
       </main>
     </div>
@@ -54,29 +59,6 @@ const handleChangeComponent = (componentName) => {
   currentComponent.value = componentName;
 };
 
-const handleSendInvitations = async (invitationList) => {
-  const mappedList = invitationList.map(item => ({
-    email: item.email,
-    permission: item.permission === "Read" ? "READ" : "READ_AND_WRITE"
-  }));
-
-  try {
-    const response = await fetch('/api/send-invitations', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(mappedList)
-    });
-    if (!response.ok) {
-      throw new Error('Failed to send invitations');
-    }
-    // handle success
-  } catch (error) {
-    console.error(error);
-    // handle error
-  }
-};
 </script>
 
 <style>
@@ -104,14 +86,11 @@ body {
   background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
 }
 
-.main-layout > *:first-child {
-  flex: 0 0 280px;
-  width: 280px;
-  min-width: 280px;
-  max-width: 280px;
-  flex-shrink: 0;
-  flex-grow: 0;
-  margin-right: 0;
+.main-layout {
+  display: flex !important;
+  flex: 1;
+  height: calc(100vh - 4rem);
+  gap: 0 !important; /* 사이드바와 메인 콘텐츠 사이 간격 제거 */
 }
 
 /* 사이드바 강제 고정 */
@@ -130,7 +109,7 @@ body {
   flex: 1;
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
   padding: 2rem;
   overflow-y: auto;
   background: transparent;
@@ -142,12 +121,35 @@ body {
   max-width: 1200px;
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
+  position: relative; /* Transition을 위한 relative positioning */
 }
 
 .content-wrapper > * {
   width: 100%;
   max-width: 800px;
+}
+
+/* Vue Transition 애니메이션 정의 */
+.slide-up-enter-active,
+.slide-up-leave-active {
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.slide-up-enter-from {
+  opacity: 0;
+  transform: translateY(30px);
+}
+
+.slide-up-leave-to {
+  opacity: 0;
+  transform: translateY(-15px);
+}
+
+.slide-up-enter-to,
+.slide-up-leave-from {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 /* 요구사항 매트릭스 스타일 */
@@ -252,7 +254,6 @@ body {
 
 .add-requirement-button:hover {
   background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-  transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(59, 130, 246, 0.25);
 }
 
@@ -318,6 +319,12 @@ body {
   .add-requirement-button {
     width: 100%;
     justify-content: center;
+  }
+
+  /* 모바일에서 애니메이션 속도 조정 */
+  .slide-up-enter-active,
+  .slide-up-leave-active {
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   }
 }
 
@@ -388,7 +395,19 @@ body {
   outline-offset: 2px;
 }
 
-/* 로딩 애니메이션 */
+/* 메인 애니메이션: 스르르 올라오는 효과 - 이제 사용되지 않음 */
+@keyframes slideUpFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 기존 애니메이션 유지 (필요시) */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -398,10 +417,5 @@ body {
     opacity: 1;
     transform: translateY(0);
   }
-}
-
-.matrix-card,
-.permission-card {
-  animation: fadeIn 0.6s ease-out;
 }
 </style>
