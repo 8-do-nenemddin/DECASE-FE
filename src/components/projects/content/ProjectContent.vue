@@ -1,29 +1,34 @@
 <template>
-  <div class="project-content">
+  <div class="project-content-container">
     <!-- 각 컴포넌트를 wrapper로 감싸서 전체 너비 보장 -->
     <div class="content-wrapper">
-      <BasicContent v-if="!selectedFile" />
+      <BasicContent v-if="!selectedFile && !activeMockupFile" />
 
       <AsIsReportContent
-        v-else-if="selectedFile.type === 'as-is'"
+        v-else-if="selectedFile?.type === 'as-is'"
         :docId="selectedFile.docId"
         :file="selectedFile.file"
       />
 
       <UploadContent
-        v-else-if="selectedFile.type === 'uploaded'"
+        v-else-if="selectedFile?.type === 'uploaded'"
         :docId="selectedFile.docId"
         :file="selectedFile.file"
       />
 
       <RequirementsContent
-        v-else-if="selectedFile.type === 'generated'"
+        v-else-if="selectedFile?.type === 'generated'"
         :projectId="selectedFile.projectId"
         :revision="
           projectStore.projectRevision >= 1
             ? projectStore.projectRevision
             : selectedFile.revision
         "
+      />
+
+      <MockUpViewContent
+        v-else-if="activeMockupFile"
+        :activeFile="activeMockupFile"
       />
     </div>
   </div>
@@ -35,6 +40,7 @@ import BasicContent from "./BasicContent.vue";
 import UploadContent from "./UploadContent.vue";
 import RequirementsContent from "./RequirementsContent.vue";
 import AsIsReportContent from "./AsisContent.vue"; // AS-IS 컴포넌트 추가
+import MockUpViewContent from "./MockUpViewContent.vue";
 import { useProjectStore } from "../../../stores/projectStore";
 
 const projectStore = useProjectStore();
@@ -84,11 +90,24 @@ const clearSelection = () => {
   selectedFile.value = null;
 };
 
+const activeMockupFile = ref(null);
+
+const handleMockupFileSelected = (file) => {
+  console.log("ProjectContent received mockup file:", file); // 디버깅용 로그 추가
+  selectedFile.value = null; // 기존 선택된 파일 초기화
+  activeMockupFile.value = {
+    ...file,
+    code: file.code || "",
+  };
+  console.log("Updated activeMockupFile:", activeMockupFile.value); // 디버깅용 로그 추가
+};
+
 // 외부에서 접근할 수 있도록 expose
 defineExpose({
   handleFileSelected,
   handleSearch,
   clearSelection,
+  handleMockupFileSelected,
 });
 
 onMounted(() => {
@@ -97,12 +116,13 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.project-content {
-  width: 100%;
+.project-content-container {
+  width: 100vw;
   height: 100vh;
   /* display: flex; */
   /* justify-content: center; */
   /* align-items: center; */
+  overflow-x: hidden;
   padding: 0;
   margin: 0;
   box-sizing: border-box;
