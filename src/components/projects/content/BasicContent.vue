@@ -309,6 +309,7 @@ const handleSubmit = async () => {
   .welcome-section {
     padding: 30px 20px;
   }
+}
 
 .file-preview {
   display: flex;
