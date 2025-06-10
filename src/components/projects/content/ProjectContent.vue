@@ -1,27 +1,29 @@
 <template>
   <div class="project-content">
-    <!-- 각 컴포넌트를 wrapper로 감싸서 전체 너비 보장 -->
-    <div class="content-wrapper">
-      <BasicContent v-if="!selectedFile" />
-      
-      <AsIsReportContent
-        v-else-if="selectedFile.type === 'as-is'"
-        :docId="selectedFile.docId"
-        :file="selectedFile.file"
-      />
-      
-      <UploadContent
-        v-else-if="selectedFile.type === 'uploaded'"
-        :docId="selectedFile.docId"
-        :file="selectedFile.file"
-      />
-      
-      <RequirementsContent
-        v-else-if="selectedFile.type === 'generated'"
-        :projectId="selectedFile.projectId"
-        :revision="selectedFile.revision"
-      />
-    </div>
+    <!-- 기본 화면 -->
+    <BasicContent v-if="!selectedFile" />
+
+    <!-- AS-IS 보고서 선택 시 -->
+    <AsIsReportContent
+      v-else-if="selectedFile.type === 'as-is'"
+      :docId="selectedFile.docId"
+      :file="selectedFile.file"
+    />
+
+    <!-- 업로드 파일 선택 시 -->
+    <UploadContent
+      v-else-if="selectedFile.type === 'uploaded'"
+      :docId="selectedFile.docId"
+      :file="selectedFile.file"
+    />
+
+    <!-- 생성된 파일 선택 시 -->
+    <RequirementsContent
+      v-else-if="selectedFile.type === 'generated'"
+      :projectId="selectedFile.projectId"
+      :revision="selectedFile.revision"
+      ref="requirementsContentRef"
+    />
   </div>
 </template>
 
@@ -38,6 +40,7 @@ const projectId = computed(() => projectStore.projectId);
 
 // 선택된 파일 정보
 const selectedFile = ref(null);
+const requirementsContentRef = ref(null);
 
 // 파일 선택 이벤트 처리 (부모에서 호출)
 const handleFileSelected = (fileData) => {
@@ -57,6 +60,16 @@ const handleFileSelected = (fileData) => {
   };
 };
 
+// 검색 이벤트 처리
+const handleSearch = (searchParams) => {
+  if (
+    selectedFile.value?.type === "generated" &&
+    requirementsContentRef.value
+  ) {
+    requirementsContentRef.value.handleSearch(searchParams);
+  }
+};
+
 // 파일 선택 해제 (필요한 경우)
 const clearSelection = () => {
   selectedFile.value = null;
@@ -65,6 +78,7 @@ const clearSelection = () => {
 // 외부에서 접근할 수 있도록 expose
 defineExpose({
   handleFileSelected,
+  handleSearch,
   clearSelection,
 });
 

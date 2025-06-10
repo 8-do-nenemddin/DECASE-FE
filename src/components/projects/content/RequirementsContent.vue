@@ -14,7 +14,7 @@
             class="load-button"
             :disabled="loading"
           >
-            {{ loading ? "🔄 다운로드중..." : "📥 요구사항 정의서 다운로드" }}
+            {{ loading ? "🔄 다운로드중..." : "📥 다운로드" }}
           </button>
           <button
             @click="saveChanges"
@@ -92,6 +92,7 @@ const loading = ref(false);
 const error = ref(null);
 const rowData = ref([]);
 const modifiedRows = ref(new Set());
+const searchParams = ref(null);
 
 // 컬럼 정의
 const columnDefs = ref([
@@ -329,6 +330,12 @@ function transformApiDataToTableData(apiData) {
   });
 }
 
+// 검색 이벤트 핸들러
+const handleSearch = (params) => {
+  searchParams.value = params;
+  loadDataFromAPI();
+};
+
 // API에서 데이터 로드
 async function loadDataFromAPI() {
   if (!props.projectId || !props.revision) {
@@ -340,12 +347,38 @@ async function loadDataFromAPI() {
   error.value = null;
 
   try {
-    console.log("요구사항 데이터 로드:", {
-      projectId: props.projectId,
-      revision: props.revision,
-    });
+    let apiUrl;
+    if (searchParams.value) {
+      // 검색 파라미터가 있는 경우 검색 API 사용
+      const queryParams = new URLSearchParams();
+      if (searchParams.value.query)
+        queryParams.append("query", searchParams.value.query);
+      if (searchParams.value.level1)
+        queryParams.append("level1", searchParams.value.level1);
+      if (searchParams.value.level2)
+        queryParams.append("level2", searchParams.value.level2);
+      if (searchParams.value.level3)
+        queryParams.append("level3", searchParams.value.level3);
+      if (searchParams.value.type)
+        queryParams.append("type", searchParams.value.type);
+      if (searchParams.value.difficulty)
+        queryParams.append("difficulty", searchParams.value.difficulty);
+      if (searchParams.value.priority)
+        queryParams.append("priority", searchParams.value.priority);
+      if (searchParams.value.docType) {
+        searchParams.value.docType.forEach((type) =>
+          queryParams.append("docType", type)
+        );
+      }
 
-    const apiUrl = `/api/v1/projects/${props.projectId}/requirements/generated?revisionCount=${props.revision}`;
+      apiUrl = `/api/v1/projects/${
+        props.projectId
+      }/documents/search?${queryParams.toString()}`;
+    } else {
+      // 일반 요구사항 로드
+      apiUrl = `/api/v1/projects/${props.projectId}/requirements/generated?revisionCount=${props.revision}`;
+    }
+
     console.log("API URL:", apiUrl);
 
     const response = await fetch(apiUrl, {
@@ -369,28 +402,20 @@ async function loadDataFromAPI() {
 
     let apiData;
     if (responseData.data && Array.isArray(responseData.data)) {
-      // 래핑된 응답 구조인 경우
       apiData = responseData.data;
-      console.log("래핑된 응답에서 data 추출:", apiData);
     } else if (Array.isArray(responseData)) {
-      // 직접 배열 응답인 경우
       apiData = responseData;
-      console.log("직접 배열 응답:", apiData);
     } else {
-      // 예상치 못한 응답 구조
       console.error("예상치 못한 응답 구조:", responseData);
       throw new Error("응답 데이터 구조가 올바르지 않습니다.");
     }
 
     if (!Array.isArray(apiData) || apiData.length === 0) {
-      console.warn(
-        `리비전 ${props.revision}에 대한 요구사항 데이터가 없습니다.`
-      );
+      console.warn("검색 결과가 없습니다.");
       rowData.value = [];
       return;
     }
 
-    console.log("처리할 실제 데이터:", apiData);
     const transformedData = transformApiDataToTableData(apiData);
     rowData.value = transformedData;
     modifiedRows.value.clear();
@@ -615,6 +640,11 @@ onMounted(() => {
     projectId: props.projectId,
     revision: props.revision,
   });
+});
+
+// 컴포넌트 정의
+defineExpose({
+  handleSearch,
 });
 </script>
 <style scoped>
