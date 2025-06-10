@@ -103,9 +103,32 @@ body {
 }
 
 .main-layout {
-  display: flex;
+  display: flex !important;
   flex: 1;
   height: calc(100vh - 4rem);
+  gap: 0 !important; /* 사이드바와 메인 콘텐츠 사이 간격 제거 */
+}
+
+/* 사이드바 강제 고정 */
+.main-layout > *:first-child {
+  flex: 0 0 280px !important;
+  width: 280px !important;
+  min-width: 280px !important;
+  max-width: 280px !important;
+  flex-shrink: 0 !important;
+  flex-grow: 0 !important;
+  margin-right: 0 !important; /* 우측 마진 제거 */
+}
+
+/* 메인 콘텐츠 */
+.content-area {
+  flex: 1;
+  padding: 2rem;
+  overflow-y: auto;
+  background: transparent;
+  min-width: 0;
+  max-width: 1200px;
+  margin-left: 0 !important; /* 좌측 마진 제거 */
 }
 
 .content-area {
@@ -113,6 +136,9 @@ body {
   padding: 2rem;
   overflow-y: auto;
   background: transparent;
+  min-width: 0;
+  max-width: 1200px;
+  margin-left: 0 !important; /* 좌측 마진 제거 */
 }
 
 /* 요구사항 매트릭스 스타일 */
@@ -236,8 +262,16 @@ body {
     height: auto;
   }
 
+  .main-layout > *:first-child {
+    flex: none !important;
+    width: 100% !important;
+    min-width: 100% !important;
+    max-width: 100% !important;
+  }
+
   .content-area {
     padding: 1rem;
+    max-width: none;
   }
 
   .card-header {
@@ -274,6 +308,7 @@ body {
 @media (max-width: 480px) {
   .content-area {
     padding: 0.75rem;
+    max-width: none;
   }
 
   .card-header {
@@ -303,6 +338,13 @@ body {
   .add-requirement-button {
     padding: 0.75rem 1.5rem;
     font-size: 0.8125rem;
+  }
+}
+
+/* 대형 화면에서도 콘텐츠 너비 제한 */
+@media (min-width: 1441px) {
+  .content-area {
+    max-width: 1200px;
   }
 }
 
