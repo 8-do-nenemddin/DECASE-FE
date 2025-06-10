@@ -1,17 +1,21 @@
 <template>
-  <div v-if="isVisible" class="sidebar-overlay" @click.self="handleOverlayClick">
+  <div
+    v-if="isVisible"
+    class="sidebar-overlay sidebar"
+    @click.self="handleOverlayClick"
+  >
     <div
-        ref="sidebarRef"
-        class="modern-sidebar"
-        :class="{ mobile: isMobile, tablet: isTablet, resizing: isResizing }"
-        :style="sidebarStyles"
-        @click.stop
+      ref="sidebarRef"
+      class="modern-sidebar"
+      :class="{ mobile: isMobile, tablet: isTablet, resizing: isResizing }"
+      :style="sidebarStyles"
+      @click.stop
     >
       <div
-          v-if="!isMobile && !isTablet"
-          class="resize-handle"
-          @mousedown="startResize"
-          :class="{ active: isResizing }"
+        v-if="!isMobile && !isTablet"
+        class="resize-handle"
+        @mousedown="startResize"
+        :class="{ active: isResizing }"
       ></div>
 
       <div class="sidebar-header"></div>
@@ -27,28 +31,46 @@
         </div>
 
         <div
-            v-else
-            v-for="(item, index) in sidebarItems"
-            :key="`section-${index}`"
-            class="sidebar-section"
+          v-else
+          v-for="(item, index) in sidebarItems"
+          :key="`section-${index}`"
+          class="sidebar-section"
         >
           <div class="section-header" @click="toggleItem(index)">
             <div class="section-header-content">
               <div class="expand-icon" :class="{ rotated: item.expanded }">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
                   <polyline points="9,18 15,12 9,6"></polyline>
                 </svg>
               </div>
               <span class="section-title">{{ item.name }}</span>
               <span class="count-badge">{{ item.count }}</span>
               <button
-                  class="download-revision-btn"
-                  @click.stop="downloadRevision(item)"
-                  :disabled="isDownloading[item.revisionNumber]"
-                  :title="`리비전 ${item.revisionNumber} 전체 다운로드`"
+                class="download-revision-btn"
+                @click.stop="downloadRevision(item)"
+                :disabled="isDownloading[item.revisionNumber]"
+                :title="`리비전 ${item.revisionNumber} 전체 다운로드`"
               >
-                <div v-if="isDownloading[item.revisionNumber]" class="download-spinner"></div>
-                <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <div
+                  v-if="isDownloading[item.revisionNumber]"
+                  class="download-spinner"
+                ></div>
+                <svg
+                  v-else
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                   <polyline points="7,10 12,15 17,10"></polyline>
                   <line x1="12" y1="15" x2="12" y2="3"></line>
@@ -61,12 +83,14 @@
             <div v-if="item.expanded" class="section-content">
               <div class="file-grid">
                 <div
-                    v-for="(file, fileIndex) in item.files"
-                    :key="`file-${fileIndex}-${file.name}`"
-                    class="file-item"
-                    :class="{ selected: isFileSelected(fileIndex, item.type) }"
-                    @click="selectFile(file, fileIndex, item.type)"
-                    @contextmenu.prevent="showContextMenu($event, file, fileIndex, item.type)"
+                  v-for="(file, fileIndex) in item.files"
+                  :key="`file-${fileIndex}-${file.name}`"
+                  class="file-item"
+                  :class="{ selected: isFileSelected(fileIndex, item.type) }"
+                  @click="selectFile(file, fileIndex, item.type)"
+                  @contextmenu.prevent="
+                    showContextMenu($event, file, fileIndex, item.type)
+                  "
                 >
                   <div class="file-content">
                     <div class="file-icon orange-gradient">🖼️</div>
@@ -74,9 +98,23 @@
                       <div class="file-name">{{ file.name }}</div>
                     </div>
                   </div>
-                  <button class="menu-button" @click.stop="showContextMenu($event, file, fileIndex, item.type)">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle>
+                  <button
+                    class="menu-button"
+                    @click.stop="
+                      showContextMenu($event, file, fileIndex, item.type)
+                    "
+                  >
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <circle cx="12" cy="12" r="1"></circle>
+                      <circle cx="12" cy="5" r="1"></circle>
+                      <circle cx="12" cy="19" r="1"></circle>
                     </svg>
                   </button>
                 </div>
@@ -86,26 +124,55 @@
         </div>
       </div>
 
-      <div v-if="contextMenu.show" class="context-menu" :style="{ top: contextMenu.y + 'px', left: contextMenu.x + 'px' }" @click.stop>
-        <div class="context-menu-item" @click="showFileInfo"><span>파일 정보</span></div>
-        <div class="context-menu-item" @click="downloadFile"><span>다운로드</span></div>
+      <div
+        v-if="contextMenu.show"
+        class="context-menu"
+        :style="{ top: contextMenu.y + 'px', left: contextMenu.x + 'px' }"
+        @click.stop
+      >
+        <div class="context-menu-item" @click="showFileInfo">
+          <span>파일 정보</span>
+        </div>
+        <div class="context-menu-item" @click="downloadFile">
+          <span>다운로드</span>
+        </div>
       </div>
 
-      <div v-if="fileInfoModal.show" class="modal-overlay" @click="closeFileInfo">
+      <div
+        v-if="fileInfoModal.show"
+        class="modal-overlay"
+        @click="closeFileInfo"
+      >
         <div class="modal" @click.stop>
           <div class="modal-header">
             <h3>파일 정보</h3>
             <button class="modal-close" @click="closeFileInfo">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
               </svg>
             </button>
           </div>
           <div class="modal-content">
             <div class="preview-name">{{ fileInfoModal.file?.name }}</div>
             <div class="preview-meta">
-              <div class="meta-row"><span class="meta-label">리비전:</span><span class="meta-value">v{{ fileInfoModal.file.revision }}</span></div>
-              <div class="meta-row"><span class="meta-label">유형:</span><span class="meta-value">목업 파일</span></div>
+              <div class="meta-row">
+                <span class="meta-label">리비전:</span
+                ><span class="meta-value"
+                  >v{{ fileInfoModal.file.revision }}</span
+                >
+              </div>
+              <div class="meta-row">
+                <span class="meta-label">유형:</span
+                ><span class="meta-value">목업 파일</span>
+              </div>
             </div>
           </div>
           <div class="modal-footer">
@@ -115,31 +182,45 @@
         </div>
       </div>
 
-      <div v-if="contextMenu.show" class="context-overlay" @click="hideContextMenu"></div>
+      <div
+        v-if="contextMenu.show"
+        class="context-overlay"
+        @click="hideContextMenu"
+      ></div>
     </div>
     <div class="mockup-viewer-pane" v-if="activeFile">
       <div class="viewer-header">
         <h3>{{ activeFile.name }} (v{{ activeFile.revision }})</h3>
       </div>
       <div class="viewer-tabs">
-        <button :class="{ active: viewerTab === 'preview' }" @click="viewerTab = 'preview'">Preview</button>
-        <button :class="{ active: viewerTab === 'code' }" @click="viewerTab = 'code'">Code</button>
+        <button
+          :class="{ active: viewerTab === 'preview' }"
+          @click="viewerTab = 'preview'"
+        >
+          Preview
+        </button>
+        <button
+          :class="{ active: viewerTab === 'code' }"
+          @click="viewerTab = 'code'"
+        >
+          Code
+        </button>
       </div>
       <div class="save-button-container" v-if="viewerTab === 'code'">
         <button class="save-button" @click="saveCode">저장</button>
       </div>
       <div class="viewer-content">
         <iframe
-            v-if="viewerTab === 'preview'"
-            class="preview-iframe"
-            :srcdoc="activeFile.code"
-            sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+          v-if="viewerTab === 'preview'"
+          class="preview-iframe"
+          :srcdoc="activeFile.code"
+          sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
         ></iframe>
         <textarea
-            v-else
-            class="code-textarea"
-            v-model="activeFile.code"
-            spellcheck="false"
+          v-else
+          class="code-textarea"
+          v-model="activeFile.code"
+          spellcheck="false"
         ></textarea>
       </div>
     </div>
@@ -147,6 +228,7 @@
 </template>
 
 <script setup>
+
 import { ref, reactive, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
 import { useProjectStore } from '../../../../stores/projectStore';
 import axios from 'axios';
@@ -164,24 +246,24 @@ const saveCode = async () => {
     alert('저장되었습니다!');
   } catch (error) {
     console.error(error);
-    alert('저장 중 오류가 발생했습니다.');
+    alert("저장 중 오류가 발생했습니다.");
   }
 };
 
 const props = defineProps({
   isVisible: Boolean,
 });
-const emit = defineEmits(['close', 'fileSelected']);
+const emit = defineEmits(["close", "fileSelected"]);
 
 const handleOverlayClick = (event) => {
-  const headerEl = document.querySelector('.header-bar');
+  const headerEl = document.querySelector(".header-bar");
   if (headerEl && headerEl.contains(event.target)) return;
-  emit('close');
+  emit("close");
 };
 
 // --- 상태 변수 (State) ---
 const windowWidth = ref(window.innerWidth);
-const sidebarWidth = ref(340);
+const sidebarWidth = ref(320);
 const isResizing = ref(false);
 const sidebarRef = ref(null);
 const isLoading = ref(true);
@@ -190,8 +272,20 @@ const sidebarItems = ref([]);
 const selectedFiles = reactive({});
 const isDownloading = ref({}); // 리비전별 다운로드 상태 관리
 
-const contextMenu = reactive({ show: false, x: 0, y: 0, file: null, fileIndex: -1, sectionType: null });
-const fileInfoModal = reactive({ show: false, file: null, fileIndex: -1, sectionType: null });
+const contextMenu = reactive({
+  show: false,
+  x: 0,
+  y: 0,
+  file: null,
+  fileIndex: -1,
+  sectionType: null,
+});
+const fileInfoModal = reactive({
+  show: false,
+  file: null,
+  fileIndex: -1,
+  sectionType: null,
+});
 
 // --- 데이터 로딩 및 처리 ---
 const loadMockupData = async () => {
@@ -209,17 +303,19 @@ const loadMockupData = async () => {
         name: `목업 리비전 ${revision}`,
         type: type,
         revisionNumber: revision, // 리비전 번호 추가
-        expanded: true,
-        files: files.map(fileName => ({
+        expanded: false,
+        files: files.map((fileName) => ({
           name: fileName,
           revision: revision,
-          type: 'mockup',
+          type: "mockup",
         })),
         count: files.length,
       };
     });
     // 최신 리비전이 위로 오도록 정렬
-    sidebarItems.value = items.sort((a, b) => Number(b.revisionNumber) - Number(a.revisionNumber));
+    sidebarItems.value = items.sort(
+      (a, b) => Number(b.revisionNumber) - Number(a.revisionNumber)
+    );
   } catch (error) {
     console.error("목업 데이터를 불러오는 중 오류 발생:", error);
     sidebarItems.value = [];
@@ -235,7 +331,7 @@ const downloadMockupFile = async (file) => {
     const response = await axios.get(url, { responseType: 'blob' });
 
     const blob = new Blob([response.data]);
-    const link = document.createElement('a');
+    const link = document.createElement("a");
     link.href = window.URL.createObjectURL(blob);
     link.download = file.name;
     document.body.appendChild(link);
@@ -244,7 +340,7 @@ const downloadMockupFile = async (file) => {
     window.URL.revokeObjectURL(link.href);
   } catch (error) {
     console.error("목업 파일 다운로드 오류:", error);
-    alert('파일 다운로드에 실패했습니다.');
+    alert("파일 다운로드에 실패했습니다.");
   }
 };
 
@@ -258,15 +354,15 @@ const downloadRevision = async (item) => {
   try {
     const url = `/api/v1/projects/mockups/${projectId.value}/${item.revisionNumber}/download`;
     const response = await axios.get(url, {
-      responseType: 'blob',
-      timeout: 60000 // 60초 타임아웃
+      responseType: "blob",
+      timeout: 60000, // 60초 타임아웃
     });
 
     // 파일명 생성 (예: mockup-revision-1.zip)
     const fileName = `mockup-revision-${item.revisionNumber}.zip`;
 
     const blob = new Blob([response.data]);
-    const link = document.createElement('a');
+    const link = document.createElement("a");
     link.href = window.URL.createObjectURL(blob);
     link.download = fileName;
     document.body.appendChild(link);
@@ -278,11 +374,11 @@ const downloadRevision = async (item) => {
   } catch (error) {
     console.error(`리비전 ${item.revisionNumber} 다운로드 오류:`, error);
     if (error.response?.status === 404) {
-      alert('해당 리비전의 파일을 찾을 수 없습니다.');
-    } else if (error.code === 'ECONNABORTED') {
-      alert('다운로드 시간이 초과되었습니다. 다시 시도해주세요.');
+      alert("해당 리비전의 파일을 찾을 수 없습니다.");
+    } else if (error.code === "ECONNABORTED") {
+      alert("다운로드 시간이 초과되었습니다. 다시 시도해주세요.");
     } else {
-      alert('리비전 다운로드에 실패했습니다.');
+      alert("리비전 다운로드에 실패했습니다.");
     }
   } finally {
     // 다운로드 상태 해제
@@ -296,14 +392,14 @@ const toggleItem = (index) => {
 };
 
 const activeFile = ref(null);
-const viewerTab = ref('preview');
+const viewerTab = ref("preview");
 
 const selectFile = async (file, fileIndex, sectionType) => {
-  Object.keys(selectedFiles).forEach(key => selectedFiles[key] = -1);
+  Object.keys(selectedFiles).forEach((key) => (selectedFiles[key] = -1));
   selectedFiles[sectionType] = fileIndex;
 
-  emit('fileSelected', {
-    type: 'mockup',
+  emit("fileSelected", {
+    type: "mockup",
     revision: file.revision,
     fileName: file.name,
   });
@@ -312,17 +408,17 @@ const selectFile = async (file, fileIndex, sectionType) => {
     const res = await axios.get(`/api/v1/projects/mockups/${projectId.value}/${file.revision}/${file.name}`);
     activeFile.value = {
       ...file,
-      code: await res.data
+      code: await res.data,
     };
   } catch (error) {
     console.error("파일 불러오기 실패:", error);
     activeFile.value = {
       ...file,
-      code: '<!-- 파일을 불러오는 데 실패했습니다. -->'
+      code: "<!-- 파일을 불러오는 데 실패했습니다. -->",
     };
   }
 
-  viewerTab.value = 'preview';
+  viewerTab.value = "preview";
 };
 
 const isFileSelected = (fileIndex, sectionType) => {
@@ -341,23 +437,34 @@ const showContextMenu = (event, file, fileIndex, sectionType) => {
   contextMenu.file = file;
   contextMenu.fileIndex = fileIndex;
   contextMenu.sectionType = sectionType;
-  contextMenu.x = Math.min(event.clientX - (rect?.left || 0), (sidebarRef.value?.clientWidth || 340) - 180);
+  contextMenu.x = Math.min(
+    event.clientX - (rect?.left || 0),
+    (sidebarRef.value?.clientWidth || 340) - 180
+  );
   contextMenu.y = event.clientY;
   contextMenu.show = true;
 };
 
-const hideContextMenu = () => { contextMenu.show = false; };
+const hideContextMenu = () => {
+  contextMenu.show = false;
+};
 const showFileInfo = () => {
   fileInfoModal.file = contextMenu.file;
   fileInfoModal.show = true;
   hideContextMenu();
 };
-const closeFileInfo = () => { fileInfoModal.show = false; };
+const closeFileInfo = () => {
+  fileInfoModal.show = false;
+};
 
 // --- 반응형 및 리사이즈 로직 ---
 const isMobile = computed(() => windowWidth.value < 768);
-const isTablet = computed(() => windowWidth.value >= 768 && windowWidth.value < 1024);
-const sidebarStyles = computed(() => ({ width: `${isMobile.value ? windowWidth.value : sidebarWidth.value}px` }));
+const isTablet = computed(
+  () => windowWidth.value >= 768 && windowWidth.value < 1024
+);
+const sidebarStyles = computed(() => ({
+  width: `${isMobile.value ? windowWidth.value : sidebarWidth.value}px`,
+}));
 
 const startResize = (event) => {
   isResizing.value = true;
@@ -365,7 +472,10 @@ const startResize = (event) => {
   const startWidth = sidebarWidth.value;
 
   const handleMouseMove = (e) => {
-    sidebarWidth.value = Math.max(300, Math.min(600, startWidth + (startX - e.clientX)));
+    sidebarWidth.value = Math.max(
+      300,
+      Math.min(600, startWidth + (startX - e.clientX))
+    );
   };
   const handleMouseUp = () => {
     isResizing.value = false;
@@ -382,10 +492,12 @@ const handleKeydown = (event) => {
   if (event.key === "Escape") {
     hideContextMenu();
     closeFileInfo();
-    emit('close');
+    emit("close");
   }
 };
-const handleWindowResize = () => { windowWidth.value = window.innerWidth; };
+const handleWindowResize = () => {
+  windowWidth.value = window.innerWidth;
+};
 
 onMounted(() => {
   document.addEventListener("keydown", handleKeydown);
@@ -396,19 +508,22 @@ onUnmounted(() => {
   window.removeEventListener("resize", handleWindowResize);
 });
 
-watch(() => props.isVisible, (newValue) => {
-  if (newValue) {
-    nextTick(() => {
-      loadMockupData();
-    });
+watch(
+  () => props.isVisible,
+  (newValue) => {
+    if (newValue) {
+      nextTick(() => {
+        loadMockupData();
+      });
+    }
   }
-});
+);
 
 watch(() => projectId, (newId) => {
   if (newId && props.isVisible) {
     loadMockupData();
   }
-});
+);
 </script>
 
 <style scoped>
@@ -493,7 +608,7 @@ watch(() => projectId, (newId) => {
   background: #fff;
   resize: none;
   padding: 20px;
-  font-family: 'Fira Mono', 'Menlo', 'Consolas', 'monospace';
+  font-family: "Fira Mono", "Menlo", "Consolas", "monospace";
   font-size: 15px;
   color: #1e293b;
   outline: none;
@@ -1162,7 +1277,7 @@ watch(() => projectId, (newId) => {
     min-height: 320px;
     max-height: 80vh;
     border-radius: 18px 18px 0 0;
-    box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.10);
+    box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.1);
     animation: slideInLeft 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   }
 

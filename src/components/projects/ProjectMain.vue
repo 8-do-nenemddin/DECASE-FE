@@ -1,6 +1,6 @@
 <template>
   <div class="project-main">
-    <HeaderBar @fileSelected="handleFileSelected" />
+    <HeaderBar @fileSelected="handleFileSelected" @search="handleSearch" />
     <div class="content-wrapper" :class="contentClasses">
       <ProjectContent ref="projectContentRef" />
     </div>
@@ -22,6 +22,14 @@ const handleFileSelected = (fileData) => {
   // ProjectContent의 handleFileSelected 메서드 호출
   if (projectContentRef.value) {
     projectContentRef.value.handleFileSelected(fileData);
+  }
+};
+
+// 검색 이벤트 핸들러
+const handleSearch = (searchParams) => {
+  // ProjectContent의 handleSearch 메서드 호출
+  if (projectContentRef.value) {
+    projectContentRef.value.handleSearch(searchParams);
   }
 };
 

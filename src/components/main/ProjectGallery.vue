@@ -5,22 +5,29 @@
       :class="{ 'dropdown-open': project.showDropdown }"
       v-for="project in localProjects"
       :key="project.projectId"
-      @click="project.showDropdown ? null : navigateToProject(project.projectId)"
+      @click="
+        project.showDropdown ? null : navigateToProject(project.projectId)
+      "
     >
+      <h2 class="project-header">
+        <span class="project-name">{{ project.name }}</span>
+        <div class="project-status-wrapper">
+          <span
+            class="project-status"
+            :class="
+              'status-' +
+              getProjectStatus(project).toLowerCase().replaceAll(' ', '_')
+            "
+          >
+            {{ getProjectStatus(project) }}
+          </span>
+        </div>
+      </h2>
 
-    <h2 class="project-header">
-  <span class="project-name">{{ project.name }}</span>
-  <div class="project-status-wrapper">
-    <span
-      class="project-status"
-      :class="'status-' + getProjectStatus(project).toLowerCase().replaceAll(' ', '_')"
-    >
-      {{ getProjectStatus(project) }}
-    </span>
-  </div>
-</h2>
-
-      <p>{{ project.startDate }} ~ {{project.endDate}} ・ 버전 이력 {{ project.revisionCount }}개</p>
+      <p>
+        {{ project.startDate }} ~ {{ project.endDate }} ・ 버전 이력
+        {{ project.revisionCount }}개
+      </p>
     </div>
   </div>
 </template>
@@ -28,7 +35,7 @@
 <script setup>
 import { ref, onMounted, watch } from "vue";
 import { useRouter } from "vue-router";
-import { useProjectStore } from '/src/stores/projectStore.js';
+import { useProjectStore } from "/src/stores/projectStore.js";
 
 const props = defineProps({
   projects: {
@@ -52,10 +59,12 @@ watch(
 const router = useRouter();
 const projectStore = useProjectStore();
 
-const navigateToProject = (projectId) => {
-  const selectedProject = localProjects.value.find(p => p.projectId === projectId);
+const navigateToProject = async (projectId) => {
+  const selectedProject = localProjects.value.find(
+    (p) => p.projectId === projectId
+  );
 
-  console.log(selectedProject)
+  console.log(selectedProject);
 
   const now = new Date();
   const start = new Date(selectedProject.startDate);
@@ -68,28 +77,53 @@ const navigateToProject = (projectId) => {
   }
 
   if (selectedProject) {
-    projectStore.setProject(selectedProject.projectId, selectedProject.name, selectedProject.status, selectedProject.isAdmin);
-    router.push({
-      name: "ProjectMain",
-      params: { projectId: selectedProject.projectId },
-    });
+    try {
+      const response = await fetch(`/api/v1/projects/${projectId}/revision`);
+      const revisions = await response.json();
+      const revisionCount = revisions.length || 0;
+
+      projectStore.setProject(
+        selectedProject.projectId,
+        selectedProject.name,
+        revisionCount,
+        selectedProject.status,
+        selectedProject.isAdmin
+      );
+      router.push({
+        name: "ProjectMain",
+        params: { projectId: selectedProject.projectId },
+      });
+    } catch (error) {
+      console.error("Failed to fetch revision count:", error);
+      // If API call fails, use the existing revision count
+      projectStore.setProject(
+        selectedProject.projectId,
+        selectedProject.name,
+        selectedProject.revisionCount,
+        selectedProject.status,
+        selectedProject.isAdmin
+      );
+      router.push({
+        name: "ProjectMain",
+        params: { projectId: selectedProject.projectId },
+      });
+    }
   }
 };
 
 function getProjectStatus(project) {
   const today = new Date();
-  today.setHours(0, 0, 0, 0);  // 시간 초기화
+  today.setHours(0, 0, 0, 0); // 시간 초기화
 
   const startDate = new Date(project.startDate);
   startDate.setHours(0, 0, 0, 0);
   const endDate = new Date(project.endDate);
-  endDate.setHours(23, 59, 59, 999);  // 오늘 끝까지 포함
+  endDate.setHours(23, 59, 59, 999); // 오늘 끝까지 포함
 
   if (today < startDate) return "not_started";
   if (today <= endDate) return "in_progress";
   return "done";
 }
-
 </script>
 
 <style scoped>
@@ -118,7 +152,7 @@ function getProjectStatus(project) {
 
 /* 상단 그라데이션 바 */
 .project-card::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -264,17 +298,17 @@ function getProjectStatus(project) {
     gap: 16px;
     padding: 16px 0;
   }
-  
+
   .project-card {
     padding: 20px;
     height: 140px;
   }
-  
+
   .project-header {
     font-size: 1.1em;
     margin-bottom: 12px;
   }
-  
+
   .project-status {
     min-width: 70px;
     height: 24px;
@@ -287,18 +321,18 @@ function getProjectStatus(project) {
     padding: 16px;
     height: 130px;
   }
-  
+
   .project-header {
     font-size: 1em;
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
   }
-  
+
   .project-name {
     margin-right: 0;
   }
-  
+
   .project-status {
     margin-left: 0;
   }
