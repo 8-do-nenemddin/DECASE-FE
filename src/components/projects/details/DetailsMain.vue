@@ -1,7 +1,7 @@
 <template>
   <div class="app-container">
     <!-- 헤더 컴포넌트 -->
-    <DetailsHeader :project-id="projectId" />
+    <SettingsHeader :project-id="projectId" />
 
     <div class="main-layout">
       <!-- 사이드바 컴포넌트 -->
@@ -24,10 +24,10 @@
 
 <script setup>
 import { ref } from "vue";
-import DetailsHeader from "./DetailsHeader.vue";
 import DetailsSidebar from "./DetailsSidebar.vue";
 import ProjectInfo from "./project_detail/ProjectInfo.vue";
 import ViewMatrix from "./view_matrix/ViewMatrix.vue";
+import SettingsHeader from "../settings/SettingsHeader.vue";
 
 const props = defineProps({
   projectId: {
