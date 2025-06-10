@@ -102,6 +102,8 @@ const props = defineProps({
   },
 });
 
+const emit = defineEmits(["mockupFileSelected"]);
+
 // 상태 관리
 const loading = ref(false);
 const error = ref(null);
@@ -696,6 +698,15 @@ onMounted(() => {
 defineExpose({
   handleSearch,
 });
+
+// 목업 보기 함수 추가
+const viewMockup = () => {
+  // 부모 컴포넌트에 목업 파일 선택 이벤트 발생
+  emit("mockupFileSelected", {
+    name: "index.html",
+    revision: props.revision,
+  });
+};
 </script>
 <style scoped>
 .project-main.project-content {
