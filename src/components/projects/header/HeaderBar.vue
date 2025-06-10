@@ -167,6 +167,7 @@
   />
   <SearchRequirementsSidebar
     v-if="showSidebar"
+    :selectedRevision="projectStore.projectRevision"
     @close="closeSidebar"
     @search="handleSearch"
   />
