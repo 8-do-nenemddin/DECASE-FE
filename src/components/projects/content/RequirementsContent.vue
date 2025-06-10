@@ -10,6 +10,21 @@
         </div>
         <div class="action-buttons">
           <button
+              v-if="mockupExists"
+              @click="viewMockup"
+              class="mockup-button-view"
+          >
+            👀 목업 보러가기
+          </button>
+          <button
+              v-if="!mockupExists"
+              @click="createMockup"
+              class="mockup-button"
+              :disabled="loading"
+          >
+            🎨 목업 생성
+          </button>
+          <button
             @click="downloadRequirements"
             class="load-button"
             :disabled="loading"
@@ -70,8 +85,8 @@ import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import { useProjectStore } from "/src/stores/projectStore.js";
 
-const memberStore = useProjectStore();
-const memberId = memberStore.memberId;
+const projectStore = useProjectStore();
+const userId = projectStore.userId;
 
 // AG Grid 모듈 등록
 ModuleRegistry.registerModules([AllCommunityModule]);
@@ -93,6 +108,7 @@ const error = ref(null);
 const rowData = ref([]);
 const modifiedRows = ref(new Set());
 const searchParams = ref(null);
+const mockupExists = ref(true); // 초기값은 false
 
 // 컬럼 정의
 const columnDefs = ref([
@@ -381,23 +397,38 @@ async function loadDataFromAPI() {
 
     console.log("API URL:", apiUrl);
 
-    const response = await fetch(apiUrl, {
-      method: "GET",
-      headers: {
-        Accept: "*/*",
-        "Content-Type": "application/json",
-      },
-      mode: "cors",
-      credentials: "omit",
-    });
+    const mockupCheckUrl = `/api/v1/projects/${props.projectId}/mockups/${props.revision}/exist`;
 
-    if (!response.ok) {
-      throw new Error(
-        `HTTP error! status: ${response.status} - ${response.statusText}`
-      );
+    const [requirementsResponse, mockupResponse] = await Promise.all([
+      fetch(apiUrl, {
+        method: "GET",
+        headers: {
+          Accept: "*/*",
+          "Content-Type": "application/json",
+        },
+        mode: "cors",
+        credentials: "omit",
+      }),
+      fetch(mockupCheckUrl, {
+        method: "GET",
+        headers: {
+          Accept: "*/*",
+          "Content-Type": "application/json",
+        },
+        mode: "cors",
+        credentials: "omit",
+      }),
+    ]);
+
+    if (!requirementsResponse.ok || !mockupResponse.ok) {
+      throw new Error("하나 이상의 API 요청이 실패했습니다.");
     }
 
-    const responseData = await response.json();
+    const responseData = await requirementsResponse.json();
+    const mockupData = await mockupResponse.json();
+    mockupExists.value = mockupData.mockupExists;
+
+    console.log("Mockup 존재 여부:", mockupExists);
     console.log("API 응답 데이터:", responseData);
 
     let apiData;
@@ -555,6 +586,14 @@ function cancelChanges() {
   }
 }
 
+// function createMockup() {
+//   console.log(mockupExists.value)
+//   if (mockupExists.value === false) {
+//     console.log("....")
+//     mockupExists.value = true;
+//   }
+// }
+
 // API에서 데이터 로드
 async function downloadRequirements() {
   if (!props.projectId || !props.revision) {
@@ -706,6 +745,8 @@ defineExpose({
   flex-wrap: wrap;
 }
 
+.mockup-button,
+.mockup-button-view,
 .load-button,
 .save-button,
 .cancel-button {
@@ -716,6 +757,20 @@ defineExpose({
   cursor: pointer;
   transition: all 0.2s;
   font-size: 14px;
+}
+
+/* [NEW] Mockup Button Styles */
+.mockup-button {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.mockup-button-view {
+  background-color: #3b82f6;
+  color: white;
+}
+.mockup-button-view:hover:not(:disabled) {
+  background-color: #3b82f6;
 }
 
 .load-button {
