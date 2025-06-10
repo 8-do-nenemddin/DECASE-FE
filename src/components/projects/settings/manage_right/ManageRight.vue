@@ -152,7 +152,6 @@
 
 <script setup>
 import { ref, onMounted } from "vue";
-import { useRoute } from 'vue-router';
 import AddMemberModal from "./AddMemberModal.vue";
 import AddSuccessModal from "./AddSuccessModal.vue";
 
@@ -351,7 +350,7 @@ const handleSuccessClose = () => {
 
 <style scoped>
 .permission-container {
-  max-width: 800px;
+  width: 100%;
   margin: 0 auto;
   padding: 2rem;
   padding-top: 2rem;
