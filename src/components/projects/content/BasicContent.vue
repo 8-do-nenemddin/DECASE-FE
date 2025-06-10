@@ -300,12 +300,11 @@ const handleSubmit = async () => {
   margin: 0;
 }
 
-.upload-placeholder small {
-  display: block;
-  margin-top: 8px;
-  font-size: 0.875rem;
-  color: #9ca3af;
-  font-weight: 400;
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .welcome-section {
+    padding: 30px 20px;
+  }
 }
 
 .file-preview {
