@@ -19,10 +19,13 @@
             <label class="filter-label">대분류</label>
             <select v-model="filters.category" class="filter-select">
               <option value="">선택</option>
-              <option value="functional">기능</option>
-              <option value="performance">성능</option>
-              <option value="security">보안</option>
-              <option value="usability">사용성</option>
+              <option
+                v-for="category in categories['대분류']"
+                :key="category"
+                :value="category"
+              >
+                {{ category }}
+              </option>
             </select>
           </div>
 
@@ -31,10 +34,13 @@
             <label class="filter-label">중분류</label>
             <select v-model="filters.subcategory" class="filter-select">
               <option value="">선택</option>
-              <option value="ui">UI</option>
-              <option value="api">API</option>
-              <option value="database">데이터베이스</option>
-              <option value="auth">인증</option>
+              <option
+                v-for="category in categories['중분류']"
+                :key="category"
+                :value="category"
+              >
+                {{ category }}
+              </option>
             </select>
           </div>
 
@@ -43,10 +49,13 @@
             <label class="filter-label">소분류</label>
             <select v-model="filters.detailCategory" class="filter-select">
               <option value="">선택</option>
-              <option value="form">폼</option>
-              <option value="table">테이블</option>
-              <option value="chart">차트</option>
-              <option value="modal">모달</option>
+              <option
+                v-for="category in categories['소분류']"
+                :key="category"
+                :value="category"
+              >
+                {{ category }}
+              </option>
             </select>
           </div>
 
@@ -55,10 +64,8 @@
             <label class="filter-label">유형</label>
             <select v-model="filters.type" class="filter-select">
               <option value="">선택</option>
-              <option value="requirement">요구사항</option>
-              <option value="spec">명세</option>
-              <option value="design">디자인</option>
-              <option value="test">테스트</option>
+              <option value="fr">기능</option>
+              <option value="nfr">비기능</option>
             </select>
           </div>
 
@@ -67,9 +74,9 @@
             <label class="filter-label">중요도</label>
             <select v-model="filters.priority" class="filter-select">
               <option value="">선택</option>
-              <option value="high">높음</option>
-              <option value="medium">보통</option>
-              <option value="low">낮음</option>
+              <option value="high">상</option>
+              <option value="medium">중</option>
+              <option value="low">하</option>
             </select>
           </div>
 
@@ -77,9 +84,9 @@
             <label class="filter-label">난이도</label>
             <select v-model="filters.difficulty" class="filter-select">
               <option value="">선택</option>
-              <option value="high">높음</option>
-              <option value="medium">보통</option>
-              <option value="low">낮음</option>
+              <option value="high">상</option>
+              <option value="medium">중</option>
+              <option value="low">하</option>
             </select>
           </div>
         </div>
@@ -108,22 +115,23 @@
             </label>
           </div>
         </div>
-
-        <!-- 검색 버튼 -->
-        <div class="action-section">
-          <button class="search-button" @click="performSearch">검색</button>
-        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive } from "vue";
+import { ref, reactive, onMounted, watch } from "vue";
+import axios from "axios";
 
 const emit = defineEmits(["close", "search"]);
 
 const searchQuery = ref("");
+const categories = reactive({
+  대분류: [],
+  중분류: [],
+  소분류: [],
+});
 
 const filters = reactive({
   category: "",
@@ -141,16 +149,92 @@ const options = reactive({
   functional: false,
 });
 
-const performSearch = () => {
-  const searchParams = {
-    query: searchQuery.value,
-    filters: { ...filters },
-    options: { ...options },
+// 검색 파라미터 생성 함수
+const createSearchParams = () => {
+  // Convert checkbox options to docType numbers
+  const docTypes = [];
+  if (options.rfp) docTypes.push("1"); // RFP
+  if (options.functional) docTypes.push("2"); // MOMV (회의록 음성)
+  if (options.proposal) docTypes.push("3"); // MOMD (회의록)
+  if (options.additional) docTypes.push("4"); // EXTRA (추가파일)
+
+  // Map type values
+  const typeMap = {
+    fr: 1, // 기능
+    nfr: 2, // 비기능
   };
 
+  // Map difficulty and priority values
+  const levelMap = {
+    high: 3,
+    medium: 2,
+    low: 1,
+  };
+
+  const searchParams = {
+    query: searchQuery.value,
+    level1: filters.category || undefined,
+    level2: filters.subcategory || undefined,
+    level3: filters.detailCategory || undefined,
+    type: filters.type ? typeMap[filters.type] : undefined,
+    difficulty: filters.difficulty ? levelMap[filters.difficulty] : undefined,
+    priority: filters.priority ? levelMap[filters.priority] : undefined,
+    docType: docTypes.length > 0 ? docTypes : undefined,
+  };
+
+  // Remove undefined values
+  Object.keys(searchParams).forEach((key) => {
+    if (searchParams[key] === undefined) {
+      delete searchParams[key];
+    }
+  });
+
+  return searchParams;
+};
+
+// 검색 실행 함수
+const performSearch = () => {
+  const searchParams = createSearchParams();
   console.log("검색 실행:", searchParams);
   emit("search", searchParams);
 };
+
+// 모든 필터 변경 감지
+watch(
+  [
+    searchQuery,
+    () => filters.category,
+    () => filters.subcategory,
+    () => filters.detailCategory,
+    () => filters.type,
+    () => filters.priority,
+    () => filters.difficulty,
+    () => options.rfp,
+    () => options.proposal,
+    () => options.additional,
+    () => options.functional,
+  ],
+  () => {
+    performSearch();
+  },
+  { deep: true }
+);
+
+const fetchCategories = async () => {
+  try {
+    const projectId = 1; // TODO: Get actual project ID from props or route
+    const response = await axios.get(
+      `/api/v1/projects/${projectId}/documents/categories`
+    );
+    Object.assign(categories, response.data);
+  } catch (error) {
+    console.error("Failed to fetch categories:", error);
+  }
+};
+
+onMounted(() => {
+  fetchCategories();
+});
 </script>
 
 <style scoped>
@@ -332,39 +416,6 @@ const performSearch = () => {
   font-weight: 500;
   line-height: 1.4;
   transition: color 0.2s ease;
-}
-
-/* 액션 섹션 */
-.action-section {
-  margin-top: 8px;
-  padding-top: 4px;
-}
-
-.search-button {
-  width: 100%;
-  background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
-  color: white;
-  border: none;
-  padding: 14px 20px;
-  border-radius: 10px;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-family: inherit;
-  letter-spacing: -0.02em;
-  box-shadow: 0 2px 8px rgba(31, 41, 55, 0.15);
-}
-
-.search-button:hover {
-  background: linear-gradient(135deg, #374151 0%, #4b5563 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(31, 41, 55, 0.25);
-}
-
-.search-button:active {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(31, 41, 55, 0.2);
 }
 
 /* 반응형 디자인 */
