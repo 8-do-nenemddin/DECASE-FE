@@ -1,43 +1,47 @@
 <template>
-	<table class="project-table">
-	  <thead>
-		<tr>
-		  <th>제목</th>
-		  <th>소스</th>
-		  <th>상태</th>
-		  <th>프로젝트 기간</th>
-		</tr>
-	  </thead>
-	  <tbody>
-		<tr
-		  v-for="project in localProjects"
-		  :key="project.id"
-		  @click="project.showDropdown ? null : navigateToProject(project.projectId)"
-		  class="project-row"
-		>
-		  <td class="title-cell">{{ project.name }}</td>
-		  <td>버전 이력 {{ project.revisionCount }}개</td>
-		  <td>
-
-        <div class="status-wrapper">
-  <span
-    class="status-badge"
-    :class="'status-' + getProjectStatus(project).toLowerCase().replaceAll(' ', '_')"
-  >
-    {{ getProjectStatus(project) }}
-  </span>
-</div>
-		  </td>
-		  <td>{{ project.startDate }}~{{project.endDate}}</td>
-		</tr>
-	  </tbody>
-	</table>
+  <table class="project-table">
+    <thead>
+      <tr>
+        <th>제목</th>
+        <th>소스</th>
+        <th>상태</th>
+        <th>프로젝트 기간</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr
+        v-for="project in localProjects"
+        :key="project.id"
+        @click="
+          project.showDropdown ? null : navigateToProject(project.projectId)
+        "
+        class="project-row"
+      >
+        <td class="title-cell">{{ project.name }}</td>
+        <td>버전 이력 {{ project.revisionCount }}개</td>
+        <td>
+          <div class="status-wrapper">
+            <span
+              class="status-badge"
+              :class="
+                'status-' +
+                getProjectStatus(project).toLowerCase().replaceAll(' ', '_')
+              "
+            >
+              {{ getProjectStatus(project) }}
+            </span>
+          </div>
+        </td>
+        <td>{{ project.startDate }}~{{ project.endDate }}</td>
+      </tr>
+    </tbody>
+  </table>
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
-import { useRouter } from 'vue-router';
-import { useProjectStore } from '/src/stores/projectStore.js';
+import { ref, watch } from "vue";
+import { useRouter } from "vue-router";
+import { useProjectStore } from "/src/stores/projectStore.js";
 const projectStore = useProjectStore();
 
 const props = defineProps({
@@ -64,19 +68,21 @@ const router = useRouter();
 
 function getProjectStatus(project) {
   const today = new Date();
-  today.setHours(0, 0, 0, 0);  // 시간 초기화
+  today.setHours(0, 0, 0, 0); // 시간 초기화
   const startDate = new Date(project.startDate);
   startDate.setHours(0, 0, 0, 0);
   const endDate = new Date(project.endDate);
-  endDate.setHours(23, 59, 59, 999);  // 오늘 끝까지 포함
+  endDate.setHours(23, 59, 59, 999); // 오늘 끝까지 포함
 
   if (today < startDate) return "not_started";
   if (today <= endDate) return "in_progress";
   return "done";
 }
 
-const navigateToProject = (projectId) => {
-  const selectedProject = localProjects.value.find(p => p.projectId === projectId);
+const navigateToProject = async (projectId) => {
+  const selectedProject = localProjects.value.find(
+    (p) => p.projectId === projectId
+  );
 
   const now = new Date();
   const start = new Date(selectedProject.startDate);
@@ -89,8 +95,37 @@ const navigateToProject = (projectId) => {
   }
 
   if (selectedProject) {
-    projectStore.setProject(selectedProject.projectId, selectedProject.name, selectedProject.revisionCount, selectedProject.status, selectedProject.isAdmin);
-    router.push({ name: "ProjectMain", params: { projectId: selectedProject.projectId } });
+    try {
+      const response = await fetch(`/api/v1/projects/${projectId}/revision`);
+      const revisions = await response.json();
+      const revisionCount = revisions.length || 0;
+
+      projectStore.setProject(
+        selectedProject.projectId,
+        selectedProject.name,
+        revisionCount,
+        selectedProject.status,
+        selectedProject.isAdmin
+      );
+      router.push({
+        name: "ProjectMain",
+        params: { projectId: selectedProject.projectId },
+      });
+    } catch (error) {
+      console.error("Failed to fetch revision count:", error);
+      // If API call fails, use the existing revision count
+      projectStore.setProject(
+        selectedProject.projectId,
+        selectedProject.name,
+        selectedProject.revisionCount,
+        selectedProject.status,
+        selectedProject.isAdmin
+      );
+      router.push({
+        name: "ProjectMain",
+        params: { projectId: selectedProject.projectId },
+      });
+    }
   }
 };
 </script>
