@@ -4,22 +4,24 @@
     <!-- v-if : Project 상태에 따라서 (요구사항 입력 전 / 요구사항 생성중 / 요구사항 생성완료)-->
     <div class="upload-card" v-if="projectStore.projectRevision === 0">
       <h2 class="upload-title">RFP 파일 업로드</h2>
-      <p class="upload-subtitle">프로젝트 제안 요청서(RFP) 파일을 업로드해주세요.</p>
+      <p class="upload-subtitle">
+        프로젝트 제안 요청서(RFP) 파일을 업로드해주세요.
+      </p>
 
       <div
-          class="upload-zone"
-          :class="{ 'drag-over': isDragOver, 'uploading': isUploading }"
-          @click="triggerFileInput"
-          @dragover.prevent="handleDragOver"
-          @dragleave.prevent="handleDragLeave"
-          @drop.prevent="handleFileDrop"
+        class="upload-zone"
+        :class="{ 'drag-over': isDragOver, uploading: isUploading }"
+        @click="triggerFileInput"
+        @dragover.prevent="handleDragOver"
+        @dragleave.prevent="handleDragLeave"
+        @drop.prevent="handleFileDrop"
       >
         <input
-            type="file"
-            ref="fileInput"
-            @change="handleFileChange"
-            accept=".pdf,.doc,.docx,.hwp,.zip"
-            style="display: none;"
+          type="file"
+          ref="fileInput"
+          @change="handleFileChange"
+          accept=".pdf,.doc,.docx,.hwp,.zip"
+          style="display: none"
         />
 
         <div v-if="!selectedFile" class="upload-empty">
@@ -36,16 +38,14 @@
             <div class="file-name">{{ selectedFile.name }}</div>
             <div class="file-size">{{ formatFileSize(selectedFile.size) }}</div>
           </div>
-          <button @click.stop="clearFile" class="clear-button">
-            삭제
-          </button>
+          <button @click.stop="clearFile" class="clear-button">삭제</button>
         </div>
       </div>
 
       <button
-          @click="handleSubmit"
-          :disabled="!selectedFile || isUploading"
-          class="submit-button"
+        @click="handleSubmit"
+        :disabled="!selectedFile || isUploading"
+        class="submit-button"
       >
         <span v-if="isUploading">업로드 중...</span>
         <span v-else>업로드 시작</span>
@@ -53,16 +53,17 @@
 
       <div v-if="isUploading" class="progress-container">
         <div class="progress-bar">
-          <div class="progress-fill" :style="{ width: uploadProgress + '%' }"></div>
+          <div
+            class="progress-fill"
+            :style="{ width: uploadProgress + '%' }"
+          ></div>
         </div>
         <div class="progress-text">{{ Math.round(uploadProgress) }}%</div>
       </div>
     </div>
 
     <!-- 요구사항정의서 생성 중 화면 -->
-    <!-- 추후 수정-->
-    <!-- v-if : Project 상태에 따라서 (요구사항 입력 전 / 요구사항 생성중 / 요구사항 생성완료)-->
-    <div class="generating-card" v-if="projectStore.projectRevision === 1">
+    <div class="generating-card" v-if="isGenerating">
       <div class="generating-content">
         <div class="generating-icon">
           <div class="spinner"></div>
@@ -70,7 +71,7 @@
         <h2 class="generating-title">요구사항정의서 생성중입니다</h2>
         <p class="generating-subtitle">
           업로드된 RFP 파일을 분석하여 요구사항정의서를 생성하고 있습니다.
-          <br>
+          <br />
           <strong>약 30분 정도 소요될 예정입니다.</strong>
         </p>
         <div class="generating-progress">
@@ -85,9 +86,8 @@
   </main>
 </template>
 
-
 <script setup>
-import { ref } from 'vue';
+import { ref, watch } from "vue";
 import { useProjectStore } from "/src/stores/projectStore";
 
 const projectStore = useProjectStore();
@@ -104,6 +104,16 @@ const isUploading = ref(false);
 const uploadProgress = ref(0);
 // 요구사항정의서 생성 상태
 const isGenerating = ref(false);
+
+// projectRevision 변경 감지
+watch(
+  () => projectStore.projectRevision,
+  (newValue) => {
+    if (newValue === 1) {
+      isGenerating.value = false;
+    }
+  }
+);
 
 // 파일 업로드 영역을 클릭했을 때 숨겨진 input을 클릭시키는 함수
 const triggerFileInput = () => {
@@ -142,17 +152,17 @@ const handleFileDrop = (event) => {
 // 선택된 파일을 삭제하는 함수
 const clearFile = () => {
   selectedFile.value = null;
-  fileInput.value.value = '';
+  fileInput.value.value = "";
   uploadProgress.value = 0;
 };
 
 // 파일 크기 포맷팅 함수
 const formatFileSize = (bytes) => {
-  if (bytes === 0) return '0 Bytes';
+  if (bytes === 0) return "0 Bytes";
   const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const sizes = ["Bytes", "KB", "MB", "GB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
 };
 
 // 파일을 서버로 제출하는 함수
@@ -167,28 +177,31 @@ const handleSubmit = async () => {
   try {
     // FormData 객체를 사용하여 파일을 서버로 전송
     const formData = new FormData();
-    formData.append('file', selectedFile.value);
+    formData.append("file", selectedFile.value);
+    formData.append("memberId", projectStore.userId);
 
-    console.log('다음 파일을 서버로 업로드합니다:', selectedFile.value.name);
+    console.log("다음 파일을 서버로 업로드합니다:", selectedFile.value.name);
 
-    const response = await fetch(`/api/v1/projects/${projectStore.projectId}/requirement-documents?memberId=${projectStore.userId}`, {
-      method: 'POST',
-      body: formData,
-    });
+    const response = await fetch(
+      `/api/v1/projects/${projectStore.projectId}/requirement-documents`,
+      {
+        method: "POST",
+        body: formData,
+      }
+    );
 
     if (!response.ok) {
-      throw new Error('업로드 실패');
+      throw new Error("업로드 실패");
     }
 
     const data = await response.json();
 
     alert(`'${selectedFile.value.name}' 파일이 성공적으로 업로드되었습니다!`);
     clearFile();
-
     isGenerating.value = true;
   } catch (error) {
-    console.error('업로드 실패:', error);
-    alert('파일 업로드 중 오류가 발생했습니다.');
+    console.error("업로드 실패:", error);
+    alert("파일 업로드 중 오류가 발생했습니다.");
   } finally {
     isUploading.value = false;
   }
@@ -202,7 +215,8 @@ const handleSubmit = async () => {
   align-items: center;
   min-height: 100vh;
   padding: 40px;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
   background: #ffffff;
 }
 
@@ -431,8 +445,12 @@ const handleSubmit = async () => {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .generating-title {
@@ -482,7 +500,9 @@ const handleSubmit = async () => {
 }
 
 @keyframes pulse {
-  0%, 80%, 100% {
+  0%,
+  80%,
+  100% {
     transform: scale(1);
     opacity: 0.5;
   }
