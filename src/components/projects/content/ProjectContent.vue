@@ -37,6 +37,9 @@ import { useProjectStore } from "../../../stores/projectStore";
 const projectStore = useProjectStore();
 const projectId = computed(() => projectStore.projectId);
 
+console.log("✅✅✅✅✅✅✅✅")
+console.log(projectStore.projectId, projectStore.projectName, projectStore.projectRevision);
+
 // 선택된 파일 정보
 const selectedFile = ref(null);
 
