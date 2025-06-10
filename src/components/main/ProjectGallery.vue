@@ -68,7 +68,7 @@ const navigateToProject = (projectId) => {
   }
 
   if (selectedProject) {
-    projectStore.setProject(selectedProject.projectId, selectedProject.name, selectedProject.status, selectedProject.isAdmin);
+    projectStore.setProject(selectedProject.projectId, selectedProject.name, selectedProject.revisionCount, selectedProject.status, selectedProject.isAdmin);
     router.push({
       name: "ProjectMain",
       params: { projectId: selectedProject.projectId },
