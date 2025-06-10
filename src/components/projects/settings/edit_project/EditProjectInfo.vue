@@ -1,103 +1,117 @@
 <template>
   <div class="project-info-container">
-    <Transition name="slide-up" appear>
-      <div class="form-card">
-        <!-- 프로젝트 기간 -->
-        <div class="form-section">
-          <label class="form-label">프로젝트 기간</label>
-          <div class="date-range-container">
-            <div class="date-input-wrapper">
+    <!-- 로딩 상태 표시 -->
+    <div v-if="loading" class="loading-container">
+      <div class="loading-spinner"></div>
+      <p>프로젝트 정보를 불러오는 중...</p>
+    </div>
+
+    <!-- 에러 상태 표시 -->
+    <div v-else-if="error" class="error-container">
+      <div class="error-icon">⚠️</div>
+      <p class="error-message">{{ error }}</p>
+      <button @click="loadProjectData" class="retry-button">다시 시도</button>
+    </div>
+
+    <!-- 프로젝트 정보 폼 -->
+    <template v-else>
+      <Transition name="slide-up" appear>
+        <div class="form-card">
+          <!-- 프로젝트 기간 -->
+          <div class="form-section">
+            <label class="form-label">프로젝트 기간</label>
+            <div class="date-range-container">
+              <div class="date-input-wrapper">
+                <input
+                  type="date"
+                  v-model="projectData.startDate"
+                  class="date-input"
+                />
+              </div>
+              <span class="date-separator">~</span>
+              <div class="date-input-wrapper">
+                <input
+                  type="date"
+                  v-model="projectData.endDate"
+                  class="date-input"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- 프로젝트 이름과 담당 PM -->
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="project-name">프로젝트 이름</label>
               <input
-                type="date"
-                v-model="projectData.startDate"
-                class="date-input"
+                id="project-name"
+                type="text"
+                v-model="projectData.name"
+                class="form-input"
+                placeholder="프로젝트 이름을 입력하세요"
               />
             </div>
-            <span class="date-separator">~</span>
-            <div class="date-input-wrapper">
+
+            <div class="form-group">
+              <label class="form-label" for="project-pm">제안 PM</label>
               <input
-                type="date"
-                v-model="projectData.endDate"
-                class="date-input"
+                id="project-pm"
+                type="text"
+                v-model="projectData.pm"
+                class="form-input"
+                placeholder="담당 PM을 입력하세요"
               />
             </div>
           </div>
-        </div>
 
-        <!-- 프로젝트 이름과 담당 PM -->
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label" for="project-name">프로젝트 이름</label>
-            <input
-              id="project-name"
-              type="text"
-              v-model="projectData.name"
-              class="form-input"
-              placeholder="프로젝트 이름을 입력하세요"
-            />
+          <!-- 프로젝트 설명 -->
+          <div class="form-section">
+            <label class="form-label" for="project-description">프로젝트 설명</label>
+            <textarea
+              id="project-description"
+              v-model="projectData.description"
+              rows="6"
+              class="form-textarea"
+              placeholder="프로젝트에 대한 상세한 설명을 입력하세요..."
+            ></textarea>
           </div>
 
-          <div class="form-group">
-            <label class="form-label" for="project-pm">제안 PM</label>
-            <input
-              id="project-pm"
-              type="text"
-              v-model="projectData.pm"
-              class="form-input"
-              placeholder="담당 PM을 입력하세요"
-            />
+          <!-- 프로젝트 규모 -->
+          <div class="form-section">
+            <label class="form-label" for="project-scale">프로젝트 규모</label>
+            <div class="input-with-unit">
+              <input
+                id="project-scale"
+                type="text"
+                @input="onScaleInput"
+                :value="displayValue"
+                class="form-input no-spinner"
+                placeholder="0"
+              />
+              <span class="unit-label">원</span>
+            </div>
+            <div v-if="scaleError" class="error-message">{{ scaleError }}</div>
+          </div>
+
+          <!-- 저장 버튼 -->
+          <div class="form-actions">
+            <button @click="saveProject" class="save-button" :disabled="saving">
+              <span class="save-icon">💾</span>
+              {{ saving ? '저장 중...' : '저장' }}
+            </button>
           </div>
         </div>
+      </Transition>
 
-        <!-- 프로젝트 설명 -->
-        <div class="form-section">
-          <label class="form-label" for="project-description"
-            >프로젝트 설명</label
-          >
-          <textarea
-            id="project-description"
-            v-model="projectData.description"
-            rows="6"
-            class="form-textarea"
-            placeholder="프로젝트에 대한 상세한 설명을 입력하세요..."
-          ></textarea>
-        </div>
-
-        <!-- 프로젝트 규모 -->
-        <div class="form-section">
-          <label class="form-label" for="project-scale">프로젝트 규모</label>
-          <div class="input-with-unit">
-            <input
-              id="project-scale"
-              type="text"
-              @input="onScaleInput"
-              :value="displayValue"
-              class="form-input no-spinner"
-              placeholder="0"
-            />
-            <span class="unit-label">원</span>
-          </div>
-          <div v-if="scaleError" class="error-message">{{ scaleError }}</div>
-        </div>
-
-        <!-- 저장 버튼 -->
-        <div class="form-actions">
-          <button @click="saveProject" class="save-button">
-            <span class="save-icon">💾</span>
-            저장
+      <!-- 프로젝트 삭제 -->
+      <Transition name="slide-up" appear>
+        <div class="delete-section">
+          <button @click="showDeleteModal = true" class="delete-button">
+            프로젝트 삭제
           </button>
         </div>
-      </div>
-    </Transition>
-
-    <!-- 프로젝트 삭제 -->
-    <Transition name="slide-up" appear>
-      <div class="delete-section">
-        <button @click="showDeleteModal = true" class="delete-button">
-          프로젝트 삭제
-        </button>
-      </div>
-    </Transition>
+      </Transition>
+    </template>
   </div>
 
   <!-- 삭제 확인 모달 -->
@@ -124,9 +138,9 @@
         </div>
         
         <div class="modal-actions">
-          <button @click="confirmDelete" class="confirm-delete-button">
+          <button @click="confirmDelete" class="confirm-delete-button" :disabled="deleting">
             <span class="delete-icon">🗑️</span>
-            삭제
+            {{ deleting ? '삭제 중...' : '삭제' }}
           </button>
           <button @click="closeDeleteModal" class="cancel-button">
             취소
@@ -148,10 +162,15 @@ import { ref, reactive, computed, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import EditSuccessModal from "./EditSuccessModal.vue";
 import router from "../../../../router";
+import { useProjectStore } from "../../../../stores/projectStore";
 
 const showSuccessSaveModal = ref(false);
 const showDeleteModal = ref(false);
 const scaleError = ref('');
+const loading = ref(false);
+const saving = ref(false);
+const deleting = ref(false);
+const error = ref('');
 
 const projectData = reactive({
   startDate: "",
@@ -164,29 +183,96 @@ const projectData = reactive({
 });
 
 const route = useRoute();
-const projectId = route.params.projectId;
+const projectStore = useProjectStore();
 
-onMounted(async () => {
-  try {
-    const res = await fetch(`/api/v1/projects/${projectId}`);
-    if (!res.ok) throw new Error("프로젝트 정보 로드 실패");
-    const data = await res.json();
-    projectData.name = data.name;
-    projectData.scale = data.scale.toString();
-    projectData.startDate = data.startDate.slice(0, 10);
-    projectData.endDate = data.endDate.slice(0, 10);
-    projectData.description = data.description;
-    projectData.pm = data.proposalPM;
-    projectData.creatorMemberId = data.creatorMemberId;
-  } catch (err) {
-    console.error(err);
+// projectId를 여러 방법으로 가져오기 시도
+const projectId = computed(() => {
+  // 1. projectStore에서 가져오기
+  if (projectStore.projectId) {
+    return projectStore.projectId;
   }
+  
+  // 2. route params에서 가져오기
+  if (route.params.id) {
+    return route.params.id;
+  }
+  
+  // 3. route query에서 가져오기
+  if (route.query.projectId) {
+    return route.query.projectId;
+  }
+  
+  return null;
+});
+
+// 날짜 포맷 함수 (ISO 문자열을 YYYY-MM-DD로 변환)
+const formatDateForInput = (dateString) => {
+  if (!dateString) return '';
+  try {
+    const date = new Date(dateString);
+    return date.toISOString().split('T')[0];
+  } catch (e) {
+    console.error('날짜 변환 오류:', e);
+    return '';
+  }
+};
+
+// 프로젝트 데이터 로드 함수
+const loadProjectData = async () => {
+  if (!projectId.value) {
+    error.value = '프로젝트 ID를 찾을 수 없습니다.';
+    return;
+  }
+
+  loading.value = true;
+  error.value = '';
+  
+  try {
+    console.log('프로젝트 ID:', projectId.value);
+    
+    const res = await fetch(`/api/v1/projects/${projectId.value}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        // 필요한 경우 인증 헤더 추가
+        // 'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    console.log('응답 상태:', res.status);
+    
+    if (!res.ok) {
+      throw new Error(`프로젝트 정보 로드 실패: ${res.status} ${res.statusText}`);
+    }
+    
+    const json = await res.json();
+    const data = json.data;
+    console.log('받은 데이터:', data);
+    
+    // 데이터 설정
+    projectData.name = data.name || '';
+    projectData.scale = data.scale ? String(data.scale) : '';
+    projectData.startDate = formatDateForInput(data.startDate);
+    projectData.endDate = formatDateForInput(data.endDate);
+    projectData.description = data.description || '';
+    projectData.pm = data.proposalPM || '';
+
+    console.log('설정 후 projectData:', JSON.stringify(projectData, null, 2));
+    
+  } catch (err) {
+    console.error('프로젝트 로드 오류:', err);
+    error.value = err.message || '프로젝트 정보를 불러오는데 실패했습니다.';
+  } finally {
+    loading.value = false;
+  }
+};
+
+onMounted(() => {
+  loadProjectData();
 });
 
 function onScaleInput(event) {
-  const raw = event.target.value.replace(/[^\d]/g, ''); // 숫자만 추출
-  
-  // 9,999조 = 9999000000000000 (최대값)
+  const raw = event.target.value.replace(/[^\d]/g, '');
   const maxValue = 9999000000000000;
   
   if (raw) {
@@ -201,7 +287,6 @@ function onScaleInput(event) {
     scaleError.value = '';
   }
   
-  // 13자리로 제한 (9,999조까지)
   const limited = raw.slice(0, 13);
   projectData.scale = limited;
 }
@@ -211,28 +296,41 @@ const displayValue = computed(() => {
   return Number(projectData.scale).toLocaleString();
 });
 
-// 프로젝트 내용 수정 저장 모달
 const saveProject = async () => {
+  if (!projectId.value) {
+    alert('프로젝트 ID를 찾을 수 없습니다.');
+    return;
+  }
+
+  saving.value = true;
+  
   try {
-    const res = await fetch(`/api/v1/projects/${projectId}`, {
+    const res = await fetch(`/api/v1/projects/${projectId.value}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
         name: projectData.name,
-        scale: Number(projectData.scale),
-        startDate: new Date(projectData.startDate).toISOString(),
-        endDate: new Date(projectData.endDate).toISOString(),
+        scale: Number(projectData.scale) || 0,
+        startDate: projectData.startDate ? new Date(projectData.startDate).toISOString() : null,
+        endDate: projectData.endDate ? new Date(projectData.endDate).toISOString() : null,
         description: projectData.description,
         proposalPM: projectData.pm,
         creatorMemberId: projectData.creatorMemberId,
       }),
     });
-    if (!res.ok) throw new Error("프로젝트 저장 실패");
+    
+    if (!res.ok) {
+      throw new Error(`프로젝트 저장 실패: ${res.status} ${res.statusText}`);
+    }
+    
     showSuccessSaveModal.value = true;
   } catch (err) {
-    console.error("저장 실패:", err.message);
+    console.error("저장 실패:", err);
+    alert(`저장에 실패했습니다: ${err.message}`);
+  } finally {
+    saving.value = false;
   }
 };
 
@@ -240,14 +338,20 @@ const closeSuccessSaveModal = () => {
   showSuccessSaveModal.value = false;
 };
 
-// 삭제 모달 관련 함수들
 const closeDeleteModal = () => {
   showDeleteModal.value = false;
 };
 
 const confirmDelete = async () => {
+  if (!projectId.value) {
+    alert('프로젝트 ID를 찾을 수 없습니다.');
+    return;
+  }
+
+  deleting.value = true;
+  
   try {
-    const response = await fetch(`/api/v1/projects/${projectId}`, {
+    const response = await fetch(`/api/v1/projects/${projectId.value}`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json"
@@ -255,17 +359,17 @@ const confirmDelete = async () => {
     });
 
     if (!response.ok) {
-      throw new Error("프로젝트 삭제 실패");
+      throw new Error(`프로젝트 삭제 실패: ${response.status} ${response.statusText}`);
     }
 
     console.log("프로젝트 삭제 완료");
     showDeleteModal.value = false;
-
-    // 삭제 후 메인 페이지로 이동
     router.push({ name: "MainView" });
   } catch (error) {
     console.error("프로젝트 삭제 중 오류 발생:", error);
-    alert("프로젝트 삭제에 실패했습니다.");
+    alert(`프로젝트 삭제에 실패했습니다: ${error.message}`);
+  } finally {
+    deleting.value = false;
   }
 };
 </script>
@@ -276,7 +380,74 @@ const confirmDelete = async () => {
   margin: 0 auto;
 }
 
-/* 슬라이드 업 애니메이션 */
+/* 로딩 상태 스타일 */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f4f6;
+  border-top: 4px solid #4f46e5;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 에러 상태 스타일 */
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+  margin: 2rem 0;
+}
+
+.error-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.error-message {
+  color: #dc2626;
+  font-size: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.retry-button {
+  background: #dc2626;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.retry-button:hover {
+  background: #b91c1c;
+  transform: translateY(-1px);
+}
+
+/* 기존 스타일들 */
 .slide-up-enter-active {
   transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
@@ -291,7 +462,6 @@ const confirmDelete = async () => {
   transform: translateY(0);
 }
 
-/* 모달 애니메이션 */
 .modal-fade-enter-active,
 .modal-fade-leave-active {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -436,10 +606,16 @@ const confirmDelete = async () => {
   box-shadow: 0 4px 12px rgba(31, 41, 55, 0.15);
 }
 
-.save-button:hover {
+.save-button:hover:not(:disabled) {
   background: linear-gradient(135deg, #374151 0%, #4b5563 100%);
   transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(31, 41, 55, 0.25);
+}
+
+.save-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .save-button:active {
@@ -473,7 +649,6 @@ const confirmDelete = async () => {
   transform: translateY(-1px);
 }
 
-/* 모달 스타일 */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -611,10 +786,16 @@ const confirmDelete = async () => {
   transition: all 0.3s ease;
 }
 
-.confirm-delete-button:hover {
+.confirm-delete-button:hover:not(:disabled) {
   background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+}
+
+.confirm-delete-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .delete-icon {
@@ -647,7 +828,6 @@ const confirmDelete = async () => {
   margin-top: 0.25rem;
 }
 
-/* 반응형 디자인 */
 @media (max-width: 768px) {
   .project-info-container {
     padding: 1rem;
@@ -690,7 +870,6 @@ const confirmDelete = async () => {
     flex-direction: column;
   }
 
-  /* 모바일에서 애니메이션 조정 */
   .slide-up-enter-from {
     transform: translateY(30px);
   }
@@ -734,7 +913,6 @@ const confirmDelete = async () => {
   }
 }
 
-/* 포커스 가능한 요소들의 접근성 개선 */
 .form-input:focus-visible,
 .form-textarea:focus-visible,
 .date-input:focus-visible,
