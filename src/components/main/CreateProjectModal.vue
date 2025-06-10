@@ -215,7 +215,6 @@ const handleCreateProject = async () => {
 
     // 성공적으로 생성된 프로젝트 정보
     const newProject = result.data;
-    projectStore.setProject(newProject.projectId, newProject.name);
 
     console.log(result.data)
 
@@ -228,7 +227,7 @@ const handleCreateProject = async () => {
     } else {
       newProject.status = "ACTIVE";
     }
-    projectStore.setProject(newProject.projectId, newProject.name, newProject.status, newProject.isAdmin);
+    projectStore.setProject(newProject.projectId, newProject.name, newProject.revisionCount, newProject.status, newProject.isAdmin);
 
     showSuccessModal.value = true;
     closeModal();
