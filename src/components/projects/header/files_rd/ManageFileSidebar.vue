@@ -319,10 +319,10 @@ const fileInfoModal = reactive({
 
 // Data
 const sidebarItems = reactive([
-{
+  {
     name: "요구사항 정의서",
     type: "generated",
-    expanded: false,
+    expanded: true,
     files: [],
     count: 0,
   },
@@ -336,10 +336,10 @@ const sidebarItems = reactive([
   {
     name: "업로드 파일",
     type: "uploaded",
-    expanded: true,
+    expanded: false,
     files: [],
     count: 0,
-  }
+  },
 ]);
 
 // loadAllData 함수 수정 - AS-IS 보고서 추가
@@ -406,7 +406,7 @@ const fetchGeneratedFiles = async () => {
         headers: { "Content-Type": "application/json" },
       }
     );
-    
+
     console.log(response);
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
