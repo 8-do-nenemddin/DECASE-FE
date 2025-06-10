@@ -13,13 +13,20 @@
 
 <style scoped>
 .main-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  width: 100%;
   min-height: calc(80vh);
   padding: 40px;
   text-align: center;
+  /* display: flex; 제거 */
+  /* flex-direction: column; 제거 */
+  /* align-items: center; 제거 */
+  /* justify-content: center; 제거 */
+}
+
+.welcome-section {
+  max-width: 800px; /* 필요시 최대 너비 설정 */
+  margin: 0 auto; /* 중앙 정렬 */
+  padding-top: 20vh; /* 수직 중앙 정렬을 위한 상단 패딩 */
 }
 
 .welcome-title {
@@ -36,7 +43,6 @@
   margin: 0;
   line-height: 1.5;
 }
-
 /* 반응형 디자인 */
 @media (max-width: 768px) {
   .welcome-section {

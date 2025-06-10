@@ -12,17 +12,19 @@
 
       <!-- 메인 콘텐츠 -->
       <main class="content-area">
-        <!-- 프로젝트 정보 수정 -->
-        <EditProjectInfo v-if="currentComponent === 'ProjectInfo'" />
+        <div class="content-wrapper">
+          <!-- 프로젝트 정보 수정 -->
+          <EditProjectInfo v-if="currentComponent === 'ProjectInfo'" />
 
-        <!-- 요구사항 추적 매트릭스 -->
-        <ViewMatrix v-if="currentComponent === 'ProjectMatrix'" />
+          <!-- 요구사항 추적 매트릭스 -->
+          <ViewMatrix v-if="currentComponent === 'ProjectMatrix'" />
 
-        <!-- 권한 관리 -->
-        <ManageRight :project-id="projectId" v-if="currentComponent === 'ProjectRight'" />
+          <!-- 권한 관리 -->
+          <ManageRight :project-id="projectId" v-if="currentComponent === 'ProjectRight'" />
 
-        <!-- 초대 현황 -->
-        <Invitation :project-id="projectId" v-if="currentComponent === 'Invitation'" />
+          <!-- 초대 현황 -->
+          <Invitation :project-id="projectId" v-if="currentComponent === 'Invitation'" />
+        </div>
       </main>
     </div>
   </div>
@@ -123,22 +125,26 @@ body {
 /* 메인 콘텐츠 */
 .content-area {
   flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
   padding: 2rem;
   overflow-y: auto;
   background: transparent;
   min-width: 0;
-  max-width: 1200px;
-  margin-left: 0 !important; /* 좌측 마진 제거 */
 }
 
-.content-area {
-  flex: 1;
-  padding: 2rem;
-  overflow-y: auto;
-  background: transparent;
-  min-width: 0;
+.content-wrapper {
+  width: 100%;
   max-width: 1200px;
-  margin-left: 0 !important; /* 좌측 마진 제거 */
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.content-wrapper > * {
+  width: 100%;
+  max-width: 800px;
 }
 
 /* 요구사항 매트릭스 스타일 */
@@ -271,6 +277,13 @@ body {
 
   .content-area {
     padding: 1rem;
+  }
+
+  .content-wrapper {
+    max-width: none;
+  }
+
+  .content-wrapper > * {
     max-width: none;
   }
 
@@ -308,7 +321,6 @@ body {
 @media (max-width: 480px) {
   .content-area {
     padding: 0.75rem;
-    max-width: none;
   }
 
   .card-header {
@@ -343,7 +355,7 @@ body {
 
 /* 대형 화면에서도 콘텐츠 너비 제한 */
 @media (min-width: 1441px) {
-  .content-area {
+  .content-wrapper {
     max-width: 1200px;
   }
 }
