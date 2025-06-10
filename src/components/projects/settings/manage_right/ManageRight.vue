@@ -163,6 +163,9 @@ const showDeleteConfirmModal = ref(false);
 const selectedMember = ref(null);
 const memberToDelete = ref(null);
 const memberIndexToDelete = ref(null);
+import { useProjectStore } from "/src/stores/projectStore";
+
+const projectStore = useProjectStore();
 
 const props = defineProps({
   projectId: {
@@ -222,6 +225,7 @@ const confirmPermissionChange = async () => {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
+              adminId: projectStore.userId,
               permission: newPermission
             })
           }
@@ -262,9 +266,16 @@ const confirmDelete = async () => {
 
     try {
       const response = await fetch(
-          `/api/v1/projects/${projectId}/members/${memberId}`,
+          `/api/v1/projects/${projectId}/members`,
           {
             method: "DELETE",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              adminId: projectStore.userId,
+              memberId: memberId
+            })
           }
       );
 
