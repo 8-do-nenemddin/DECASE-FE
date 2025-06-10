@@ -78,9 +78,15 @@ const navigateToProject = async (projectId) => {
 
   if (selectedProject) {
     try {
+      console.log(
+        "Fetching revision count for project:",
+        selectedProject.projectId
+      );
       const response = await fetch(`/api/v1/projects/${projectId}/revision`);
       const revisions = await response.json();
+      console.log("Received revisions:", revisions);
       const revisionCount = revisions.length || 0;
+      console.log("Calculated revision count:", revisionCount);
 
       projectStore.setProject(
         selectedProject.projectId,
@@ -89,6 +95,8 @@ const navigateToProject = async (projectId) => {
         selectedProject.status,
         selectedProject.isAdmin
       );
+      projectStore.setRevisionCount(revisionCount);
+      console.log("Updated store with revision count:", revisionCount);
       router.push({
         name: "ProjectMain",
         params: { projectId: selectedProject.projectId },

@@ -123,6 +123,10 @@
 <script setup>
 import { ref, reactive, onMounted, watch } from "vue";
 import axios from "axios";
+import { useProjectStore } from "../../../../stores/projectStore";
+
+const projectStore = useProjectStore();
+const projectId = projectStore.projectId;
 
 const emit = defineEmits(["close", "search"]);
 
@@ -229,16 +233,47 @@ watch(
 
 const fetchCategories = async () => {
   try {
-    const projectId = 1; // TODO: Get actual project ID from props or route
-    if (!props.selectedRevision) {
-      return; // Don't fetch if no revision is selected
+    const projectId = projectStore.projectId;
+    if (!projectId) {
+      console.error("Project ID is not available");
+      return;
     }
+    if (!props.selectedRevision) {
+      console.log("No revision selected, skipping category fetch");
+      return;
+    }
+    console.log(
+      "Fetching categories for project:",
+      projectId,
+      "revision:",
+      props.selectedRevision
+    );
+
     const response = await axios.get(
       `/api/v1/projects/${projectId}/documents/${props.selectedRevision}/categories`
     );
-    Object.assign(categories, response.data);
+
+    console.log("Received categories response:", response.data);
+
+    if (response.data) {
+      // 각 카테고리 배열이 존재하는지 확인하고 할당
+      if (response.data["대분류"])
+        categories["대분류"] = response.data["대분류"];
+      if (response.data["중분류"])
+        categories["중분류"] = response.data["중분류"];
+      if (response.data["소분류"])
+        categories["소분류"] = response.data["소분류"];
+
+      console.log("Updated categories state:", categories);
+    } else {
+      console.error("No category data in response");
+    }
   } catch (error) {
     console.error("Failed to fetch categories:", error);
+    if (error.response) {
+      console.error("Error response:", error.response.data);
+      console.error("Error status:", error.response.status);
+    }
   }
 };
 
