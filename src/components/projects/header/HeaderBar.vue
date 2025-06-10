@@ -44,9 +44,10 @@
           </svg>
         </button>
         <button
-          class="icon-button upload-btn"
-          @click="openSourceUploadModal"
-          title="파일 업로드"
+            class="icon-button upload-btn"
+            @click="openSourceUploadModal"
+            title="파일 업로드"
+            :disabled="projectStore.projectRevision === 0"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
