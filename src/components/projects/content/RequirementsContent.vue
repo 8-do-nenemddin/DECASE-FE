@@ -10,17 +10,17 @@
         </div>
         <div class="action-buttons">
           <button
-              v-if="mockupExists"
-              @click="viewMockup"
-              class="mockup-button-view"
+            v-if="mockupExists"
+            @click="viewMockup"
+            class="mockup-button-view"
           >
             👀 목업 보러가기
           </button>
           <button
-              v-if="!mockupExists"
-              @click="createMockup"
-              class="mockup-button"
-              :disabled="loading"
+            v-if="!mockupExists"
+            @click="createMockup"
+            class="mockup-button"
+            :disabled="loading"
           >
             🎨 목업 생성
           </button>
@@ -698,7 +698,7 @@ defineExpose({
 });
 </script>
 <style scoped>
-.project-content {
+.project-main.project-content {
   padding: 20px;
   height: calc(100vh - 64px);
   overflow-y: auto;
