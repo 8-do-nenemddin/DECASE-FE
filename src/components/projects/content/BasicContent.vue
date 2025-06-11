@@ -218,6 +218,8 @@ const handleSubmit = async () => {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     "Helvetica Neue", Arial, sans-serif;
   background: #ffffff;
+  display: flex;
+  justify-content: center;
 }
 
 .upload-card {
