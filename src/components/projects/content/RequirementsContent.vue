@@ -14,7 +14,22 @@
             @click="viewMockup"
             class="mockup-button-view"
           >
-            👀 목업 보러가기
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+              <line x1="8" y1="21" x2="16" y2="21" />
+              <line x1="12" y1="17" x2="12" y2="21" />
+            </svg>
+            <span>목업 보러가기</span>
           </button>
           <button
             v-if="!mockupExists"
@@ -22,28 +37,86 @@
             class="mockup-button"
             :disabled="loading"
           >
-            🎨 목업 생성
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+              <line x1="8" y1="21" x2="16" y2="21" />
+              <line x1="12" y1="17" x2="12" y2="21" />
+            </svg>
+            <span>목업 생성</span>
           </button>
           <button
             @click="downloadRequirements"
             class="load-button"
             :disabled="loading"
           >
-            {{ loading ? "🔄 다운로드중..." : "📥 다운로드" }}
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            <span>{{ loading ? "다운로드중..." : "다운로드" }}</span>
           </button>
           <button
             @click="saveChanges"
             class="save-button"
             :disabled="modifiedRows.size === 0"
           >
-            💾 저장 ({{ modifiedRows.size }})
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"
+              />
+              <polyline points="17 21 17 13 7 13 7 21" />
+              <polyline points="7 3 7 8 15 8" />
+            </svg>
+            <span>저장 ({{ modifiedRows.size }})</span>
           </button>
           <button
             @click="cancelChanges"
             class="cancel-button"
             :disabled="modifiedRows.size === 0"
           >
-            ❌취소
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+            <span>취소</span>
           </button>
         </div>
       </div>
@@ -616,7 +689,7 @@ async function saveBulkChanges(modifiedData) {
       const typeMap = { 기능: "FR", 비기능: "NFR" };
 
       const transformed = {
-        memberId: 1, //일단 1로 하고 추후 수정
+        memberId: userId, //일단 1로 하고 추후 수정
         reqPk: row._originalApiData.reqPk,
         type: typeMap[row.type] || row.type,
         level1: row.level1,
@@ -745,11 +818,6 @@ async function downloadRequirements() {
   error.value = null;
 
   try {
-    console.log("요구사항 정의서 다운로드:", {
-      projectId: props.projectId,
-      revision: props.revision,
-    });
-
     const response = await fetch(
       `/api/v1/projects/${props.projectId}/requirements/downloads?revisionCount=${props.revision}`,
       {
@@ -1051,6 +1119,7 @@ const viewMockup = () => {
   });
 };
 </script>
+
 <style scoped>
 .project-main.project-content {
   padding: 20px;
@@ -1122,6 +1191,17 @@ const viewMockup = () => {
   cursor: pointer;
   transition: all 0.2s;
   font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mockup-button svg,
+.mockup-button-view svg,
+.load-button svg,
+.save-button svg,
+.cancel-button svg {
+  flex-shrink: 0;
 }
 
 /* [NEW] Mockup Button Styles */
