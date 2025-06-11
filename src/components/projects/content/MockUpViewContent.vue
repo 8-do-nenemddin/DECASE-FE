@@ -1,7 +1,7 @@
 <template>
   <div class="mockup-viewer-pane" v-if="activeFile">
     <div class="viewer-header">
-      <div class="header-content">
+      <div class="header-content-row">
         <h3>{{ activeFile.name }} (v{{ activeFile.revision }})</h3>
         <div class="view-toggle">
           <button
@@ -21,6 +21,7 @@
         </div>
       </div>
     </div>
+    <div style="height: 16px"></div>
     <div class="editor-toolbar" v-if="viewerTab === 'code'">
       <div class="toolbar-left">
         <span class="file-type">HTML</span>
@@ -193,7 +194,7 @@ onMounted(() => {
 .mockup-viewer-pane {
   padding: 20px;
   height: calc(100vh - 64px);
-  background-color: #f8f9fa;
+  background: #ffffff;
   font-family: "Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI",
     Roboto, sans-serif;
   display: flex;
@@ -204,148 +205,139 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
   padding: 20px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: #f8fafc;
+  border-radius: 24px;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.08);
+  backdrop-filter: blur(12px) saturate(160%);
+  border: 1px solid #e2e8f0;
+  transition: transform 0.2s, box-shadow 0.2s;
+  margin-bottom: 0;
+}
+.viewer-header:hover {
+  transform: translateY(-3px) scale(1.01);
+  box-shadow: 0 12px 40px 0 rgba(30, 41, 59, 0.22);
 }
 
-.header-content {
+.header-content-row {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
   width: 100%;
 }
 
 .viewer-header h3 {
   margin: 0;
-  font-size: 24px;
-  font-weight: 600;
-  color: #1f2937;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1e293b;
+  letter-spacing: -0.5px;
 }
 
 .view-toggle {
   display: flex;
-  background: #f3f4f6;
-  border-radius: 8px;
-  padding: 2px;
-  gap: 2px;
+  align-items: center;
+  background: #f1f5f9;
+  border-radius: 12px;
+  padding: 4px;
+  gap: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  position: relative;
+  border: 1px solid #e2e8f0;
 }
-
 .toggle-button {
-  padding: 8px 16px;
+  padding: 10px 24px;
   border: none;
   background: none;
-  font-size: 14px;
-  font-weight: 500;
-  color: #6b7280;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #64748b;
   cursor: pointer;
-  border-radius: 6px;
+  border-radius: 10px;
   transition: all 0.2s ease;
+  position: relative;
+  z-index: 1;
+  background-color: transparent;
 }
-
-.toggle-button:hover {
-  color: #374151;
-}
-
 .toggle-button.active {
-  background: #fff;
-  color: #3b82f6;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  background: #3b82f6;
+  color: #ffffff;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25);
+}
+.toggle-button:hover:not(.active) {
+  background: #f1f5f9;
+  color: #0f172a;
 }
 
 .editor-toolbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 20px;
-  background: white;
-  border-radius: 12px 12px 0 0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border-bottom: 1px solid #e5e7eb;
+  padding: 18px 32px;
+  background: #f8fafc;
+  border-radius: 20px 20px 0 0;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+  backdrop-filter: blur(8px);
+  border-bottom: 1.5px solid #e2e8f0;
 }
-
-.toolbar-left {
+.file-type {
+  color: #3b82f6;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 8px 18px;
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  letter-spacing: 1px;
+}
+.toolbar-button {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: #f8fafc;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  padding: 0;
 }
-
-.file-type {
-  color: #6b7280;
-  font-size: 14px;
-  font-weight: 500;
-  padding: 6px 12px;
-  background: #f3f4f6;
-  border-radius: 6px;
+.toolbar-button:hover {
+  background: #3b82f6;
+  color: #ffffff;
+  border-color: #3b82f6;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
 }
-
+.toolbar-button svg {
+  width: 16px;
+  height: 16px;
+  transition: all 0.2s ease;
+}
+.toolbar-button:hover svg {
+  stroke: #ffffff;
+}
 .toolbar-right {
   display: flex;
-  gap: 8px;
-}
-
-.toolbar-button {
-  padding: 8px 16px;
-  background: #3b82f6;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  display: flex;
+  flex-direction: row;
+  gap: 12px;
   align-items: center;
-  gap: 6px;
-}
-
-.toolbar-button:hover {
-  background: #2563eb;
 }
 
 .viewer-content {
   flex: 1;
   display: flex;
   flex-direction: column;
-  background: white;
-  border-radius: 0 0 12px 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: #ffffff;
+  border-radius: 0 0 24px 24px;
+  box-shadow: 0 4px 32px rgba(0, 0, 0, 0.06);
+  backdrop-filter: blur(8px);
   overflow: hidden;
   min-height: 0;
   position: relative;
-}
-
-.viewer-content::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 40px;
-  background: linear-gradient(
-    to bottom,
-    rgba(255, 255, 255, 0.9),
-    rgba(255, 255, 255, 0)
-  );
-  pointer-events: none;
-  z-index: 1;
-}
-
-.viewer-content::after {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 40px;
-  background: linear-gradient(
-    to top,
-    rgba(255, 255, 255, 0.9),
-    rgba(255, 255, 255, 0)
-  );
-  pointer-events: none;
-  z-index: 1;
+  transition: background 0.3s;
 }
 
 .preview-iframe {
@@ -354,54 +346,51 @@ onMounted(() => {
   min-height: 500px;
   border: none;
   flex: 1;
-  background: #fff;
-  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.05);
-  border-radius: 8px;
-  margin: 16px;
-  transition: all 0.3s ease;
+  background: #ffffff;
+  box-shadow: 0 0 24px rgba(0, 0, 0, 0.04) inset;
+  border-radius: 16px;
+  margin: 24px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .code-editor {
   display: flex;
-  background: #1e1e1e;
+  background: #ffffff;
   height: 100%;
   min-height: 500px;
   font-family: "Fira Code", "Consolas", monospace;
   overflow: hidden;
   position: relative;
+  border-radius: 0 0 24px 24px;
+  box-shadow: 0 0 32px rgba(0, 0, 0, 0.04) inset;
 }
-
 .line-numbers {
-  padding: 8px 8px 8px 0;
-  background: #252526;
-  color: #858585;
+  padding: 16px 12px 16px 0;
+  background: #f8fafc;
+  color: #3b82f6;
   text-align: right;
   user-select: none;
-  border-right: 1px solid #333;
+  border-right: 2px solid #e2e8f0;
   position: absolute;
   left: 0;
   top: 0;
   bottom: 0;
   z-index: 1;
   overflow: hidden;
-  width: 40px;
+  width: 56px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 1px;
 }
-
-.line-number {
-  padding: 0 8px;
-  font-size: 12px;
-  line-height: 1.5;
-}
-
 .code-textarea {
   flex: 1;
-  background: #1e1e1e;
-  color: #d4d4d4;
+  background: transparent;
+  color: #1e293b;
   border: none;
-  padding: 8px 8px 8px 40px;
+  padding: 16px 16px 16px 56px;
   font-family: "Fira Code", "Consolas", monospace;
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: 15px;
+  line-height: 1.7;
   resize: none;
   outline: none;
   tab-size: 2;
@@ -409,10 +398,20 @@ onMounted(() => {
   overflow-x: auto;
   width: 100%;
   height: 100%;
+  border-radius: 0 0 24px 0;
+  box-shadow: none;
+  transition: background 0.3s;
 }
-
 .code-textarea::selection {
-  background: #264f78;
+  background: #e2e8f0;
+}
+.code-textarea::-webkit-scrollbar {
+  width: 7px;
+  background: transparent;
+}
+.code-textarea::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 6px;
 }
 
 .loading-state {
@@ -421,21 +420,20 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   min-height: 400px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: #ffffff;
+  border-radius: 24px;
+  box-shadow: 0 4px 32px rgba(0, 0, 0, 0.06);
+  backdrop-filter: blur(8px);
 }
-
 .loading-spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid #e5e7eb;
-  border-top: 4px solid #3b82f6;
+  width: 56px;
+  height: 56px;
+  border: 5px solid #e2e8f0;
+  border-top: 5px solid #3b82f6;
   border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 16px;
+  animation: spin 1s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  margin-bottom: 24px;
 }
-
 @keyframes spin {
   0% {
     transform: rotate(0deg);
@@ -445,46 +443,48 @@ onMounted(() => {
   }
 }
 
-/* 반응형 디자인 */
 @media (max-width: 768px) {
   .mockup-viewer-pane {
-    padding: 16px;
+    padding: 12px;
   }
-
   .viewer-header {
-    flex-direction: column;
-    gap: 16px;
-    align-items: flex-start;
+    padding: 12px;
+    border-radius: 16px;
   }
-
-  .header-content {
-    flex-direction: column;
-    gap: 12px;
-    align-items: flex-start;
-    width: 100%;
-  }
-
   .viewer-header h3 {
-    font-size: 20px;
+    font-size: 1.2rem;
   }
-
-  .view-toggle {
-    width: 100%;
-    justify-content: center;
-  }
-
   .editor-toolbar {
-    padding: 12px 16px;
+    padding: 10px;
+    border-radius: 12px 12px 0 0;
   }
-
   .toolbar-button {
-    padding: 6px 12px;
+    padding: 8px 12px;
     font-size: 13px;
   }
-
   .preview-iframe {
     margin: 8px;
-    min-height: 400px;
+    min-height: 300px;
+    border-radius: 10px;
+  }
+  .viewer-content {
+    border-radius: 0 0 16px 16px;
+  }
+  .code-editor {
+    border-radius: 0 0 16px 16px;
+  }
+  .line-numbers {
+    width: 36px;
+    font-size: 12px;
+    border-radius: 0 0 0 12px;
+  }
+  .code-textarea {
+    padding: 8px 8px 8px 36px;
+    font-size: 13px;
+    border-radius: 0 0 16px 0;
+  }
+  .loading-state {
+    border-radius: 16px;
   }
 }
 </style>
