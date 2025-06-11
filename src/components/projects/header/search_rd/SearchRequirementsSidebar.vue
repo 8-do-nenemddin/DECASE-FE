@@ -171,15 +171,15 @@ const createSearchParams = () => {
 
   // Map type values
   const typeMap = {
-    fr: 1, // 기능
-    nfr: 2, // 비기능
+    fr: 0, // 기능
+    nfr: 1, // 비기능
   };
 
   // Map difficulty and priority values
   const levelMap = {
-    high: 3,
-    medium: 2,
-    low: 1,
+    high: 0,
+    medium: 1,
+    low: 2,
   };
 
   const searchParams = {

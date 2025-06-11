@@ -151,7 +151,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch, reactive } from "vue";
+import { ref, onMounted, watch, reactive, onUnmounted, nextTick } from "vue";
 import { AgGridVue } from "ag-grid-vue3";
 import { ModuleRegistry, AllCommunityModule } from "ag-grid-community";
 import "ag-grid-community/styles/ag-grid.css";
@@ -184,6 +184,7 @@ const rowData = ref([]);
 const modifiedRows = ref(new Set());
 const searchParams = ref(null);
 const mockupExists = ref(true); // 초기값은 false
+const gridApi = ref(null);
 
 // 컬럼 정의
 const columnDefs = ref([
@@ -359,31 +360,34 @@ const gridOptions = {
   getRowHeight: () => 60, //행높이
 };
 
-let gridApi = null;
-
 // 그리드 준비 완료 시
 function onGridReady(params) {
-  gridApi = params.api;
+  gridApi.value = params.api;
   console.log("AG Grid 준비 완료");
-  loadDataFromAPI();
+  // 그리드가 준비된 후에 데이터 로드
+  nextTick(() => {
+    loadDataFromAPI();
+  });
 }
 
 // API 응답 데이터를 테이블 형태로 변환
 function transformApiDataToTableData(apiData) {
   return apiData.map((item) => {
     // Handle sources if they exist, otherwise use empty array
-    const sourcesDisplay = item.sources
-      ? item.sources
-          .map(
-            (source) =>
-              `${source.docId} (${source.pageNum}페이지)\n${source.relSentence}`
-          )
-          .join("\n\n")
-      : "";
+    const sourcesDisplay =
+      item.sources && item.sources.length > 0
+        ? item.sources
+            .map(
+              (source) =>
+                `${source.docId} (${source.pageNum}페이지)\n${source.relSentence}`
+            )
+            .join("\n\n")
+        : "";
 
-    const sourceIds = item.sources
-      ? item.sources.map((source) => source.sourceId).join(", ")
-      : "";
+    const sourceIds =
+      item.sources && item.sources.length > 0
+        ? item.sources.map((source) => source.sourceId).join(", ")
+        : "";
 
     // Handle modification reasons if they exist, otherwise use empty array
     const modificationHistory =
@@ -444,18 +448,44 @@ const handleSearch = async (params) => {
       return;
     }
 
-    // 검색 파라미터 로깅
-    console.log("검색 파라미터:", params);
+    // 검색 파라미터 상세 로깅
+    console.log("=== 검색 파라미터 상세 정보 ===");
+    console.log("1. 기본 정보:");
+    console.log("- 프로젝트 ID:", props.projectId);
+    console.log("- 리비전:", props.revision);
+    console.log("2. 검색 조건:");
+    console.log("- 검색어:", params.query);
+    console.log("- 대분류:", params.level1);
+    console.log("- 중분류:", params.level2);
+    console.log("- 소분류:", params.level3);
+    console.log("- 유형:", params.type);
+    console.log("- 중요도:", params.priority);
+    console.log("- 난이도:", params.difficulty);
+    console.log("- 문서 유형:", params.docType);
+    console.log("3. 전체 파라미터 객체:", params);
 
     const queryParams = new URLSearchParams();
     if (params.query) queryParams.append("query", params.query);
     if (params.level1) queryParams.append("level1", params.level1);
     if (params.level2) queryParams.append("level2", params.level2);
     if (params.level3) queryParams.append("level3", params.level3);
-    if (params.type) queryParams.append("type", params.type);
-    if (params.difficulty) queryParams.append("difficulty", params.difficulty);
-    if (params.priority) queryParams.append("priority", params.priority);
-    if (params.docType) {
+
+    // type 파라미터 처리 (0: 기능, 1: 비기능)
+    if (params.type !== undefined && params.type !== null) {
+      queryParams.append("type", params.type);
+    }
+
+    // difficulty 파라미터 처리 (0: 상, 1: 중, 2: 하)
+    if (params.difficulty !== undefined && params.difficulty !== null) {
+      queryParams.append("difficulty", params.difficulty);
+    }
+
+    // priority 파라미터 처리 (0: 상, 1: 중, 2: 하)
+    if (params.priority !== undefined && params.priority !== null) {
+      queryParams.append("priority", params.priority);
+    }
+
+    if (params.docType && Array.isArray(params.docType)) {
       params.docType.forEach((type) => queryParams.append("docType", type));
     }
 
@@ -465,7 +495,14 @@ const handleSearch = async (params) => {
     const apiUrl = `/api/v1/projects/${
       props.projectId
     }/documents/search?${queryParams.toString()}`;
-    console.log("Search API URL:", apiUrl);
+
+    // API URL 로깅
+    console.log("=== API 요청 정보 ===");
+    console.log("1. 요청 URL:", apiUrl);
+    console.log("2. 쿼리 파라미터:");
+    for (const [key, value] of queryParams.entries()) {
+      console.log(`- ${key}: ${value}`);
+    }
 
     const response = await fetch(apiUrl, {
       method: "GET",
@@ -499,9 +536,6 @@ const handleSearch = async (params) => {
     if (!Array.isArray(apiData) || apiData.length === 0) {
       console.warn("검색 결과가 없습니다.");
       rowData.value = [];
-      if (gridApi) {
-        gridApi.setRowData([]);
-      }
       return;
     }
 
@@ -509,15 +543,18 @@ const handleSearch = async (params) => {
     const transformedData = transformApiDataToTableData(apiData);
     console.log("변환된 데이터:", transformedData);
 
+    // rowData를 먼저 업데이트
     rowData.value = transformedData;
     modifiedRows.value.clear();
 
-    if (gridApi) {
-      gridApi.setRowData(transformedData);
-      // 그리드 새로고침
-      gridApi.refreshCells();
-      // 그리드 크기 조정
-      gridApi.sizeColumnsToFit();
+    // gridApi가 준비되었는지 확인하고 데이터 설정
+    await nextTick();
+    if (gridApi.value && typeof gridApi.value.setRowData === "function") {
+      gridApi.value.setRowData(transformedData);
+      gridApi.value.refreshCells();
+      gridApi.value.sizeColumnsToFit();
+    } else {
+      console.warn("AG Grid가 아직 초기화되지 않았습니다.");
     }
 
     console.log("검색 결과 로드 완료. 결과 수:", transformedData.length);
@@ -525,9 +562,6 @@ const handleSearch = async (params) => {
     console.error("❌ 검색 실패:", err);
     error.value = err.message || "검색 중 오류가 발생했습니다.";
     rowData.value = [];
-    if (gridApi) {
-      gridApi.setRowData([]);
-    }
   } finally {
     loading.value = false;
   }
@@ -647,8 +681,8 @@ function onCellValueChanged(event) {
 
   if (colDef.field === "modification_reason") {
     console.log("수정 이유가 입력됨:", newValue);
-    gridApi.refreshCells({
-      rowNodes: [gridApi.getRowNode(rowIndex)],
+    gridApi.value.refreshCells({
+      rowNodes: [gridApi.value.getRowNode(rowIndex)],
       columns: ["modification_reason"],
     });
     return;
@@ -664,8 +698,8 @@ function onCellValueChanged(event) {
   data.isModified = true;
   modifiedRows.value.add(data.reqIdCode);
 
-  gridApi.refreshCells({
-    rowNodes: [gridApi.getRowNode(rowIndex)],
+  gridApi.value.refreshCells({
+    rowNodes: [gridApi.value.getRowNode(rowIndex)],
     columns: ["modification_reason"],
   });
 }
@@ -762,7 +796,7 @@ function cancelChanges() {
     });
 
     modifiedRows.value.clear();
-    gridApi.refreshCells();
+    gridApi.value.refreshCells();
     console.log("모든 변경사항이 취소되었습니다.");
   }
 }
@@ -1088,7 +1122,7 @@ watch(
       console.log(
         `요구사항 데이터 변경: projectId=${newProjectId}, revision=${newRevision}`
       );
-      if (gridApi) {
+      if (gridApi.value) {
         fetchCategories(); // 카테고리 먼저 가져오기
         loadDataFromAPI();
       }
@@ -1118,6 +1152,11 @@ const viewMockup = () => {
     revision: props.revision,
   });
 };
+
+// 컴포넌트 언마운트 시 gridApi 초기화
+onUnmounted(() => {
+  gridApi.value = null;
+});
 </script>
 
 <style scoped>
