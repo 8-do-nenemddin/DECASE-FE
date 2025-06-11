@@ -10,7 +10,17 @@
         >
           <div class="member-info">
             <div class="avatar">
-              <span class="avatar-icon">👤</span>
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
             </div>
 
             <div class="member-details">
@@ -24,23 +34,65 @@
 
           <div class="member-actions">
             <div class="permission-toggle-container">
-              <span class="permission-label">{{ member.permission === 'READ' ? 'Read' : 'Read/Write' }}</span>
+              <span class="permission-label">{{
+                member.permission === "READ" ? "Read" : "Read/Write"
+              }}</span>
               <div
                 class="permission-toggle"
-                :class="{ 'active': member.permission === 'READ_AND_WRITE' }"
+                :class="{ active: member.permission === 'READ_AND_WRITE' }"
                 @click="showPermissionModal(member)"
               >
                 <div class="toggle-slider">
                   <div class="toggle-icon">
-                    <span v-if="member.permission === 'READ'">📖</span>
-                    <span v-else>✍️</span>
+                    <svg
+                      v-if="member.permission === 'READ'"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path
+                        d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"
+                      ></path>
+                      <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                    <svg
+                      v-else
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path
+                        d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"
+                      ></path>
+                      <path d="m15 5 4 4"></path>
+                    </svg>
                   </div>
                 </div>
               </div>
             </div>
 
-            <button @click="showDeleteModal(member, index)" class="delete-button">
-              <span class="delete-icon">🗑️</span>
+            <button
+              @click="showDeleteModal(member, index)"
+              class="delete-button"
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M3 6h18"></path>
+                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+              </svg>
             </button>
           </div>
         </div>
@@ -49,7 +101,17 @@
       <!-- 멤버 추가 버튼 -->
       <div class="add-member-section">
         <button @click="showAddMemberModal = true" class="add-member-button">
-          <span class="button-icon">➕</span>
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M12 5v14"></path>
+            <path d="M5 12h14"></path>
+          </svg>
           멤버 추가
         </button>
       </div>
@@ -66,7 +128,11 @@
     <AddSuccessModal v-if="showSuccessModal" @close="handleSuccessClose" />
 
     <!-- 권한 변경 확인 모달 -->
-    <div v-if="showPermissionChangeModal" class="modal-overlay" @click="closePermissionModal">
+    <div
+      v-if="showPermissionChangeModal"
+      class="modal-overlay"
+      @click="closePermissionModal"
+    >
       <div class="modal-content" @click.stop>
         <div class="modal-header">
           <h3 class="modal-title">권한 변경 확인</h3>
@@ -78,19 +144,35 @@
         <div class="modal-body">
           <div class="member-info-modal">
             <div class="avatar-small">
-              <span class="avatar-icon">👤</span>
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
             </div>
             <div class="member-details-modal">
               <div class="member-name-modal">{{ selectedMember?.name }}</div>
-              <div class="member-department-modal">{{ selectedMember?.department }}</div>
+              <div class="member-department-modal">
+                {{ selectedMember?.department }}
+              </div>
             </div>
           </div>
 
           <div class="permission-change-info">
             <p class="change-message">
-              <span class="current-permission">{{ selectedMember?.permission }}</span>
+              <span class="current-permission">{{
+                selectedMember?.permission
+              }}</span>
               <span class="arrow">→</span>
-              <span class="new-permission">{{ getNewPermission(selectedMember?.permission) }}</span>
+              <span class="new-permission">{{
+                getNewPermission(selectedMember?.permission)
+              }}</span>
             </p>
             <p class="confirm-message">권한을 변경하시겠습니까?</p>
           </div>
@@ -108,7 +190,11 @@
     </div>
 
     <!-- 멤버 삭제 확인 모달 -->
-    <div v-if="showDeleteConfirmModal" class="modal-overlay" @click="closeDeleteModal">
+    <div
+      v-if="showDeleteConfirmModal"
+      class="modal-overlay"
+      @click="closeDeleteModal"
+    >
       <div class="modal-content delete-modal" @click.stop>
         <div class="modal-header">
           <h3 class="modal-title">멤버 삭제 확인</h3>
@@ -120,18 +206,52 @@
         <div class="modal-body">
           <div class="member-info-modal">
             <div class="avatar-small">
-              <span class="avatar-icon">👤</span>
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
             </div>
             <div class="member-details-modal">
               <div class="member-name-modal">{{ memberToDelete?.name }}</div>
-              <div class="member-department-modal">{{ memberToDelete?.department }}</div>
+              <div class="member-department-modal">
+                {{ memberToDelete?.department }}
+              </div>
             </div>
           </div>
 
           <div class="delete-warning">
-            <div class="warning-icon">⚠️</div>
+            <div class="warning-icon">
+              <svg
+                width="32"
+                height="32"
+                viewBox="0 0 32 32"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polygon points="16,4 30,28 2,28" />
+                <line x1="16" y1="12" x2="16" y2="20" />
+                <circle
+                  cx="16"
+                  cy="24"
+                  r="1.5"
+                  fill="currentColor"
+                  stroke="none"
+                />
+              </svg>
+            </div>
             <p class="warning-message">
-              이 멤버를 삭제하면 더 이상 <br>해당 프로젝트에 접근할 수 없습니다.
+              이 멤버를 삭제하면 더 이상 <br />해당 프로젝트에 접근할 수
+              없습니다.
             </p>
             <p class="confirm-message">정말로 삭제하시겠습니까?</p>
           </div>
@@ -141,9 +261,7 @@
           <button @click="confirmDelete" class="delete-confirm-button">
             삭제
           </button>
-          <button @click="closeDeleteModal" class="cancel-button">
-            취소
-          </button>
+          <button @click="closeDeleteModal" class="cancel-button">취소</button>
         </div>
       </div>
     </div>
@@ -169,8 +287,8 @@ const projectStore = useProjectStore();
 const props = defineProps({
   projectId: {
     type: String,
-    required: true
-  }
+    required: true,
+  },
 });
 
 const members = ref([]);
@@ -181,15 +299,15 @@ const fetchProjectMembers = async () => {
     const response = await fetch(`/api/v1/projects/${projectId}/members`);
     const result = await response.json();
 
-    console.log(result)
+    console.log(result);
 
     if (response.ok) {
       members.value = result.data;
     } else {
-      console.error('멤버 불러오기 실패:', result.message);
+      console.error("멤버 불러오기 실패:", result.message);
     }
   } catch (error) {
-    console.error('API 호출 에러:', error);
+    console.error("API 호출 에러:", error);
   }
 };
 
@@ -205,7 +323,7 @@ const showPermissionModal = (member) => {
 
 // 새로운 권한 반환
 const getNewPermission = (currentPermission) => {
-  return currentPermission === 'READ' ? 'READ_AND_WRITE' : 'READ';
+  return currentPermission === "READ" ? "READ_AND_WRITE" : "READ";
 };
 
 // 권한 변경 확인Unresolved variable memberId
@@ -217,24 +335,26 @@ const confirmPermissionChange = async () => {
 
     try {
       const response = await fetch(
-          `/api/v1/projects/${projectId}/members/${memberId}/status`,
-          {
-            method: "PATCH",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              adminId: projectStore.userId,
-              permission: newPermission
-            })
-          }
-       );
+        `/api/v1/projects/${projectId}/members/${memberId}/status`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            adminId: projectStore.userId,
+            permission: newPermission,
+          }),
+        }
+      );
       if (!response.ok) {
         throw new Error("권한 변경 실패");
       }
 
       selectedMember.value.permission = newPermission;
-      console.log(`멤버 ${selectedMember.value.id}의 권한을 ${newPermission}으로 변경`);
+      console.log(
+        `멤버 ${selectedMember.value.id}의 권한을 ${newPermission}으로 변경`
+      );
     } catch (error) {
       console.error("권한 변경 중 오류:", error);
       alert("권한 변경에 실패했습니다.");
@@ -264,19 +384,16 @@ const confirmDelete = async () => {
     const memberId = memberToDelete.value.memberId;
 
     try {
-      const response = await fetch(
-          `/api/v1/projects/${projectId}/members`,
-          {
-            method: "DELETE",
-            headers: {
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-              adminId: projectStore.userId,
-              memberId: memberId
-            })
-          }
-      );
+      const response = await fetch(`/api/v1/projects/${projectId}/members`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          adminId: projectStore.userId,
+          memberId: memberId,
+        }),
+      });
 
       if (!response.ok) {
         throw new Error("서버 응답 오류");
@@ -311,14 +428,17 @@ const handleSendInvitations = async (invitationData) => {
   console.log("초대 전송 처리:", invitationData);
 
   try {
-    const response = await fetch(`/api/v1/projects/${props.projectId}/members`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "*/*"
-      },
-      body: JSON.stringify(invitationData)
-    });
+    const response = await fetch(
+      `/api/v1/projects/${props.projectId}/members`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "*/*",
+        },
+        body: JSON.stringify(invitationData),
+      }
+    );
 
     const result = await response.json();
 
@@ -334,7 +454,6 @@ const handleSendInvitations = async (invitationData) => {
 
     // 초대 성공 후 멤버 목록 다시 불러오기
     await fetchProjectMembers();
-
   } catch (error) {
     console.error("초대 요청 에러:", error);
     alert("초대 요청 중 오류가 발생했습니다.");
@@ -404,6 +523,7 @@ const handleSuccessClose = () => {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  color: #6b7280;
 }
 
 .avatar-icon {
@@ -510,16 +630,18 @@ const handleSuccessClose = () => {
 }
 
 .toggle-icon {
-  font-size: 0.75rem;
-  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+}
+
+.permission-toggle.active .toggle-icon {
+  color: white;
 }
 
 .permission-toggle:not(.active) .toggle-icon {
   opacity: 0.7;
-}
-
-.permission-toggle.active .toggle-icon {
-  opacity: 1;
 }
 
 .delete-button {
@@ -577,8 +699,8 @@ const handleSuccessClose = () => {
   box-shadow: 0 8px 25px rgba(16, 185, 129, 0.25);
 }
 
-.button-icon {
-  font-size: 1rem;
+.add-member-button svg {
+  color: white;
 }
 
 /* 모달 공통 스타일 */
@@ -664,6 +786,7 @@ const handleSuccessClose = () => {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  color: #6b7280;
 }
 
 .avatar-small .avatar-icon {
@@ -742,7 +865,10 @@ const handleSuccessClose = () => {
 }
 
 .warning-icon {
-  font-size: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #dc2626;
   margin-bottom: 0.75rem;
 }
 
