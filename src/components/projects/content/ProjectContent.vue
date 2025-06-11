@@ -18,6 +18,7 @@
 
       <RequirementsContent
         v-else-if="selectedFile?.type === 'generated'"
+        ref="requirementsContentRef"
         :projectId="selectedFile.projectId"
         :revision="
           projectStore.projectRevision >= 1
