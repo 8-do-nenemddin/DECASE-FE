@@ -10,7 +10,24 @@
             ]"
             @click="$emit('changeComponent', 'ProjectInfo')"
           >
-            <span class="nav-icon">📝</span>
+            <span class="nav-icon">
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                ></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <polyline points="10 9 9 9 8 9"></polyline>
+              </svg>
+            </span>
             <span class="nav-text">프로젝트 정보 수정</span>
           </button>
         </li>
@@ -23,7 +40,21 @@
             ]"
             @click="$emit('changeComponent', 'ProjectMatrix')"
           >
-            <span class="nav-icon">📊</span>
+            <span class="nav-icon">
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <rect x="3" y="3" width="7" height="7"></rect>
+                <rect x="14" y="3" width="7" height="7"></rect>
+                <rect x="14" y="14" width="7" height="7"></rect>
+                <rect x="3" y="14" width="7" height="7"></rect>
+              </svg>
+            </span>
             <span class="nav-text">요구사항 추적 매트릭스</span>
           </button>
         </li>
@@ -36,20 +67,46 @@
             ]"
             @click="$emit('changeComponent', 'ProjectRight')"
           >
-            <span class="nav-icon">🔐</span>
+            <span class="nav-icon">
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+            </span>
             <span class="nav-text">권한 관리</span>
           </button>
         </li>
 
         <li class="nav-item">
           <button
-              :class="[
+            :class="[
               'nav-button',
               { active: currentComponent === 'Invitation' },
             ]"
-              @click="$emit('changeComponent', 'Invitation')"
+            @click="$emit('changeComponent', 'Invitation')"
           >
-            <span class="nav-icon">💌</span>
+            <span class="nav-icon">
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"
+                ></path>
+                <polyline points="22,6 12,13 2,6"></polyline>
+              </svg>
+            </span>
             <span class="nav-text">초대 현황</span>
           </button>
         </li>
