@@ -14,7 +14,22 @@
             @click="viewMockup"
             class="mockup-button-view"
           >
-            👀 목업 보러가기
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+              <line x1="8" y1="21" x2="16" y2="21" />
+              <line x1="12" y1="17" x2="12" y2="21" />
+            </svg>
+            <span>목업 보러가기</span>
           </button>
           <button
             v-if="!mockupExists"
@@ -22,28 +37,86 @@
             class="mockup-button"
             :disabled="loading"
           >
-            🎨 목업 생성
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+              <line x1="8" y1="21" x2="16" y2="21" />
+              <line x1="12" y1="17" x2="12" y2="21" />
+            </svg>
+            <span>목업 생성</span>
           </button>
           <button
             @click="downloadRequirements"
             class="load-button"
             :disabled="loading"
           >
-            {{ loading ? "🔄 다운로드중..." : "📥 다운로드" }}
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            <span>{{ loading ? "다운로드중..." : "다운로드" }}</span>
           </button>
           <button
             @click="saveChanges"
             class="save-button"
             :disabled="modifiedRows.size === 0"
           >
-            💾 저장 ({{ modifiedRows.size }})
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"
+              />
+              <polyline points="17 21 17 13 7 13 7 21" />
+              <polyline points="7 3 7 8 15 8" />
+            </svg>
+            <span>저장 ({{ modifiedRows.size }})</span>
           </button>
           <button
             @click="cancelChanges"
             class="cancel-button"
             :disabled="modifiedRows.size === 0"
           >
-            ❌취소
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+            <span>취소</span>
           </button>
         </div>
       </div>
@@ -78,7 +151,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from "vue";
+import { ref, onMounted, watch, reactive } from "vue";
 import { AgGridVue } from "ag-grid-vue3";
 import { ModuleRegistry, AllCommunityModule } from "ag-grid-community";
 import "ag-grid-community/styles/ag-grid.css";
@@ -168,7 +241,7 @@ const columnDefs = ref([
     field: "description",
     headerName: "요구사항 설명",
     editable: true,
-    width: 250,
+    width: 300,
     cellEditor: "agLargeTextCellEditor",
     cellEditorPopup: true,
   },
@@ -360,9 +433,104 @@ function transformApiDataToTableData(apiData) {
 }
 
 // 검색 이벤트 핸들러
-const handleSearch = (params) => {
-  searchParams.value = params;
-  loadDataFromAPI();
+const handleSearch = async (params) => {
+  try {
+    loading.value = true;
+    error.value = null;
+    searchParams.value = params;
+
+    if (!props.projectId || !props.revision) {
+      error.value = "프로젝트 ID 또는 리비전 정보가 없습니다.";
+      return;
+    }
+
+    // 검색 파라미터 로깅
+    console.log("검색 파라미터:", params);
+
+    const queryParams = new URLSearchParams();
+    if (params.query) queryParams.append("query", params.query);
+    if (params.level1) queryParams.append("level1", params.level1);
+    if (params.level2) queryParams.append("level2", params.level2);
+    if (params.level3) queryParams.append("level3", params.level3);
+    if (params.type) queryParams.append("type", params.type);
+    if (params.difficulty) queryParams.append("difficulty", params.difficulty);
+    if (params.priority) queryParams.append("priority", params.priority);
+    if (params.docType) {
+      params.docType.forEach((type) => queryParams.append("docType", type));
+    }
+
+    // 리비전 정보 추가
+    queryParams.append("revisionCount", props.revision);
+
+    const apiUrl = `/api/v1/projects/${
+      props.projectId
+    }/documents/search?${queryParams.toString()}`;
+    console.log("Search API URL:", apiUrl);
+
+    const response = await fetch(apiUrl, {
+      method: "GET",
+      headers: {
+        Accept: "*/*",
+        "Content-Type": "application/json",
+      },
+      credentials: "include", // 쿠키 포함
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("API Error Response:", errorText);
+      throw new Error(`검색 요청이 실패했습니다. (${response.status})`);
+    }
+
+    const responseData = await response.json();
+    console.log("Search API Response:", responseData);
+
+    // 응답 데이터 구조 확인 및 처리
+    let apiData;
+    if (responseData && responseData.data) {
+      apiData = responseData.data;
+    } else if (Array.isArray(responseData)) {
+      apiData = responseData;
+    } else {
+      console.error("예상치 못한 응답 구조:", responseData);
+      throw new Error("응답 데이터 구조가 올바르지 않습니다.");
+    }
+
+    if (!Array.isArray(apiData) || apiData.length === 0) {
+      console.warn("검색 결과가 없습니다.");
+      rowData.value = [];
+      if (gridApi) {
+        gridApi.setRowData([]);
+      }
+      return;
+    }
+
+    // 데이터 변환 및 그리드 업데이트
+    const transformedData = transformApiDataToTableData(apiData);
+    console.log("변환된 데이터:", transformedData);
+
+    rowData.value = transformedData;
+    modifiedRows.value.clear();
+
+    if (gridApi) {
+      gridApi.setRowData(transformedData);
+      // 그리드 새로고침
+      gridApi.refreshCells();
+      // 그리드 크기 조정
+      gridApi.sizeColumnsToFit();
+    }
+
+    console.log("검색 결과 로드 완료. 결과 수:", transformedData.length);
+  } catch (err) {
+    console.error("❌ 검색 실패:", err);
+    error.value = err.message || "검색 중 오류가 발생했습니다.";
+    rowData.value = [];
+    if (gridApi) {
+      gridApi.setRowData([]);
+    }
+  } finally {
+    loading.value = false;
+  }
 };
 
 // API에서 데이터 로드
@@ -521,7 +689,7 @@ async function saveBulkChanges(modifiedData) {
       const typeMap = { 기능: "FR", 비기능: "NFR" };
 
       const transformed = {
-        memberId: 1, //일단 1로 하고 추후 수정
+        memberId: userId, //일단 1로 하고 추후 수정
         reqPk: row._originalApiData.reqPk,
         type: typeMap[row.type] || row.type,
         level1: row.level1,
@@ -650,11 +818,6 @@ async function downloadRequirements() {
   error.value = null;
 
   try {
-    console.log("요구사항 정의서 다운로드:", {
-      projectId: props.projectId,
-      revision: props.revision,
-    });
-
     const response = await fetch(
       `/api/v1/projects/${props.projectId}/requirements/downloads?revisionCount=${props.revision}`,
       {
@@ -700,6 +863,220 @@ async function downloadRequirements() {
   }
 }
 
+// 카테고리 가져오기 함수
+const fetchCategories = async () => {
+  try {
+    if (!props.projectId || !props.revision) {
+      console.error("Project ID or revision is not available");
+      return;
+    }
+
+    console.log(
+      "Fetching categories for project:",
+      props.projectId,
+      "revision:",
+      props.revision
+    );
+
+    const response = await fetch(
+      `/api/v1/projects/${props.projectId}/documents/${props.revision}/categories`,
+      {
+        method: "GET",
+        headers: {
+          Accept: "*/*",
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch categories");
+    }
+
+    const data = await response.json();
+    console.log("Received categories:", data);
+
+    if (data) {
+      if (data["대분류"]) categories["대분류"] = data["대분류"];
+      if (data["중분류"]) categories["중분류"] = data["중분류"];
+      if (data["소분류"]) categories["소분류"] = data["소분류"];
+    }
+
+    // 컬럼 정의 업데이트
+    updateColumnDefs();
+  } catch (error) {
+    console.error("Failed to fetch categories:", error);
+  }
+};
+
+// 컬럼 정의 업데이트 함수
+const updateColumnDefs = () => {
+  columnDefs.value = [
+    {
+      field: "reqIdCode",
+      headerName: "요구사항 ID",
+      editable: false,
+      width: 140,
+      pinned: "left",
+    },
+    {
+      field: "type",
+      headerName: "요구사항\n 유형",
+      editable: true,
+      width: 50,
+      cellEditor: "agSelectCellEditor",
+      cellEditorParams: {
+        values: ["기능", "비기능"],
+      },
+      valueFormatter: (params) => {
+        return params.value === "FR"
+          ? "기능"
+          : params.value === "NFR"
+          ? "비기능"
+          : params.value;
+      },
+    },
+    {
+      field: "level1",
+      headerName: "대분류",
+      editable: true,
+      width: 150,
+      cellEditor: "agSelectCellEditor",
+      cellEditorParams: {
+        values: categories["대분류"],
+      },
+    },
+    {
+      field: "level2",
+      headerName: "중분류",
+      editable: true,
+      width: 150,
+      cellEditor: "agSelectCellEditor",
+      cellEditorParams: {
+        values: categories["중분류"],
+      },
+    },
+    {
+      field: "level3",
+      headerName: "소분류",
+      editable: true,
+      width: 150,
+      cellEditor: "agSelectCellEditor",
+      cellEditorParams: {
+        values: categories["소분류"],
+      },
+    },
+    {
+      field: "name",
+      headerName: "요구사항 명",
+      editable: true,
+      width: 250,
+      cellEditor: "agLargeTextCellEditor",
+      cellEditorPopup: true,
+    },
+    {
+      field: "description",
+      headerName: "요구사항 설명",
+      editable: true,
+      width: 250,
+      cellEditor: "agLargeTextCellEditor",
+      cellEditorPopup: true,
+    },
+    {
+      field: "priority",
+      headerName: "중요도",
+      editable: true,
+      width: 50,
+      cellEditor: "agSelectCellEditor",
+      cellEditorParams: {
+        values: ["상", "중", "하"],
+      },
+      valueFormatter: (params) => {
+        const priorityMap = { HIGH: "상", MIDDLE: "중", LOW: "하" };
+        return priorityMap[params.value] || params.value;
+      },
+    },
+    {
+      field: "difficulty",
+      headerName: "난이도",
+      editable: true,
+      width: 50,
+      cellEditor: "agSelectCellEditor",
+      cellEditorParams: {
+        values: ["상", "중", "하"],
+      },
+      valueFormatter: (params) => {
+        const difficultyMap = { HIGH: "상", MIDDLE: "중", LOW: "하" };
+        return difficultyMap[params.value] || params.value;
+      },
+    },
+    {
+      field: "sourcesDisplay",
+      headerName: "출처",
+      editable: true,
+      cellEditor: "agLargeTextCellEditor",
+      width: 300,
+      cellRenderer: (params) => {
+        if (!params.value) return "";
+        return `<div style="white-space: pre-line; line-height: 1.4;">${params.value}</div>`;
+      },
+    },
+    {
+      field: "sourceIds",
+      headerName: "출처 ID",
+      editable: true,
+      width: 50,
+    },
+    {
+      field: "managementStatus",
+      headerName: "관리\n구분",
+      editable: true,
+      cellEditor: "agSelectCellEditor",
+      cellEditorParams: {
+        values: ["등록", "삭제"],
+      },
+      width: 50,
+      cellStyle: (params) => {
+        if (params.value === "삭제") {
+          return { backgroundColor: "#ffebee", color: "#c62828" };
+        }
+        return { backgroundColor: "#e8f5e8", color: "#2e7d32" };
+      },
+    },
+    {
+      field: "modificationHistory",
+      headerName: "변경이력",
+      editable: true,
+      width: 250,
+      cellEditor: "agLargeTextCellEditor",
+      cellRenderer: (params) => {
+        if (!params.value) return "";
+        return `<div style="white-space: pre-line; line-height: 1.4;">${params.value}</div>`;
+      },
+    },
+    {
+      field: "lastModifiedDate",
+      headerName: "최종 변경 일자",
+      editable: true,
+      width: 130,
+    },
+    {
+      field: "modification_reason",
+      headerName: "수정 이유",
+      editable: true,
+      width: 200,
+      cellEditor: "agLargeTextCellEditor",
+      cellEditorPopup: true,
+      cellStyle: (params) => {
+        if (params.data.isModified && !params.data.modification_reason) {
+          return { backgroundColor: "#ffebee", border: "1px solid #f44336" };
+        }
+        return null;
+      },
+    },
+  ];
+};
+
 // props 변경 감지
 watch(
   [() => props.projectId, () => props.revision],
@@ -712,11 +1089,12 @@ watch(
         `요구사항 데이터 변경: projectId=${newProjectId}, revision=${newRevision}`
       );
       if (gridApi) {
+        fetchCategories(); // 카테고리 먼저 가져오기
         loadDataFromAPI();
       }
     }
   },
-  { immediate: false }
+  { immediate: true }
 );
 
 onMounted(() => {
@@ -724,6 +1102,7 @@ onMounted(() => {
     projectId: props.projectId,
     revision: props.revision,
   });
+  fetchCategories(); // 초기 카테고리 로드
 });
 
 // 컴포넌트 정의
@@ -740,6 +1119,7 @@ const viewMockup = () => {
   });
 };
 </script>
+
 <style scoped>
 .project-main.project-content {
   padding: 20px;
@@ -811,6 +1191,17 @@ const viewMockup = () => {
   cursor: pointer;
   transition: all 0.2s;
   font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mockup-button svg,
+.mockup-button-view svg,
+.load-button svg,
+.save-button svg,
+.cancel-button svg {
+  flex-shrink: 0;
 }
 
 /* [NEW] Mockup Button Styles */
