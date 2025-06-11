@@ -374,18 +374,20 @@ function onGridReady(params) {
 function transformApiDataToTableData(apiData) {
   return apiData.map((item) => {
     // Handle sources if they exist, otherwise use empty array
-    const sourcesDisplay = item.sources
-      ? item.sources
-          .map(
-            (source) =>
-              `${source.docId} (${source.pageNum}페이지)\n${source.relSentence}`
-          )
-          .join("\n\n")
-      : "";
+    const sourcesDisplay =
+      item.sources && item.sources.length > 0
+        ? item.sources
+            .map(
+              (source) =>
+                `${source.docId} (${source.pageNum}페이지)\n${source.relSentence}`
+            )
+            .join("\n\n")
+        : "";
 
-    const sourceIds = item.sources
-      ? item.sources.map((source) => source.sourceId).join(", ")
-      : "";
+    const sourceIds =
+      item.sources && item.sources.length > 0
+        ? item.sources.map((source) => source.sourceId).join(", ")
+        : "";
 
     // Handle modification reasons if they exist, otherwise use empty array
     const modificationHistory =
