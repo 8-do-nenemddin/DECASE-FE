@@ -26,6 +26,7 @@
                   type="date"
                   v-model="projectData.startDate"
                   class="date-input"
+                  :disabled="true"
                 />
               </div>
               <span class="date-separator">~</span>
@@ -34,6 +35,7 @@
                   type="date"
                   v-model="projectData.endDate"
                   class="date-input"
+                  :disabled="true"
                 />
               </div>
             </div>
@@ -48,7 +50,7 @@
                 type="text"
                 v-model="projectData.name"
                 class="form-input"
-                placeholder="프로젝트 이름을 입력하세요"
+                :disabled="true"
               />
             </div>
 
@@ -59,7 +61,7 @@
                 type="text"
                 v-model="projectData.pm"
                 class="form-input"
-                placeholder="담당 PM을 입력하세요"
+                :disabled="true"
               />
             </div>
           </div>
@@ -72,7 +74,7 @@
               v-model="projectData.description"
               rows="6"
               class="form-textarea"
-              placeholder="프로젝트에 대한 상세한 설명을 입력하세요..."
+              :disabled="true"
             ></textarea>
           </div>
 
@@ -86,7 +88,7 @@
                 @input="onScaleInput"
                 :value="displayValue"
                 class="form-input no-spinner"
-                placeholder="0"
+                :disabled="true"
               />
               <span class="unit-label">원</span>
             </div>
