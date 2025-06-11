@@ -11,7 +11,7 @@
       />
 
       <!-- 메인 콘텐츠 -->
-      <main class="content-area">
+      <main class="detail-content-area">
         <!-- 프로젝트 정보 수정 -->
         <ProjectInfo v-if="currentComponent === 'ProjectInfo'" />
 
@@ -100,7 +100,7 @@ body {
   height: calc(100vh - 4rem);
 }
 
-.content-area {
+.detail-content-area {
   flex: 1;
   padding: 2rem;
   overflow-y: auto;
