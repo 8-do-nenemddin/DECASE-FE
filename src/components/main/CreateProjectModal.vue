@@ -233,10 +233,10 @@ const handleCreateProject = async () => {
       newProject.projectId,
       newProject.name,
       0,
-      newProject.revisionCount,
       newProject.status,
       newProject.isAdmin
     );
+    projectStore.setRevisionCount(newProject.revisionCount);
 
     showSuccessModal.value = true;
     closeModal();
