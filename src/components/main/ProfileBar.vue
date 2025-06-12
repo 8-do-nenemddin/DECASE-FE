@@ -184,7 +184,7 @@ const router = useRouter();
 const confirmLogout = () => {
   console.log("로그아웃 확인");
   emit("logout");
-  router.push("/home");
+  router.push("/");
   emit("close");
   closeLogoutModal();
   projectStore.resetAll();
@@ -214,7 +214,7 @@ const confirmWithdraw = async () => {
     if (response.ok) {
       console.log("탈퇴 성공");
       projectStore.resetAll();
-      router.push("/home");
+      router.push("/");
       closeWithdrawModal();
     } else {
       const result = await response.json();
