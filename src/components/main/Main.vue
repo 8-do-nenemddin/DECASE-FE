@@ -17,24 +17,6 @@
       </div>
 
       <div class="header-right">
-        <button class="new-project-button" @click="openModal">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <line x1="12" y1="5" x2="12" y2="19"></line>
-            <line x1="5" y1="12" x2="19" y2="12"></line>
-          </svg>
-          <span>새로 만들기</span>
-        </button>
-
         <div class="action-buttons">
           <button
             class="icon-button profile-btn"
@@ -59,6 +41,25 @@
 
     <main class="main-content">
       <div class="toolbar">
+        <div class="toolbar-left">
+          <button class="new-project-button" @click="openModal">
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+            >
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            <span>새로 만들기</span>
+          </button>
+        </div>
         <div class="toolbar-right">
           <div class="search-container">
             <svg
@@ -593,6 +594,14 @@ onMounted(() => {
   border-radius: 12px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   width: 100%;
+}
+
+.toolbar-left {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex: 1;
+  gap: 16px;
 }
 
 .toolbar-right {
