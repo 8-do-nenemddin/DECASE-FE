@@ -1,17 +1,78 @@
 <template>
   <div id="app-container">
-    <MainHeader @toggleProfile="toggleProfileSidebar"></MainHeader>
+    <header class="header">
+      <div class="header-left">
+        <div class="logo-container">
+          <div class="logo-icon">
+            <img src="/DECASE-light.png" alt="DECASE Logo" class="logo" />
+          </div>
+          <span class="logo-text">DECASE</span>
+        </div>
+      </div>
+
+      <div class="header-center">
+        <div class="welcome-message">
+          <h1>프로젝트 관리</h1>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <div class="action-buttons">
+          <button
+            class="icon-button profile-btn"
+            @click="toggleProfileSidebar"
+            title="사용자"
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </header>
 
     <main class="main-content">
       <div class="toolbar">
-        <button class="new-project-button" @click="openModal">
-          <span class="plus-icon">+</span>
-          새로 만들기
-        </button>
-
+        <div class="toolbar-left">
+          <button class="new-project-button" @click="openModal">
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+            >
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            <span>새로 만들기</span>
+          </button>
+        </div>
         <div class="toolbar-right">
           <div class="search-container">
-            <div class="search-icon">🔍</div>
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="11" cy="11" r="8"></circle>
+              <path d="m21 21-4.35-4.35"></path>
+            </svg>
             <input
               type="text"
               v-model="searchQuery"
@@ -28,7 +89,19 @@
                 @click="setView('gallery')"
                 title="갤러리 보기"
               >
-                <span class="view-icon">⚏</span>
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <rect x="3" y="3" width="7" height="7"></rect>
+                  <rect x="14" y="3" width="7" height="7"></rect>
+                  <rect x="14" y="14" width="7" height="7"></rect>
+                  <rect x="3" y="14" width="7" height="7"></rect>
+                </svg>
               </button>
               <button
                 class="view-toggle-button"
@@ -36,7 +109,21 @@
                 @click="setView('list')"
                 title="리스트 보기"
               >
-                <span class="view-icon">☰</span>
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <line x1="8" y1="6" x2="21" y2="6"></line>
+                  <line x1="8" y1="12" x2="21" y2="12"></line>
+                  <line x1="8" y1="18" x2="21" y2="18"></line>
+                  <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                  <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                  <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                </svg>
               </button>
             </div>
 
@@ -110,7 +197,7 @@ import ProjectGallery from "./ProjectGallery.vue";
 import ProjectList from "./ProjectList.vue";
 import MainHeader from "../main/MainHeader.vue";
 import ProfileBar from "./ProfileBar.vue";
-import { useProjectStore } from '/src/stores/projectStore.js';
+import { useProjectStore } from "/src/stores/projectStore.js";
 
 // 상태 변수들
 const showModal = ref(false);
@@ -167,7 +254,7 @@ const paginationPages = computed(() => {
   const pages = [];
   const total = totalPages.value;
   const current = currentPage.value;
-  
+
   if (total <= 7) {
     // 총 페이지가 7개 이하면 모두 표시
     for (let i = 1; i <= total; i++) {
@@ -177,21 +264,21 @@ const paginationPages = computed(() => {
     // 총 페이지가 많으면 현재 페이지 기준으로 표시
     if (current <= 4) {
       for (let i = 1; i <= 5; i++) pages.push(i);
-      pages.push('...');
+      pages.push("...");
       pages.push(total);
     } else if (current >= total - 3) {
       pages.push(1);
-      pages.push('...');
+      pages.push("...");
       for (let i = total - 4; i <= total; i++) pages.push(i);
     } else {
       pages.push(1);
-      pages.push('...');
+      pages.push("...");
       for (let i = current - 1; i <= current + 1; i++) pages.push(i);
-      pages.push('...');
+      pages.push("...");
       pages.push(total);
     }
   }
-  
+
   return pages;
 });
 
@@ -221,7 +308,7 @@ const fetchProjects = async () => {
 };
 
 const goToPage = (page) => {
-  if (page >= 1 && page <= totalPages.value && page !== '...') {
+  if (page >= 1 && page <= totalPages.value && page !== "...") {
     currentPage.value = page;
   }
 };
@@ -260,21 +347,24 @@ const closeModal = () => {
 
 const handleCreateProject = (newProjectName) => {
   console.log(`새 프로젝트 '${newProjectName}'가 생성되었습니다.`);
-  
+
   const newProject = {
     id: Date.now(),
     name: newProjectName,
-    startDate: new Date().toISOString().split('T')[0],
+    startDate: new Date().toISOString().split("T")[0],
     versionInfo: "버전 이력 0개",
     status: "NOT_STARTED",
   };
-  
+
   projects.value.unshift(newProject);
   closeModal();
   currentPage.value = 1;
-  
+
   if (newProjectName.id) {
-    router.push({ name: "ProjectMain", params: { projectId: newProjectName.id } });
+    router.push({
+      name: "ProjectMain",
+      params: { projectId: newProjectName.id },
+    });
   }
 };
 
@@ -324,84 +414,166 @@ onMounted(() => {
 
 .header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 20px 50px;
-  background-color: #ffffff;
+  justify-content: space-between;
+  padding: 0 32px;
+  height: 72px;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
   position: relative;
-  min-height: 90px;
-  width: 100%;
-  flex-shrink: 0;
+  z-index: 50;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  min-width: 0;
+}
+
+.header-center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  min-width: 0;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
 }
 
 .logo-container {
-  flex-shrink: 0;
-  width: 200px;
   display: flex;
-  justify-content: flex-start;
   align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 16px;
+  margin-bottom: 5px;
+}
+
+.logo-container:hover {
+  background: rgba(0, 0, 0, 0.03);
+  transform: translateY(-1px);
+}
+
+.logo-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  width: 36px;
 }
 
 .logo {
-  height: 50px;
+  height: 100%;
   width: auto;
-  display: block;
+  max-height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  object-fit: contain;
+  margin-top: 30px !important;
   animation: none !important;
   transform: none !important;
   transition: none !important;
 }
 
-.welcome-message {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
+.logo-text {
+  font-size: 20px;
+  font-weight: 800;
+  color: #000000;
+  letter-spacing: 0.02em;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui,
+    sans-serif;
+  margin-top: 5px !important;
 }
 
 .welcome-message h1 {
-  font-size: 2em;
-  font-weight: 600;
+  font-size: 28px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #1e293b 0%, #3b82f6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   margin: 0;
-  color: #1a202c;
-  letter-spacing: -0.5px;
-  animation: none !important;
-  transition: none !important;
-  opacity: 1 !important;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
 }
 
-.profile-section {
-  flex-shrink: 0;
-  width: 200px;
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-}
-
-.profile-icon {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background: #f7fafc;
-  border: 2px solid #e2e8f0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  color: #718096;
-  font-size: 12px;
-  font-weight: 500;
+.new-project-button {
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 16px;
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  animation: none !important;
-  transform: none !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(30, 41, 59, 0.3);
 }
 
-.profile-icon:hover {
-  background: #edf2f7;
-  border-color: #4a5568;
-  color: #4a5568;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+.new-project-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(30, 41, 59, 0.4);
+  background: linear-gradient(135deg, #334155 0%, #475569 100%);
+}
+
+.new-project-button:active {
+  transform: translateY(0);
+}
+
+.action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(248, 250, 252, 0.8);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-radius: 16px;
+  padding: 4px;
+  backdrop-filter: blur(8px);
+}
+
+.icon-button {
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: transparent;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  color: #64748b;
+  position: relative;
+  overflow: hidden;
+}
+
+.icon-button:hover {
+  color: #3b82f6;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+.icon-button:active {
+  transform: translateY(0);
+}
+
+.profile-btn:hover {
+  color: #f59e0b;
 }
 
 .main-content {
@@ -414,7 +586,7 @@ onMounted(() => {
 
 .toolbar {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   margin-bottom: 35px;
   padding: 25px;
@@ -424,31 +596,12 @@ onMounted(() => {
   width: 100%;
 }
 
-.new-project-button {
-  background: #4a5568;
-  color: white;
-  border: none;
-  padding: 16px 28px;
-  border-radius: 10px;
-  cursor: pointer;
-  font-size: 15px;
-  font-weight: 600;
+.toolbar-left {
   display: flex;
   align-items: center;
-  gap: 10px;
-  box-shadow: 0 2px 8px rgba(74, 85, 104, 0.2);
-  flex-shrink: 0;
-  transition: all 0.2s ease;
-}
-
-.new-project-button:hover {
-  background: #2d3748;
-  box-shadow: 0 4px 12px rgba(74, 85, 104, 0.3);
-}
-
-.plus-icon {
-  font-size: 18px;
-  font-weight: 300;
+  justify-content: flex-start;
+  flex: 1;
+  gap: 16px;
 }
 
 .toolbar-right {
@@ -472,12 +625,6 @@ onMounted(() => {
   border-color: #4a5568;
   background: white;
   box-shadow: 0 0 0 3px rgba(74, 85, 104, 0.1);
-}
-
-.search-icon {
-  margin-right: 10px;
-  color: #718096;
-  font-size: 15px;
 }
 
 .search-input {
@@ -529,10 +676,6 @@ onMounted(() => {
   background: #4a5568;
   color: white;
   box-shadow: 0 1px 3px rgba(74, 85, 104, 0.2);
-}
-
-.view-icon {
-  font-size: 15px;
 }
 
 .dropdown {
@@ -632,16 +775,16 @@ onMounted(() => {
   .header {
     padding: 15px 40px;
   }
-  
+
   .main-content {
     padding: 25px 40px;
   }
-  
+
   .logo-container,
   .profile-section {
     width: 150px;
   }
-  
+
   .logo {
     height: 45px;
   }
@@ -651,11 +794,11 @@ onMounted(() => {
   .header {
     padding: 15px 30px;
   }
-  
+
   .main-content {
     padding: 25px 30px;
   }
-  
+
   .search-input {
     width: 200px;
   }
@@ -669,47 +812,47 @@ onMounted(() => {
     padding: 20px;
     min-height: auto;
   }
-  
+
   .logo-container,
   .profile-section {
     width: auto;
   }
-  
+
   .logo {
     height: 40px;
   }
-  
+
   .welcome-message h1 {
     font-size: 1.6em;
   }
-  
+
   .main-content {
     padding: 20px;
   }
-  
+
   .toolbar {
     flex-direction: column;
     align-items: stretch;
     gap: 18px;
     padding: 20px;
   }
-  
+
   .toolbar-right {
     justify-content: space-between;
   }
-  
+
   .search-input {
     width: 180px;
   }
-  
+
   .pagination-container {
     gap: 8px;
   }
-  
+
   .pagination-pages {
     gap: 4px;
   }
-  
+
   .page-button {
     padding: 6px 10px;
     min-width: 35px;
@@ -721,43 +864,43 @@ onMounted(() => {
   .header {
     padding: 15px;
   }
-  
+
   .main-content {
     padding: 15px;
   }
-  
+
   .welcome-message h1 {
     font-size: 1.4em;
   }
-  
+
   .toolbar-right {
     flex-direction: column;
     gap: 12px;
   }
-  
+
   .view-options {
     justify-content: center;
   }
-  
+
   .search-input {
     width: 100%;
     min-width: 160px;
   }
-  
+
   .dropdown {
     min-width: auto;
     flex: 1;
   }
-  
+
   .pagination-container {
     flex-direction: column;
     gap: 10px;
   }
-  
+
   .pagination-pages {
     order: 2;
   }
-  
+
   .pagination-button {
     padding: 8px 12px;
     font-size: 12px;

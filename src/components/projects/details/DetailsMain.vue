@@ -1,7 +1,7 @@
 <template>
   <div class="app-container">
     <!-- 헤더 컴포넌트 -->
-    <DetailsHeader :project-id="projectId" />
+    <SettingsHeader :project-id="projectId" />
 
     <div class="main-layout">
       <!-- 사이드바 컴포넌트 -->
@@ -11,7 +11,7 @@
       />
 
       <!-- 메인 콘텐츠 -->
-      <main class="content-area">
+      <main class="detail-content-area">
         <!-- 프로젝트 정보 수정 -->
         <ProjectInfo v-if="currentComponent === 'ProjectInfo'" />
 
@@ -24,10 +24,10 @@
 
 <script setup>
 import { ref } from "vue";
-import DetailsHeader from "./DetailsHeader.vue";
 import DetailsSidebar from "./DetailsSidebar.vue";
 import ProjectInfo from "./project_detail/ProjectInfo.vue";
 import ViewMatrix from "./view_matrix/ViewMatrix.vue";
+import SettingsHeader from "../settings/SettingsHeader.vue";
 
 const props = defineProps({
   projectId: {
@@ -100,7 +100,7 @@ body {
   height: calc(100vh - 4rem);
 }
 
-.content-area {
+.detail-content-area {
   flex: 1;
   padding: 2rem;
   overflow-y: auto;

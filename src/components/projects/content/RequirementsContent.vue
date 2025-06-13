@@ -3,32 +3,141 @@
     <div class="table-container">
       <div class="header-section">
         <div class="content-info">
-          <h2 class="content-title">📋 요구사항 정의서</h2>
+          <h2 class="content-title">
+            <span>
+
+            </span>
+            <svg
+                width="23"
+                height="23"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+            >
+              <path
+                  d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+              ></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+            <span> 요구사항 정의서 </span>
+          </h2>
           <div class="file-details">
             <span class="detail-item">ver. {{ revision }}</span>
           </div>
         </div>
         <div class="action-buttons">
           <button
+            v-if="mockupExists"
+            @click="viewMockup"
+            class="mockup-button-view"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+              <line x1="8" y1="21" x2="16" y2="21" />
+              <line x1="12" y1="17" x2="12" y2="21" />
+            </svg>
+            <span>목업 보러가기</span>
+          </button>
+          <button
+            v-if="!mockupExists"
+            @click="createMockup"
+            class="mockup-button"
+            :disabled="loading"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+              <line x1="8" y1="21" x2="16" y2="21" />
+              <line x1="12" y1="17" x2="12" y2="21" />
+            </svg>
+            <span>목업 생성</span>
+          </button>
+          <button
             @click="downloadRequirements"
             class="load-button"
             :disabled="loading"
           >
-            {{ loading ? "🔄 다운로드중..." : "📥 다운로드" }}
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            <span>{{ loading ? "다운로드중..." : "다운로드" }}</span>
           </button>
           <button
             @click="saveChanges"
             class="save-button"
             :disabled="modifiedRows.size === 0"
           >
-            💾 저장 ({{ modifiedRows.size }})
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"
+              />
+              <polyline points="17 21 17 13 7 13 7 21" />
+              <polyline points="7 3 7 8 15 8" />
+            </svg>
+            <span>저장 ({{ modifiedRows.size }})</span>
           </button>
           <button
             @click="cancelChanges"
             class="cancel-button"
             :disabled="modifiedRows.size === 0"
           >
-            ❌취소
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+            <span>취소</span>
           </button>
         </div>
       </div>
@@ -63,15 +172,15 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from "vue";
+import { ref, onMounted, watch, reactive, onUnmounted, nextTick } from "vue";
 import { AgGridVue } from "ag-grid-vue3";
 import { ModuleRegistry, AllCommunityModule } from "ag-grid-community";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import { useProjectStore } from "/src/stores/projectStore.js";
 
-const memberStore = useProjectStore();
-const memberId = memberStore.memberId;
+const projectStore = useProjectStore();
+const userId = projectStore.userId;
 
 // AG Grid 모듈 등록
 ModuleRegistry.registerModules([AllCommunityModule]);
@@ -87,12 +196,16 @@ const props = defineProps({
   },
 });
 
+const emit = defineEmits(["mockupFileSelected"]);
+
 // 상태 관리
 const loading = ref(false);
 const error = ref(null);
 const rowData = ref([]);
 const modifiedRows = ref(new Set());
 const searchParams = ref(null);
+const mockupExists = ref(true); // 초기값은 false
+const gridApi = ref(null);
 
 // 컬럼 정의
 const columnDefs = ref([
@@ -150,7 +263,7 @@ const columnDefs = ref([
     field: "description",
     headerName: "요구사항 설명",
     editable: true,
-    width: 250,
+    width: 300,
     cellEditor: "agLargeTextCellEditor",
     cellEditorPopup: true,
   },
@@ -268,43 +381,57 @@ const gridOptions = {
   getRowHeight: () => 60, //행높이
 };
 
-let gridApi = null;
-
 // 그리드 준비 완료 시
 function onGridReady(params) {
-  gridApi = params.api;
+  gridApi.value = params.api;
   console.log("AG Grid 준비 완료");
-  loadDataFromAPI();
+  // 그리드가 준비된 후에 데이터 로드
+  nextTick(() => {
+    loadDataFromAPI();
+  });
 }
 
 // API 응답 데이터를 테이블 형태로 변환
 function transformApiDataToTableData(apiData) {
   return apiData.map((item) => {
-    const sourcesDisplay = item.sources
-      .map(
-        (source) =>
-          `${source.docId} (${source.pageNum}페이지)\n${source.relSentence}`
-      )
-      .join("\n\n");
+    // Handle sources if they exist, otherwise use empty array
+    const sourcesDisplay =
+      item.sources && item.sources.length > 0
+        ? item.sources
+            .map(
+              (source) =>
+                `${source.docId} (${source.pageNum}페이지)\n${source.relSentence}`
+            )
+            .join("\n\n")
+        : "";
 
-    const sourceIds = item.sources.map((source) => source.sourceId).join(", ");
+    const sourceIds =
+      item.sources && item.sources.length > 0
+        ? item.sources.map((source) => source.sourceId).join(", ")
+        : "";
 
-    const modificationHistory = item.modReason
-      .filter((reason) => reason && reason.trim() !== "")
-      .join("\n\n");
+    // Handle modification reasons if they exist, otherwise use empty array
+    const modificationHistory =
+      item.modReason && Array.isArray(item.modReason)
+        ? item.modReason
+            .filter((reason) => reason && reason.trim() !== "")
+            .join("\n\n")
+        : "";
 
-    const lastModifiedDate = item.createdDate.replace(/-/g, ".");
+    const lastModifiedDate = item.createdDate
+      ? item.createdDate.replace(/-/g, ".")
+      : "";
 
     return {
       reqPk: item.reqPk,
       reqIdCode: item.reqIdCode,
       revisionCount: item.revisionCount,
       type: item.type === "FR" ? "기능" : "비기능",
-      level1: item.level1,
-      level2: item.level2,
-      level3: item.level3,
-      name: item.name,
-      description: item.description,
+      level1: item.level1 || "",
+      level2: item.level2 || "",
+      level3: item.level3 || "",
+      name: item.name || "",
+      description: item.description || "",
       priority:
         item.priority === "HIGH"
           ? "상"
@@ -331,9 +458,134 @@ function transformApiDataToTableData(apiData) {
 }
 
 // 검색 이벤트 핸들러
-const handleSearch = (params) => {
-  searchParams.value = params;
-  loadDataFromAPI();
+const handleSearch = async (params) => {
+  try {
+    loading.value = true;
+    error.value = null;
+    searchParams.value = params;
+
+    if (!props.projectId || !props.revision) {
+      error.value = "프로젝트 ID 또는 리비전 정보가 없습니다.";
+      return;
+    }
+
+    // 검색 파라미터 상세 로깅
+    console.log("=== 검색 파라미터 상세 정보 ===");
+    console.log("1. 기본 정보:");
+    console.log("- 프로젝트 ID:", props.projectId);
+    console.log("- 리비전:", props.revision);
+    console.log("2. 검색 조건:");
+    console.log("- 검색어:", params.query);
+    console.log("- 대분류:", params.level1);
+    console.log("- 중분류:", params.level2);
+    console.log("- 소분류:", params.level3);
+    console.log("- 유형:", params.type);
+    console.log("- 중요도:", params.priority);
+    console.log("- 난이도:", params.difficulty);
+    console.log("- 문서 유형:", params.docType);
+    console.log("3. 전체 파라미터 객체:", params);
+
+    const queryParams = new URLSearchParams();
+    if (params.query) queryParams.append("query", params.query);
+    if (params.level1) queryParams.append("level1", params.level1);
+    if (params.level2) queryParams.append("level2", params.level2);
+    if (params.level3) queryParams.append("level3", params.level3);
+
+    // type 파라미터 처리 (0: 기능, 1: 비기능)
+    if (params.type !== undefined && params.type !== null) {
+      queryParams.append("type", params.type);
+    }
+
+    // difficulty 파라미터 처리 (0: 상, 1: 중, 2: 하)
+    if (params.difficulty !== undefined && params.difficulty !== null) {
+      queryParams.append("difficulty", params.difficulty);
+    }
+
+    // priority 파라미터 처리 (0: 상, 1: 중, 2: 하)
+    if (params.priority !== undefined && params.priority !== null) {
+      queryParams.append("priority", params.priority);
+    }
+
+    if (params.docType && Array.isArray(params.docType)) {
+      params.docType.forEach((type) => queryParams.append("docType", type));
+    }
+
+    // 리비전 정보 추가
+    queryParams.append("revisionCount", props.revision);
+
+    const apiUrl = `/api/v1/projects/${
+      props.projectId
+    }/documents/search?${queryParams.toString()}`;
+
+    // API URL 로깅
+    console.log("=== API 요청 정보 ===");
+    console.log("1. 요청 URL:", apiUrl);
+    console.log("2. 쿼리 파라미터:");
+    for (const [key, value] of queryParams.entries()) {
+      console.log(`- ${key}: ${value}`);
+    }
+
+    const response = await fetch(apiUrl, {
+      method: "GET",
+      headers: {
+        Accept: "*/*",
+        "Content-Type": "application/json",
+      },
+      credentials: "include", // 쿠키 포함
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("API Error Response:", errorText);
+      throw new Error(`검색 요청이 실패했습니다. (${response.status})`);
+    }
+
+    const responseData = await response.json();
+    console.log("Search API Response:", responseData);
+
+    // 응답 데이터 구조 확인 및 처리
+    let apiData;
+    if (responseData && responseData.data) {
+      apiData = responseData.data;
+    } else if (Array.isArray(responseData)) {
+      apiData = responseData;
+    } else {
+      console.error("예상치 못한 응답 구조:", responseData);
+      throw new Error("응답 데이터 구조가 올바르지 않습니다.");
+    }
+
+    if (!Array.isArray(apiData) || apiData.length === 0) {
+      console.warn("검색 결과가 없습니다.");
+      rowData.value = [];
+      return;
+    }
+
+    // 데이터 변환 및 그리드 업데이트
+    const transformedData = transformApiDataToTableData(apiData);
+    console.log("변환된 데이터:", transformedData);
+
+    // rowData를 먼저 업데이트
+    rowData.value = transformedData;
+    modifiedRows.value.clear();
+
+    // gridApi가 준비되었는지 확인하고 데이터 설정
+    await nextTick();
+    if (gridApi.value && typeof gridApi.value.setRowData === "function") {
+      gridApi.value.setRowData(transformedData);
+      gridApi.value.refreshCells();
+      gridApi.value.sizeColumnsToFit();
+    } else {
+      console.warn("AG Grid가 아직 초기화되지 않았습니다.");
+    }
+
+    console.log("검색 결과 로드 완료. 결과 수:", transformedData.length);
+  } catch (err) {
+    console.error("❌ 검색 실패:", err);
+    error.value = err.message || "검색 중 오류가 발생했습니다.";
+    rowData.value = [];
+  } finally {
+    loading.value = false;
+  }
 };
 
 // API에서 데이터 로드
@@ -381,23 +633,38 @@ async function loadDataFromAPI() {
 
     console.log("API URL:", apiUrl);
 
-    const response = await fetch(apiUrl, {
-      method: "GET",
-      headers: {
-        Accept: "*/*",
-        "Content-Type": "application/json",
-      },
-      mode: "cors",
-      credentials: "omit",
-    });
+    const mockupCheckUrl = `/api/v1/projects/${props.projectId}/mockups/${props.revision}/exist`;
 
-    if (!response.ok) {
-      throw new Error(
-        `HTTP error! status: ${response.status} - ${response.statusText}`
-      );
+    const [requirementsResponse, mockupResponse] = await Promise.all([
+      fetch(apiUrl, {
+        method: "GET",
+        headers: {
+          Accept: "*/*",
+          "Content-Type": "application/json",
+        },
+        mode: "cors",
+        credentials: "omit",
+      }),
+      fetch(mockupCheckUrl, {
+        method: "GET",
+        headers: {
+          Accept: "*/*",
+          "Content-Type": "application/json",
+        },
+        mode: "cors",
+        credentials: "omit",
+      }),
+    ]);
+
+    if (!requirementsResponse.ok || !mockupResponse.ok) {
+      throw new Error("하나 이상의 API 요청이 실패했습니다.");
     }
 
-    const responseData = await response.json();
+    const responseData = await requirementsResponse.json();
+    const mockupData = await mockupResponse.json();
+    mockupExists.value = mockupData.mockupExists;
+
+    console.log("Mockup 존재 여부:", mockupExists);
     console.log("API 응답 데이터:", responseData);
 
     let apiData;
@@ -435,8 +702,8 @@ function onCellValueChanged(event) {
 
   if (colDef.field === "modification_reason") {
     console.log("수정 이유가 입력됨:", newValue);
-    gridApi.refreshCells({
-      rowNodes: [gridApi.getRowNode(rowIndex)],
+    gridApi.value.refreshCells({
+      rowNodes: [gridApi.value.getRowNode(rowIndex)],
       columns: ["modification_reason"],
     });
     return;
@@ -452,8 +719,8 @@ function onCellValueChanged(event) {
   data.isModified = true;
   modifiedRows.value.add(data.reqIdCode);
 
-  gridApi.refreshCells({
-    rowNodes: [gridApi.getRowNode(rowIndex)],
+  gridApi.value.refreshCells({
+    rowNodes: [gridApi.value.getRowNode(rowIndex)],
     columns: ["modification_reason"],
   });
 }
@@ -477,7 +744,7 @@ async function saveBulkChanges(modifiedData) {
       const typeMap = { 기능: "FR", 비기능: "NFR" };
 
       const transformed = {
-        memberId: 1, //일단 1로 하고 추후 수정
+        memberId: userId, //일단 1로 하고 추후 수정
         reqPk: row._originalApiData.reqPk,
         type: typeMap[row.type] || row.type,
         level1: row.level1,
@@ -550,8 +817,48 @@ function cancelChanges() {
     });
 
     modifiedRows.value.clear();
-    gridApi.refreshCells();
+    gridApi.value.refreshCells();
     console.log("모든 변경사항이 취소되었습니다.");
+  }
+}
+
+// function createMockup() {
+//   console.log(mockupExists.value)
+//   if (mockupExists.value === false) {
+//     console.log("....")
+//     mockupExists.value = true;
+//   }
+// }
+
+async function createMockup() {
+  loading.value = true;
+
+  try {
+    const response = await fetch(
+      `/api/v1/projects/${props.projectId}/mockups/${props.revision}?outputFolderName=index.html`,
+      {
+        method: "POST",
+        headers: {
+          Accept: "*/*",
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("목업 생성 요청이 실패했습니다.");
+    }
+
+    // 2초 대기
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    alert("목업 생성이 시작되었습니다. 약 10분 정도 소요될 예정입니다.");
+    mockupExists.value = true;
+  } catch (error) {
+    console.error("목업 생성 실패:", error);
+    alert("목업 생성 중 오류가 발생했습니다.");
+  } finally {
+    loading.value = false;
   }
 }
 
@@ -566,11 +873,6 @@ async function downloadRequirements() {
   error.value = null;
 
   try {
-    console.log("요구사항 정의서 다운로드:", {
-      projectId: props.projectId,
-      revision: props.revision,
-    });
-
     const response = await fetch(
       `/api/v1/projects/${props.projectId}/requirements/downloads?revisionCount=${props.revision}`,
       {
@@ -616,6 +918,220 @@ async function downloadRequirements() {
   }
 }
 
+// 카테고리 가져오기 함수
+const fetchCategories = async () => {
+  try {
+    if (!props.projectId || !props.revision) {
+      console.error("Project ID or revision is not available");
+      return;
+    }
+
+    console.log(
+      "Fetching categories for project:",
+      props.projectId,
+      "revision:",
+      props.revision
+    );
+
+    const response = await fetch(
+      `/api/v1/projects/${props.projectId}/documents/${props.revision}/categories`,
+      {
+        method: "GET",
+        headers: {
+          Accept: "*/*",
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch categories");
+    }
+
+    const data = await response.json();
+    console.log("Received categories:", data);
+
+    if (data) {
+      if (data["대분류"]) categories["대분류"] = data["대분류"];
+      if (data["중분류"]) categories["중분류"] = data["중분류"];
+      if (data["소분류"]) categories["소분류"] = data["소분류"];
+    }
+
+    // 컬럼 정의 업데이트
+    updateColumnDefs();
+  } catch (error) {
+    console.error("Failed to fetch categories:", error);
+  }
+};
+
+// 컬럼 정의 업데이트 함수
+const updateColumnDefs = () => {
+  columnDefs.value = [
+    {
+      field: "reqIdCode",
+      headerName: "요구사항 ID",
+      editable: false,
+      width: 140,
+      pinned: "left",
+    },
+    {
+      field: "type",
+      headerName: "요구사항\n 유형",
+      editable: true,
+      width: 50,
+      cellEditor: "agSelectCellEditor",
+      cellEditorParams: {
+        values: ["기능", "비기능"],
+      },
+      valueFormatter: (params) => {
+        return params.value === "FR"
+          ? "기능"
+          : params.value === "NFR"
+          ? "비기능"
+          : params.value;
+      },
+    },
+    {
+      field: "level1",
+      headerName: "대분류",
+      editable: true,
+      width: 150,
+      cellEditor: "agSelectCellEditor",
+      cellEditorParams: {
+        values: categories["대분류"],
+      },
+    },
+    {
+      field: "level2",
+      headerName: "중분류",
+      editable: true,
+      width: 150,
+      cellEditor: "agSelectCellEditor",
+      cellEditorParams: {
+        values: categories["중분류"],
+      },
+    },
+    {
+      field: "level3",
+      headerName: "소분류",
+      editable: true,
+      width: 150,
+      cellEditor: "agSelectCellEditor",
+      cellEditorParams: {
+        values: categories["소분류"],
+      },
+    },
+    {
+      field: "name",
+      headerName: "요구사항 명",
+      editable: true,
+      width: 250,
+      cellEditor: "agLargeTextCellEditor",
+      cellEditorPopup: true,
+    },
+    {
+      field: "description",
+      headerName: "요구사항 설명",
+      editable: true,
+      width: 250,
+      cellEditor: "agLargeTextCellEditor",
+      cellEditorPopup: true,
+    },
+    {
+      field: "priority",
+      headerName: "중요도",
+      editable: true,
+      width: 50,
+      cellEditor: "agSelectCellEditor",
+      cellEditorParams: {
+        values: ["상", "중", "하"],
+      },
+      valueFormatter: (params) => {
+        const priorityMap = { HIGH: "상", MIDDLE: "중", LOW: "하" };
+        return priorityMap[params.value] || params.value;
+      },
+    },
+    {
+      field: "difficulty",
+      headerName: "난이도",
+      editable: true,
+      width: 50,
+      cellEditor: "agSelectCellEditor",
+      cellEditorParams: {
+        values: ["상", "중", "하"],
+      },
+      valueFormatter: (params) => {
+        const difficultyMap = { HIGH: "상", MIDDLE: "중", LOW: "하" };
+        return difficultyMap[params.value] || params.value;
+      },
+    },
+    {
+      field: "sourcesDisplay",
+      headerName: "출처",
+      editable: true,
+      cellEditor: "agLargeTextCellEditor",
+      width: 300,
+      cellRenderer: (params) => {
+        if (!params.value) return "";
+        return `<div style="white-space: pre-line; line-height: 1.4;">${params.value}</div>`;
+      },
+    },
+    {
+      field: "sourceIds",
+      headerName: "출처 ID",
+      editable: true,
+      width: 50,
+    },
+    {
+      field: "managementStatus",
+      headerName: "관리\n구분",
+      editable: true,
+      cellEditor: "agSelectCellEditor",
+      cellEditorParams: {
+        values: ["등록", "삭제"],
+      },
+      width: 50,
+      cellStyle: (params) => {
+        if (params.value === "삭제") {
+          return { backgroundColor: "#ffebee", color: "#c62828" };
+        }
+        return { backgroundColor: "#e8f5e8", color: "#2e7d32" };
+      },
+    },
+    {
+      field: "modificationHistory",
+      headerName: "변경이력",
+      editable: true,
+      width: 250,
+      cellEditor: "agLargeTextCellEditor",
+      cellRenderer: (params) => {
+        if (!params.value) return "";
+        return `<div style="white-space: pre-line; line-height: 1.4;">${params.value}</div>`;
+      },
+    },
+    {
+      field: "lastModifiedDate",
+      headerName: "최종 변경 일자",
+      editable: true,
+      width: 130,
+    },
+    {
+      field: "modification_reason",
+      headerName: "수정 이유",
+      editable: true,
+      width: 200,
+      cellEditor: "agLargeTextCellEditor",
+      cellEditorPopup: true,
+      cellStyle: (params) => {
+        if (params.data.isModified && !params.data.modification_reason) {
+          return { backgroundColor: "#ffebee", border: "1px solid #f44336" };
+        }
+        return null;
+      },
+    },
+  ];
+};
+
 // props 변경 감지
 watch(
   [() => props.projectId, () => props.revision],
@@ -627,12 +1143,13 @@ watch(
       console.log(
         `요구사항 데이터 변경: projectId=${newProjectId}, revision=${newRevision}`
       );
-      if (gridApi) {
+      if (gridApi.value) {
+        fetchCategories(); // 카테고리 먼저 가져오기
         loadDataFromAPI();
       }
     }
   },
-  { immediate: false }
+  { immediate: true }
 );
 
 onMounted(() => {
@@ -640,15 +1157,31 @@ onMounted(() => {
     projectId: props.projectId,
     revision: props.revision,
   });
+  fetchCategories(); // 초기 카테고리 로드
 });
 
 // 컴포넌트 정의
 defineExpose({
   handleSearch,
 });
+
+// 목업 보기 함수 추가
+const viewMockup = () => {
+  // 부모 컴포넌트에 목업 파일 선택 이벤트 발생
+  emit("mockupFileSelected", {
+    name: "index.html",
+    revision: props.revision,
+  });
+};
+
+// 컴포넌트 언마운트 시 gridApi 초기화
+onUnmounted(() => {
+  gridApi.value = null;
+});
 </script>
+
 <style scoped>
-.project-content {
+.project-main.project-content {
   padding: 20px;
   height: calc(100vh - 64px);
   overflow-y: auto;
@@ -706,6 +1239,8 @@ defineExpose({
   flex-wrap: wrap;
 }
 
+.mockup-button,
+.mockup-button-view,
 .load-button,
 .save-button,
 .cancel-button {
@@ -716,6 +1251,31 @@ defineExpose({
   cursor: pointer;
   transition: all 0.2s;
   font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mockup-button svg,
+.mockup-button-view svg,
+.load-button svg,
+.save-button svg,
+.cancel-button svg {
+  flex-shrink: 0;
+}
+
+/* [NEW] Mockup Button Styles */
+.mockup-button {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.mockup-button-view {
+  background-color: #3b82f6;
+  color: white;
+}
+.mockup-button-view:hover:not(:disabled) {
+  background-color: #3b82f6;
 }
 
 .load-button {

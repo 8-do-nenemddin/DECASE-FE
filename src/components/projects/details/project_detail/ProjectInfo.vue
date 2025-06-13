@@ -1,90 +1,113 @@
 <template>
   <div class="project-info-container">
-    <Transition name="slide-up" appear>
-      <div class="form-card">
-        <!-- 프로젝트 기간 -->
-        <div class="form-section">
-          <label class="form-label">프로젝트 기간</label>
-          <div class="date-range-container">
-            <div class="date-input-wrapper">
-              <input
+    <!-- 로딩 상태 표시 -->
+    <div v-if="loading" class="loading-container">
+      <div class="loading-spinner"></div>
+      <p>프로젝트 정보를 불러오는 중...</p>
+    </div>
+
+    <!-- 에러 상태 표시 -->
+    <div v-else-if="error" class="error-container">
+      <div class="error-icon">⚠️</div>
+      <p class="error-message">{{ error }}</p>
+      <button @click="loadProjectData" class="retry-button">다시 시도</button>
+    </div>
+
+    <!-- 프로젝트 정보 폼 -->
+    <template v-else>
+      <Transition name="slide-up" appear>
+        <div class="form-card">
+          <!-- 프로젝트 기간 -->
+          <div class="form-section">
+            <label class="form-label">프로젝트 기간</label>
+            <div class="date-range-container">
+              <div class="date-input-wrapper">
+                <input
                   type="date"
                   v-model="projectData.startDate"
                   class="date-input"
-                  readonly
-              />
-            </div>
-            <span class="date-separator">~</span>
-            <div class="date-input-wrapper">
-              <input
+                  :disabled="true"
+                />
+              </div>
+              <span class="date-separator">~</span>
+              <div class="date-input-wrapper">
+                <input
                   type="date"
                   v-model="projectData.endDate"
                   class="date-input"
-                  readonly
-              />
+                  :disabled="true"
+                />
+              </div>
             </div>
           </div>
-        </div>
 
-        <!-- 프로젝트 이름과 담당 PM -->
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label" for="project-name">프로젝트 이름</label>
-            <input
+          <!-- 프로젝트 이름과 담당 PM -->
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="project-name">프로젝트 이름</label>
+              <input
                 id="project-name"
                 type="text"
                 v-model="projectData.name"
                 class="form-input"
-                readonly
-            />
-          </div>
+                :disabled="true"
+              />
+            </div>
 
-          <div class="form-group">
-            <label class="form-label" for="project-pm">제안 PM</label>
-            <input
+            <div class="form-group">
+              <label class="form-label" for="project-pm">제안 PM</label>
+              <input
                 id="project-pm"
                 type="text"
                 v-model="projectData.pm"
                 class="form-input"
-                readonly
-            />
+                :disabled="true"
+              />
+            </div>
           </div>
-        </div>
 
-        <!-- 프로젝트 설명 -->
-        <div class="form-section">
-          <label class="form-label" for="project-description">프로젝트 설명</label>
-          <textarea
+          <!-- 프로젝트 설명 -->
+          <div class="form-section">
+            <label class="form-label" for="project-description">프로젝트 설명</label>
+            <textarea
               id="project-description"
               v-model="projectData.description"
               rows="6"
               class="form-textarea"
-              readonly
-          ></textarea>
-        </div>
+              :disabled="true"
+            ></textarea>
+          </div>
 
-        <!-- 프로젝트 규모 -->
-        <div class="form-section">
-          <label class="form-label" for="project-scale">프로젝트 규모</label>
-          <div class="input-with-unit">
-            <input
+          <!-- 프로젝트 규모 -->
+          <div class="form-section">
+            <label class="form-label" for="project-scale">프로젝트 규모</label>
+            <div class="input-with-unit">
+              <input
                 id="project-scale"
                 type="text"
+                @input="onScaleInput"
                 :value="displayValue"
                 class="form-input no-spinner"
-                readonly
-            />
-            <span class="unit-label">원</span>
+                :disabled="true"
+              />
+              <span class="unit-label">원</span>
+            </div>
+            <div v-if="scaleError" class="error-message">{{ scaleError }}</div>
           </div>
         </div>
-      </div>
-    </Transition>
+      </Transition>
+    </template>
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, computed, onMounted } from "vue";
 import { useRoute } from "vue-router";
+import { useProjectStore } from "../../../../stores/projectStore";
+
+const scaleError = ref('');
+const loading = ref(false);
+const error = ref('');
 
 const projectData = reactive({
   startDate: "",
@@ -92,27 +115,105 @@ const projectData = reactive({
   name: "",
   pm: "",
   description: "",
-  scale: ""
+  scale: "",
 });
 
 const route = useRoute();
-const projectId = route.params.projectId;
+const projectStore = useProjectStore();
 
-onMounted(async () => {
-  try {
-    const res = await fetch(`/api/v1/projects/${projectId}`);
-    if (!res.ok) throw new Error("프로젝트 정보 로드 실패");
-    const data = await res.json();
-    projectData.name = data.name;
-    projectData.scale = data.scale.toString();
-    projectData.startDate = data.startDate.slice(0, 10);
-    projectData.endDate = data.endDate.slice(0, 10);
-    projectData.description = data.description;
-    projectData.pm = data.proposalPM;
-  } catch (err) {
-    console.error(err);
+// projectId를 여러 방법으로 가져오기 시도
+const projectId = computed(() => {
+  if (projectStore.projectId) {
+    return projectStore.projectId;
   }
+  
+  if (route.params.id) {
+    return route.params.id;
+  }
+  
+  if (route.query.projectId) {
+    return route.query.projectId;
+  }
+  
+  return null;
 });
+
+// 날짜 포맷 함수
+const formatDateForInput = (dateString) => {
+  if (!dateString) return '';
+  try {
+    const date = new Date(dateString);
+    return date.toISOString().split('T')[0];
+  } catch (e) {
+    console.error('날짜 변환 오류:', e);
+    return '';
+  }
+};
+
+// 프로젝트 데이터 로드 함수
+const loadProjectData = async () => {
+  if (!projectId.value) {
+    error.value = '프로젝트 ID를 찾을 수 없습니다.';
+    return;
+  }
+
+  loading.value = true;
+  error.value = '';
+  
+  try {
+    const res = await fetch(`/api/v1/projects/${projectId.value}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+    
+    if (!res.ok) {
+      throw new Error(`프로젝트 정보 로드 실패: ${res.status} ${res.statusText}`);
+    }
+    
+    const json = await res.json();
+    const data = json.data;
+    
+    // 데이터 설정
+    projectData.name = data.name || '';
+    projectData.scale = data.scale ? String(data.scale) : '';
+    projectData.startDate = formatDateForInput(data.startDate);
+    projectData.endDate = formatDateForInput(data.endDate);
+    projectData.description = data.description || '';
+    projectData.pm = data.proposalPM || '';
+    
+  } catch (err) {
+    console.error('프로젝트 로드 오류:', err);
+    error.value = err.message || '프로젝트 정보를 불러오는데 실패했습니다.';
+  } finally {
+    loading.value = false;
+  }
+};
+
+onMounted(() => {
+  loadProjectData();
+});
+
+function onScaleInput(event) {
+  const raw = event.target.value.replace(/[^\d]/g, '');
+  const maxValue = 9999000000000000;
+  
+  if (raw) {
+    const numValue = Number(raw);
+    if (numValue > maxValue) {
+      scaleError.value = '프로젝트 규모는 9,999조를 초과할 수 없습니다.';
+      return;
+    } else {
+      scaleError.value = '';
+    }
+  } else {
+    scaleError.value = '';
+  }
+  
+  const limited = raw.slice(0, 13);
+  projectData.scale = limited;
+}
 
 const displayValue = computed(() => {
   if (!projectData.scale) return '';
@@ -126,7 +227,74 @@ const displayValue = computed(() => {
   margin: 0 auto;
 }
 
-/* 슬라이드 업 애니메이션 */
+/* 로딩 상태 스타일 */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f4f6;
+  border-top: 4px solid #4f46e5;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 에러 상태 스타일 */
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+  margin: 2rem 0;
+}
+
+.error-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.error-message {
+  color: #dc2626;
+  font-size: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.retry-button {
+  background: #dc2626;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.retry-button:hover {
+  background: #b91c1c;
+  transform: translateY(-1px);
+}
+
+/* 기존 스타일들 */
 .slide-up-enter-active {
   transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
@@ -139,22 +307,6 @@ const displayValue = computed(() => {
 .slide-up-enter-to {
   opacity: 1;
   transform: translateY(0);
-}
-
-/* 모달 애니메이션 */
-.modal-fade-enter-active,
-.modal-fade-leave-active {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.modal-fade-enter-from,
-.modal-fade-leave-to {
-  opacity: 0;
-}
-
-.modal-fade-enter-from .modal-container,
-.modal-fade-leave-to .modal-container {
-  transform: scale(0.9) translateY(-20px);
 }
 
 .form-card {
@@ -262,215 +414,6 @@ const displayValue = computed(() => {
   flex-shrink: 0;
 }
 
-.form-actions {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 2.5rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid #f3f4f6;
-}
-
-.save-button {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.875rem 2rem;
-  background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
-  color: white;
-  border: none;
-  border-radius: 12px;
-  font-size: 0.875rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 12px rgba(31, 41, 55, 0.15);
-}
-
-.save-button:hover {
-  background: linear-gradient(135deg, #374151 0%, #4b5563 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(31, 41, 55, 0.25);
-}
-
-.save-button:active {
-  transform: translateY(0);
-}
-
-.save-icon {
-  font-size: 1rem;
-}
-
-.delete-section {
-  margin-top: 2rem;
-  text-align: right;
-}
-
-.delete-button {
-  background: transparent;
-  border: none;
-  color: #ef4444;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  transition: all 0.3s ease;
-}
-
-.delete-button:hover {
-  background: #fef2f2;
-  color: #dc2626;
-  transform: translateY(-1px);
-}
-
-/* 모달 스타일 */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 1rem;
-}
-
-.modal-container {
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  max-width: 400px;
-  width: 100%;
-  overflow: hidden;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.modal-header {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 1.5rem 1.5rem 1rem 1.5rem;
-  position: relative;
-}
-
-.modal-icon {
-  width: 48px;
-  height: 48px;
-  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.warning-icon {
-  font-size: 1.5rem;
-}
-
-.modal-title {
-  font-size: 1.125rem;
-  font-weight: 700;
-  color: #111827;
-  margin: 0;
-  flex: 1;
-}
-
-.modal-close-button {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  background: transparent;
-  border: none;
-  color: #6b7280;
-  cursor: pointer;
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  transition: all 0.2s ease;
-}
-
-.modal-close-button:hover {
-  background: #f3f4f6;
-  color: #374151;
-}
-
-.close-icon {
-  font-size: 1.25rem;
-  font-weight: bold;
-}
-
-.modal-body {
-  padding: 0 1.5rem 1.5rem 1.5rem;
-}
-
-.modal-message {
-  font-size: 0.875rem;
-  color: #374151;
-  margin: 0 0 0.5rem 0;
-  font-weight: 500;
-}
-
-.modal-warning {
-  font-size: 0.8125rem;
-  color: #6b7280;
-  margin: 0;
-}
-
-.modal-actions {
-  display: flex;
-  gap: 0.75rem;
-  padding: 1rem 1.5rem 1.5rem 1.5rem;
-  border-top: 1px solid #f3f4f6;
-}
-
-.cancel-button {
-  flex: 1;
-  background: #f9fafb;
-  color: #374151;
-  border: 1px solid #e5e7eb;
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.cancel-button:hover {
-  background: #f3f4f6;
-  border-color: #d1d5db;
-}
-
-.confirm-delete-button {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-  color: white;
-  border: none;
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
-  font-size: 0.875rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.confirm-delete-button:hover {
-  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
-}
-
-.delete-icon {
-  font-size: 0.875rem;
-}
-
 .input-with-unit {
   position: relative;
   display: inline-block;
@@ -497,7 +440,6 @@ const displayValue = computed(() => {
   margin-top: 0.25rem;
 }
 
-/* 반응형 디자인 */
 @media (max-width: 768px) {
   .project-info-container {
     padding: 1rem;
@@ -522,25 +464,6 @@ const displayValue = computed(() => {
     display: none;
   }
 
-  .form-actions {
-    justify-content: center;
-  }
-
-  .save-button {
-    width: 100%;
-    justify-content: center;
-  }
-
-  .modal-container {
-    margin: 1rem;
-    max-width: calc(100% - 2rem);
-  }
-
-  .modal-actions {
-    flex-direction: column;
-  }
-
-  /* 모바일에서 애니메이션 조정 */
   .slide-up-enter-from {
     transform: translateY(30px);
   }
@@ -565,34 +488,11 @@ const displayValue = computed(() => {
     padding: 0.75rem;
     font-size: 0.8125rem;
   }
-
-  .save-button {
-    padding: 0.75rem 1.5rem;
-    font-size: 0.8125rem;
-  }
-
-  .modal-header {
-    padding: 1rem;
-  }
-
-  .modal-body {
-    padding: 0 1rem 1rem 1rem;
-  }
-
-  .modal-actions {
-    padding: 1rem;
-  }
 }
 
-/* 포커스 가능한 요소들의 접근성 개선 */
 .form-input:focus-visible,
 .form-textarea:focus-visible,
-.date-input:focus-visible,
-.save-button:focus-visible,
-.delete-button:focus-visible,
-.cancel-button:focus-visible,
-.confirm-delete-button:focus-visible,
-.modal-close-button:focus-visible {
+.date-input:focus-visible {
   outline: 2px solid #4f46e5;
   outline-offset: 2px;
 }
