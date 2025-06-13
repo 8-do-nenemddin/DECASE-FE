@@ -122,7 +122,7 @@ const handleLogin = async () => {
 
 const goToHome = () => {
   showSuccessModal.value = false;
-  router.push('/'); // 홈으로 이동
+  router.push('/main'); // 메인으로 이동
 };
 
 const closeModal = () => {

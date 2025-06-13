@@ -163,10 +163,11 @@
   <MockupSidebar
     :isVisible="showMockupSidebar"
     @close="closeMockupSidebar"
-    @selectMockup="handleMockupSelected"
+    @fileSelected="handleMockupFileSelected"
   />
   <SearchRequirementsSidebar
     v-if="showSidebar"
+    :selectedRevision="projectStore.projectRevision"
     @close="closeSidebar"
     @search="handleSearch"
   />
@@ -205,7 +206,7 @@ import ProfileBar from "../../main/ProfileBar.vue";
 import MockupSidebar from "./mockup/MockupSidebar.vue";
 import { useProjectStore } from "/src/stores/projectStore";
 
-const emit = defineEmits(["fileSelected", "search"]);
+const emit = defineEmits(["fileSelected", "search", "mockupFileSelected"]);
 
 const projectStore = useProjectStore();
 const router = useRouter();
@@ -259,10 +260,9 @@ const closeMockupSidebar = () => {
   showMockupSidebar.value = false;
 };
 
-const handleMockupSelected = (mockupFile) => {
-  console.log("선택된 목업:", mockupFile);
-  // 목업 선택 후 사이드바를 닫거나 다른 작업을 수행할 수 있습니다.
-  closeMockupSidebar();
+const handleMockupFileSelected = (mockupFile) => {
+  console.log("HeaderBar received mockup file:", mockupFile); // 디버깅용 로그 추가
+  emit("mockupFileSelected", mockupFile);
 };
 
 const handleLogout = () => {

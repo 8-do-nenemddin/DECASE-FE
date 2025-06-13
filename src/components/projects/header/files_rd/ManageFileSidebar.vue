@@ -319,10 +319,10 @@ const fileInfoModal = reactive({
 
 // Data
 const sidebarItems = reactive([
-{
+  {
     name: "요구사항 정의서",
     type: "generated",
-    expanded: false,
+    expanded: true,
     files: [],
     count: 0,
   },
@@ -336,10 +336,10 @@ const sidebarItems = reactive([
   {
     name: "업로드 파일",
     type: "uploaded",
-    expanded: true,
+    expanded: false,
     files: [],
     count: 0,
-  }
+  },
 ]);
 
 // loadAllData 함수 수정 - AS-IS 보고서 추가
@@ -406,7 +406,7 @@ const fetchGeneratedFiles = async () => {
         headers: { "Content-Type": "application/json" },
       }
     );
-    
+
     console.log(response);
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
@@ -842,9 +842,10 @@ watch(
   position: fixed;
   top: 0;
   left: 0;
-  width: 100vw;
+  width: 320px; /* 사이드바 너비만큼만 */
   height: 100vh;
   animation: overlayFadeIn 0.3s ease-out;
+  pointer-events: none; /* 클릭 이벤트 통과 */
 }
 
 .modern-sidebar {
@@ -859,6 +860,7 @@ watch(
   display: flex;
   flex-direction: column;
   transition: width 0.2s ease;
+  pointer-events: auto; /* 사이드바는 클릭 이벤트 활성화 */
 }
 
 .modern-sidebar.mobile {
