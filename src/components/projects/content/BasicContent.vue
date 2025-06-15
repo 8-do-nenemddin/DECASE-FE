@@ -2,6 +2,7 @@
   <main class="main-content">
     <!-- 추후 수정-->
     <!-- v-if : Project 상태에 따라서 (요구사항 입력 전 / 요구사항 생성중 / 요구사항 생성완료)-->
+
     <div class="upload-card" v-if="projectStore.projectRevision === 0">
       <h2 class="upload-title">RFP 파일 업로드</h2>
       <p class="upload-subtitle">
@@ -42,39 +43,102 @@
               <line x1="12" y1="3" x2="12" y2="15" />
             </svg>
           </div>
-          <p class="upload-placeholder">
-            파일을 드래그하거나 클릭하여 선택하세요
-            <small>PDF 파일 지원 (최대 1GB)</small>
-          </p>
         </div>
-
-        <div v-else class="file-preview">
-          <div class="file-icon">✓</div>
-          <div class="file-info">
-            <div class="file-name">{{ selectedFile.name }}</div>
-            <div class="file-size">{{ formatFileSize(selectedFile.size) }}</div>
+        <button
+          @click="handleSubmit"
+          :disabled="!selectedFile || isUploading"
+          class="submit-button"
+        >
+          <span v-if="isUploading">업로드 중...</span>
+          <span v-else>업로드 시작</span>
+        </button>
+        <div v-if="isUploading" class="progress-container">
+          <div class="progress-bar">
+            <div
+              class="progress-fill"
+              :style="{ width: uploadProgress + '%' }"
+            ></div>
           </div>
-          <button @click.stop="clearFile" class="clear-button">삭제</button>
+          <div class="progress-text">{{ Math.round(uploadProgress) }}%</div>
         </div>
       </div>
-
-      <button
-        @click="handleSubmit"
-        :disabled="!selectedFile || isUploading"
-        class="submit-button"
-      >
-        <span v-if="isUploading">업로드 중...</span>
-        <span v-else>업로드 시작</span>
-      </button>
-
-      <div v-if="isUploading" class="progress-container">
-        <div class="progress-bar">
-          <div
-            class="progress-fill"
-            :style="{ width: uploadProgress + '%' }"
-          ></div>
+      <!-- 두 번째 업로드 카드 (추가 파일) -->
+      <div class="upload-card">
+        <h2 class="upload-title">추가 파일 업로드</h2>
+        <p class="upload-subtitle">
+          요구사항 정의에 필요한 참고 파일을 업로드해주세요.
+        </p>
+        <div
+          class="upload-zone"
+          :class="{ 'drag-over': isDragOverExtra, uploading: isUploadingExtra }"
+          @click="triggerFileInputExtra"
+          @dragover.prevent="handleDragOverExtra"
+          @dragleave.prevent="handleDragLeaveExtra"
+          @drop.prevent="handleFileDropExtra"
+        >
+          <input
+            type="file"
+            ref="fileInputExtra"
+            @change="handleFileChangeExtra"
+            accept=".pdf,.doc,.docx,.hwp,.zip"
+            style="display: none"
+            :disabled="true"
+          />
+          <div v-if="!selectedFileExtra" class="upload-empty">
+            <div class="upload-icon">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="48"
+                height="48"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="17 8 12 3 7 8" />
+                <line x1="12" y1="3" x2="12" y2="15" />
+              </svg>
+            </div>
+            <p class="upload-placeholder">
+              파일을 드래그하거나 클릭하여 선택하세요
+              <small>PDF 파일 지원 (최대 1GB)</small>
+            </p>
+          </div>
+          <div v-else class="file-preview">
+            <div class="file-icon">✓</div>
+            <div class="file-info">
+              <div class="file-name">{{ selectedFileExtra.name }}</div>
+              <div class="file-size">
+                {{ formatFileSize(selectedFileExtra.size) }}
+              </div>
+            </div>
+            <button @click.stop="clearFileExtra" class="clear-button">
+              삭제
+            </button>
+          </div>
         </div>
-        <div class="progress-text">{{ Math.round(uploadProgress) }}%</div>
+        <button
+          @click="handleSubmitExtra"
+          :disabled="!selectedFileExtra || isUploadingExtra"
+          class="submit-button"
+        >
+          <span v-if="isUploadingExtra">업로드 중...</span>
+          <span v-else>업로드 시작</span>
+        </button>
+        <div v-if="isUploadingExtra" class="progress-container">
+          <div class="progress-bar">
+            <div
+              class="progress-fill"
+              :style="{ width: uploadProgressExtra + '%' }"
+            ></div>
+          </div>
+          <div class="progress-text">
+            {{ Math.round(uploadProgressExtra) }}%
+          </div>
+        </div>
       </div>
     </div>
 
@@ -191,6 +255,78 @@ const handleSubmit = async () => {
     isUploading.value = false;
   }
 };
+
+// ------ 추가 파일 업로드용 함수들 ------
+const triggerFileInputExtra = () => {
+  if (!isUploadingExtra.value) {
+    fileInputExtra.value.click();
+  }
+};
+
+const handleFileChangeExtra = (event) => {
+  const files = event.target.files;
+  if (files.length > 0) {
+    selectedFileExtra.value = files[0];
+  }
+};
+
+const handleDragOverExtra = (event) => {
+  isDragOverExtra.value = true;
+};
+
+const handleDragLeaveExtra = (event) => {
+  isDragOverExtra.value = false;
+};
+
+const handleFileDropExtra = (event) => {
+  isDragOverExtra.value = false;
+  const files = event.dataTransfer.files;
+  if (files.length > 0) {
+    selectedFileExtra.value = files[0];
+  }
+};
+
+const clearFileExtra = () => {
+  selectedFileExtra.value = null;
+  fileInputExtra.value.value = "";
+  uploadProgressExtra.value = 0;
+};
+
+const handleSubmitExtra = async () => {
+  if (!selectedFileExtra.value || isUploadingExtra.value) {
+    return;
+  }
+  isUploadingExtra.value = true;
+  uploadProgressExtra.value = 0;
+  try {
+    const formData = new FormData();
+    formData.append("file", selectedFileExtra.value);
+    formData.append("memberId", projectStore.userId);
+    // 실제 업로드 엔드포인트는 상황에 따라 다를 수 있음
+    console.log(
+      "추가 파일을 서버로 업로드합니다:",
+      selectedFileExtra.value.name
+    );
+    const response = await fetch(
+      `/api/v1/projects/${projectStore.projectId}/reference-files`,
+      {
+        method: "POST",
+        body: formData,
+      }
+    );
+    if (!response.ok) {
+      throw new Error("업로드 실패");
+    }
+    const data = await response.json();
+    clearFileExtra();
+    // 추가 파일 업로드 후 별도 처리 필요시 여기에 작성
+  } catch (error) {
+    console.error("업로드 실패:", error);
+    alert("파일 업로드 중 오류가 발생했습니다.");
+  } finally {
+    isUploadingExtra.value = false;
+  }
+};
 </script>
 
 <style scoped>
@@ -205,20 +341,23 @@ const handleSubmit = async () => {
   justify-content: center;
 }
 
+.dual-upload-section {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 40px;
+  justify-content: center;
+}
+
 .upload-card {
-  width: 100%;
-  max-width: 700px;
+  flex: 1;
+  min-width: 320px;
+  max-width: 500px;
   background: #ffffff;
   border: 1px solid #e1e5e9;
   border-radius: 12px;
   padding: 60px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
   text-align: center;
-
-  /* display: flex; 제거 */
-  /* flex-direction: column; 제거 */
-  /* align-items: center; 제거 */
-  /* justify-content: center; 제거 */
 }
 
 .welcome-section {
