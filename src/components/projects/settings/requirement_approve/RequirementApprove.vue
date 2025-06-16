@@ -16,12 +16,19 @@
     <!-- 수정된 요구사항 목록 -->
     <template v-else>
       <div class="main-content" :class="{ 'with-sidebar': showSidebar }">
+        <div class="table-controls">
+          <button @click="bulkApprove" :disabled="selectedRequirements.length === 0" class="bulk-button approve">선택 승인</button>
+          <button @click="bulkApprove" class="bulk-button approve">전체 승인</button>
+          <button @click="bulkReject" class="bulk-button reject">전체 반려</button>
+        </div>
         <div class="table-container">
           <div class="table-wrapper">
             <table class="requirements-table">
               <thead>
               <tr>
-                <th class="col-division">구분</th>
+                <th class="col-toggle sticky-col" style="left: 0;"></th>
+                <th class="col-select sticky-col" style="left: 40px;">선택</th>
+                <th class="col-approval sticky-col" style="left: 90px;">승인/반려</th>
                 <th class="col-id">ID</th>
                 <th class="col-type">요구사항 유형</th>
                 <th class="col-name">요구사항명</th>
@@ -36,47 +43,24 @@
                 <th class="col-date">변경일자</th>
                 <th class="col-modifier">변경자</th>
                 <th class="col-reason">수정 이유</th>
-                <th class="col-approval">승인</th>
               </tr>
               </thead>
               <tbody>
               <template v-for="requirement in requirements" :key="requirement.id">
-                <tr :class="{ 'selected': selectedRequirement?.id === requirement.id }" class="clickable-row">
-                  <td class="row-label col-division">기존</td>
-                  <td class="col-id">{{ requirement.original.id }}</td>
-                  <td class="col-type">{{ requirement.original.type }}</td>
-                  <td class="col-name">{{ requirement.original.name }}</td>
-                  <td class="col-description">{{ requirement.original.description }}</td>
-                  <td class="col-category">{{ requirement.original.category1 }}</td>
-                  <td class="col-category">{{ requirement.original.category2 }}</td>
-                  <td class="col-category">{{ requirement.original.category3 }}</td>
-                  <td class="col-priority">{{ requirement.original.priority }}</td>
-                  <td class="col-difficulty">{{ requirement.original.difficulty }}</td>
-                  <td class="col-source">{{ requirement.original.source }}</td>
-                  <td class="col-page">{{ requirement.original.sourcePage }}</td>
-                  <td class="col-date">{{ requirement.original.modifiedDate }}</td>
-                  <td class="col-modifier">{{ requirement.original.modifier }}</td>
-                  <td class="col-reason">{{ requirement.original.reason }}</td>
-                  <td rowspan="2" class="col-approval">
-                    <button
-                        @click.stop="approveRequirement(requirement.id)"
-                        class="confirm-button approve"
-                        style="margin-bottom: 5px"
-                    >
-                      승인
-                    </button>
-                    <button
-                        @click.stop="rejectRequirement(requirement.id)"
-                        class="confirm-button reject"
-                        style="margin-top: 5px"
-                    >
-                      반려
+                <tr @click="toggleRow(requirement.id)" class="clickable-row">
+                  <td class="col-toggle sticky-col" style="left: 0;">
+                    <button @click.stop="toggleRow(requirement.id)" class="toggle-button">
+                      {{ expandedRows.includes(requirement.id) ? '▼' : '▶' }}
                     </button>
                   </td>
-                </tr>
-                <tr :class="{ 'selected': selectedRequirement?.id === requirement.id }" class="clickable-row">
-                  <td class="row-label col-division">제안</td>
-                  <td class="col-id">{{ requirement.proposed.id }}</td>
+                  <td class="col-select sticky-col" style="left: 40px;">
+                    <input type="checkbox" v-model="selectedRequirements" :value="requirement.id" @click.stop />
+                  </td>
+                  <td class="col-approval sticky-col button-group" style="left: 90px;">
+                    <button @click.stop="approveRequirement(requirement.id)" class="confirm-button approve">승인</button>
+                    <button @click.stop="rejectRequirement(requirement.id)" class="confirm-button reject">반려</button>
+                  </td>
+                  <td class="col-id" :class="{ 'cell-changed': isChanged(requirement, 'id') }">{{ requirement.proposed.id }}</td>
                   <td class="col-type" :class="{ 'cell-changed': isChanged(requirement, 'type') }">{{ requirement.proposed.type }}</td>
                   <td class="col-name" :class="{ 'cell-changed': isChanged(requirement, 'name') }">{{ requirement.proposed.name }}</td>
                   <td class="col-description" :class="{ 'cell-changed': isChanged(requirement, 'description') }">{{ requirement.proposed.description }}</td>
@@ -90,6 +74,123 @@
                   <td class="col-date" :class="{ 'cell-changed': isChanged(requirement, 'modifiedDate') }">{{ requirement.proposed.modifiedDate }}</td>
                   <td class="col-modifier" :class="{ 'cell-changed': isChanged(requirement, 'modifier') }">{{ requirement.proposed.modifier }}</td>
                   <td class="col-reason" :class="{ 'cell-changed': isChanged(requirement, 'reason') }">{{ requirement.proposed.reason }}</td>
+                </tr>
+                <tr class="details-row" v-if="expandedRows.includes(requirement.id)">
+                  <td></td>
+                  <td colspan="16">
+                    <div class="change-details-container">
+                      <h4>수정된 항목 상세 비교</h4>
+
+                      <div class="change-item" v-if="isChanged(requirement, 'type')">
+                        <strong class="change-label">요구사항 유형</strong>
+                        <div class="change-content">
+                          <span class="original-value">{{ requirement.original.type }}</span>
+                          <span class="arrow">→</span>
+                          <span class="proposed-value">{{ requirement.proposed.type }}</span>
+                        </div>
+                      </div>
+                      <div class="change-item" v-if="isChanged(requirement, 'name')">
+                        <strong class="change-label">요구사항명</strong>
+                        <div class="change-content">
+                          <span class="original-value">{{ requirement.original.name }}</span>
+                          <span class="arrow">→</span>
+                          <span class="proposed-value">{{ requirement.proposed.name }}</span>
+                        </div>
+                      </div>
+                      <div class="change-item" v-if="isChanged(requirement, 'description')">
+                        <strong class="change-label">요구사항 설명</strong>
+                        <div class="change-content">
+                          <span class="original-value">{{ requirement.original.description }}</span>
+                          <span class="arrow">→</span>
+                          <span class="proposed-value">{{ requirement.proposed.description }}</span>
+                        </div>
+                      </div>
+                      <div class="change-item" v-if="isChanged(requirement, 'category1')">
+                        <strong class="change-label">대분류</strong>
+                        <div class="change-content">
+                          <span class="original-value">{{ requirement.original.category1 }}</span>
+                          <span class="arrow">→</span>
+                          <span class="proposed-value">{{ requirement.proposed.category1 }}</span>
+                        </div>
+                      </div>
+                      <div class="change-item" v-if="isChanged(requirement, 'category2')">
+                        <strong class="change-label">중분류</strong>
+                        <div class="change-content">
+                          <span class="original-value">{{ requirement.original.category2 }}</span>
+                          <span class="arrow">→</span>
+                          <span class="proposed-value">{{ requirement.proposed.category2 }}</span>
+                        </div>
+                      </div>
+                      <div class="change-item" v-if="isChanged(requirement, 'category3')">
+                        <strong class="change-label">소분류</strong>
+                        <div class="change-content">
+                          <span class="original-value">{{ requirement.original.category3 }}</span>
+                          <span class="arrow">→</span>
+                          <span class="proposed-value">{{ requirement.proposed.category3 }}</span>
+                        </div>
+                      </div>
+                      <div class="change-item" v-if="isChanged(requirement, 'priority')">
+                        <strong class="change-label">중요도</strong>
+                        <div class="change-content">
+                          <span class="original-value">{{ requirement.original.priority }}</span>
+                          <span class="arrow">→</span>
+                          <span class="proposed-value">{{ requirement.proposed.priority }}</span>
+                        </div>
+                      </div>
+                      <div class="change-item" v-if="isChanged(requirement, 'difficulty')">
+                        <strong class="change-label">난이도</strong>
+                        <div class="change-content">
+                          <span class="original-value">{{ requirement.original.difficulty }}</span>
+                          <span class="arrow">→</span>
+                          <span class="proposed-value">{{ requirement.proposed.difficulty }}</span>
+                        </div>
+                      </div>
+                      <div class="change-item" v-if="isChanged(requirement, 'source')">
+                        <strong class="change-label">출처</strong>
+                        <div class="change-content">
+                          <span class="original-value">{{ requirement.original.source }}</span>
+                          <span class="arrow">→</span>
+                          <span class="proposed-value">{{ requirement.proposed.source }}</span>
+                        </div>
+                      </div>
+                      <div class="change-item" v-if="isChanged(requirement, 'sourcePage')">
+                        <strong class="change-label">출처 페이지</strong>
+                        <div class="change-content">
+                          <span class="original-value">{{ requirement.original.sourcePage }}</span>
+                          <span class="arrow">→</span>
+                          <span class="proposed-value">{{ requirement.proposed.sourcePage }}</span>
+                        </div>
+                      </div>
+                      <div class="change-item" v-if="isChanged(requirement, 'modifiedDate')">
+                        <strong class="change-label">변경일자</strong>
+                        <div class="change-content">
+                          <span class="original-value">{{ requirement.original.modifiedDate }}</span>
+                          <span class="arrow">→</span>
+                          <span class="proposed-value">{{ requirement.proposed.modifiedDate }}</span>
+                        </div>
+                      </div>
+                      <div class="change-item" v-if="isChanged(requirement, 'modifier')">
+                        <strong class="change-label">변경자</strong>
+                        <div class="change-content">
+                          <span class="original-value">{{ requirement.original.modifier }}</span>
+                          <span class="arrow">→</span>
+                          <span class="proposed-value">{{ requirement.proposed.modifier }}</span>
+                        </div>
+                      </div>
+                      <div class="change-item" v-if="isChanged(requirement, 'reason')">
+                        <strong class="change-label">수정 이유</strong>
+                        <div class="change-content">
+                          <span class="original-value">{{ requirement.original.reason }}</span>
+                          <span class="arrow">→</span>
+                          <span class="proposed-value">{{ requirement.proposed.reason }}</span>
+                        </div>
+                      </div>
+
+                    </div>
+                  </td>
+                </tr>
+                <tr class="separator-row">
+                  <td colspan="17"></td>
                 </tr>
               </template>
               </tbody>
@@ -165,6 +266,22 @@ import { useRoute } from "vue-router";
 
 import {useProjectStore} from "../../../../stores/projectStore.js";
 
+const fieldsToCompare = [
+  { key: 'description', label: '요구사항 설명' },
+  { key: 'category1', label: '대분류' },
+  { key: 'category2', label: '중분류' },
+  { key: 'category3', label: '소분류' },
+  { key: 'type', label: '요구사항 유형' },
+  { key: 'name', label: '요구사항명' },
+  { key: 'priority', label: '중요도' },
+  { key: 'difficulty', label: '난이도' },
+  { key: 'source', label: '출처' },
+  { key: 'sourcePage', label: '출처 페이지' },
+  { key: 'modifiedDate', label: '변경일자' },
+  { key: 'modifier', label: '변경자' },
+  { key: 'reason', label: '수정 이유' },
+];
+
 const loading = ref(false);
 const processing = ref(false);
 const error = ref("");
@@ -221,7 +338,7 @@ const requirements = ref([
       id: 'REQ-002',
       type: '비기능',
       name: '응답 시간',
-      description: '모든 페이지는 3초 이내에 응답해야 한다.',
+      description: '모든 페이지는 3초 이내에 응답해야 한다.모든 페이지는 3초 이내에 응답해야 한다.모든 페이지는 3초 이내에 응답해야 한다.모든 페이지는 3초 이내에 응답해야 한다.모든 페이지는 3초 이내에 응답해야 한다.모든 페이지는 3초 이내에 응답해야 한다.모든 페이지는 3초 이내에 응답해야 한다.모든 페이지는 3초 이내에 응답해야 한다.모든 페이지는 3초 이내에 응답해야 한다.',
       category1: '성능',
       category2: '응답 속도',
       category3: '웹 클라이언트',
@@ -231,7 +348,7 @@ const requirements = ref([
       sourcePage: '7',
       modifiedDate: '2024-06-01',
       modifier: '김민수',
-      reason: '초기 정의'
+      reason: '초기 정의, 모든 페이지는 3초 이내에 응답해야 한다.모든 페이지는 3초 이내에 응답해야 한다.모든 페이지는 3초 이내에 응답해야 한다.모든 페이지는 3초 이내에 응답해야 한다.모든 페이지는 3초 이내에 응답해야 한다.모든 페이지는 3초 이내에 응답해야 한다.모든 페이지는 3초 이내에 응답해야 한다.'
     },
     proposed: {
       id: 'REQ-002',
@@ -366,495 +483,135 @@ const closeSuccessModal = () => {
 onMounted(() => {
   // For UI testing: requirements are already hardcoded above and will show on mount.
 });
+const expandedRows = ref([]);
+const toggleRow = (id) => {
+  if (expandedRows.value.includes(id)) {
+    expandedRows.value = expandedRows.value.filter(rowId => rowId !== id);
+  } else {
+    expandedRows.value.push(id);
+  }
+};
 </script>
 
 <style scoped>
-.requirement-approval-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem;
+/* 상세 비교 영역의 기본 행 스타일 */
+.details-row > td {
+  padding: 0 !important;
+  /* 아래 내용이 비치지 않도록 배경색 지정 */
+  background-color: #f7f9fc;
+  border-bottom: 1px solid #e0e7ff;
 }
 
-.table-container {
+/* 1. 스크롤을 따라 움직이는 투명 껍데기 */
+.non-scrolling-wrapper {
   width: 100%;
-  overflow-x: auto;
 }
 
-/* 로딩 및 에러 상태 스타일 (기존과 동일) */
-.loading-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 4rem 2rem;
-  text-align: center;
+/* 2. 실제 내용 컨테이너 */
+.change-details-container {
+  padding: 20px 30px;
+  text-align: left;
 }
 
-.loading-spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid #f3f4f6;
-  border-top: 4px solid #4f46e5;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 1rem;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.error-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 4rem 2rem;
-  text-align: center;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: 12px;
-  margin: 2rem 0;
-}
-
-.error-icon {
-  font-size: 3rem;
-  margin-bottom: 1rem;
-}
-
-.error-message {
-  color: #dc2626;
-  font-size: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.retry-button {
-  background: #dc2626;
-  color: white;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
-  font-size: 0.875rem;
+.change-details-container h4 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 16px;
   font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
+  color: #333;
 }
 
-.retry-button:hover {
-  background: #b91c1c;
-  transform: translateY(-1px);
-}
-
-/* 모달 스타일 */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(17, 24, 39, 0.6);
+.change-item {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 1rem;
-  backdrop-filter: blur(4px);
+  align-items: flex-start;
+  margin-bottom: 12px;
 }
 
-.modal-container {
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  max-width: 420px;
-  width: 100%;
-  animation: modal-pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-@keyframes modal-pop {
-  from {
-    transform: scale(0.9) translateY(10px);
-    opacity: 0;
-  }
-  to {
-    transform: scale(1) translateY(0);
-    opacity: 1;
-  }
-}
-
-.modal-header {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 1.5rem;
-  position: relative;
-}
-
-.modal-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.change-label {
+  flex-basis: 120px;
   flex-shrink: 0;
-}
-
-.modal-icon.approve { background-color: #dcfce7; }
-.modal-icon.reject { background-color: #fee2e2; }
-.modal-icon.success { background-color: #dcfce7; }
-
-.modal-icon-text {
-  font-size: 1.5rem;
-}
-
-.modal-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #1f2937;
-  margin: 0;
-}
-
-.modal-close-button {
-  position: absolute;
-  top: 0.75rem;
-  right: 0.75rem;
-  background: transparent;
-  border: none;
-  font-size: 1.5rem;
-  color: #9ca3af;
-  cursor: pointer;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-}
-
-.modal-close-button:hover {
-  background-color: #f3f4f6;
-  color: #374151;
-}
-
-.close-icon {
-  line-height: 1;
-}
-
-.modal-body {
-  padding: 0 1.5rem 1.5rem;
-  font-size: 1rem;
+  font-weight: 500;
   color: #4b5563;
+  padding-top: 8px;
+  font-size: 14px;
 }
 
-.modal-message {
-  margin: 0 0 1rem 0;
+/* 3. Grid 레이아웃과 줄바꿈 처리를 위한 핵심 스타일 */
+.change-content {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 12px;
+  align-items: start;
+  width: 100%;
+  max-width: 900px;
+  padding: 8px;
+  background-color: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+}
+
+.original-value,
+.proposed-value {
+  word-wrap: break-word;
+  word-break: break-all;
+  min-width: 0;
+  white-space: pre-wrap;
   line-height: 1.6;
 }
 
-.modal-warning {
-  margin: 0;
-  font-size: 0.875rem;
+.original-value {
+  color: #ef4444;
+  text-decoration: line-through;
+}
+
+.arrow {
   color: #6b7280;
-  background-color: #f9fafb;
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
-  border: 1px solid #f3f4f6;
-  text-align: center;
+  font-weight: bold;
 }
 
-.modal-actions {
-  display: flex;
-  gap: 0.75rem;
-  padding: 1.25rem 1.5rem;
-  background-color: #f9fafb;
-  border-bottom-left-radius: 16px;
-  border-bottom-right-radius: 16px;
-  border-top: 1px solid #f3f4f6;
-}
-
-.cancel-button,
-.confirm-button {
-  flex: 1;
-  padding: 0.75rem 1rem;
-  border: none;
-  border-radius: 8px;
-  font-size: 1rem;
+.proposed-value {
+  color: #22c55e;
   font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
 }
 
-.cancel-button {
-  background-color: #ffffff;
-  color: #4b5563;
-  border: 1px solid #d1d5db;
-}
+.requirement-approval-container { max-width: 1400px; margin: 0 auto; padding: 2rem; font-family: Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif; }
+.main-content { transition: margin-left 0.3s; }
+.table-controls { display: flex; justify-content: flex-end; gap: 0.5rem; margin-bottom: 1rem; }
+.bulk-button { padding: 8px 14px; border: 1px solid #d1d5db; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.2s; background-color: #fff; }
+.bulk-button:disabled { background-color: #f3f4f6; cursor: not-allowed; color: #9ca3af; }
+.bulk-button.approve:not(:disabled):hover { border-color: #22c55e; color: #166534; background-color: #f0fdf4; }
+.bulk-button.reject:not(:disabled):hover { border-color: #ef4444; color: #991b1b; background-color: #fef2f2; }
 
-.cancel-button:hover:not(:disabled) {
-  background-color: #f3f4f6;
-}
+.table-container { width: 100%; overflow-x: auto; border: 1px solid #e5e7eb; border-radius: 8px; }
+.table-wrapper { min-width: 1900px; }
+.requirements-table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
+.requirements-table thead th { background-color: #f9fafb; padding: 12px 10px; text-align: center; font-weight: 600; color: #374151; position: sticky; top: 0; z-index: 10; border-bottom: 1px solid #e5e7eb; white-space: nowrap; }
+.requirements-table tbody td { padding: 10px; vertical-align: middle; text-align: center; border-bottom: 1px solid #f3f4f6; background-color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.requirements-table tbody tr:last-child td { border-bottom: none; }
+.clickable-row { cursor: pointer; transition: background-color 0.1s ease-in-out; }
+.clickable-row:hover { background-color: #f9fafb; }
 
-.confirm-button.approve {
-  background-color: #10b981;
-  color: white;
-}
-.confirm-button.approve:hover:not(:disabled) {
-  background-color: #059669;
-}
+.col-toggle { width: 40px; }
+.col-select { width: 50px; }
+.col-approval { width: 90px; }
+.col-id { width: 80px; }
+.col-type, .col-category, .col-priority, .col-difficulty, .col-source, .col-page, .col-modifier { width: 90px; }
+.col-name { width: 220px; text-align: left;}
+.col-description { width: 350px; white-space: normal; word-wrap: break-word; text-align: left; line-height: 1.5; }
+.col-date { width: 100px; }
+.col-reason { width: 250px; white-space: normal; word-wrap: break-word; text-align: left; line-height: 1.5; }
 
-.confirm-button.reject {
-  background-color: #ef4444;
-  color: white;
-}
-.confirm-button.reject:hover:not(:disabled) {
-  background-color: #dc2626;
-}
+.sticky-col { position: sticky; z-index: 2; background-color: #fff; }
+.clickable-row:hover .sticky-col { background-color: #f9fafb; }
+.requirements-table thead th.sticky-col { background-color: #f9fafb; z-index: 11; }
 
-.confirm-button:disabled {
-  opacity: 0.7;
-  cursor: wait;
-}
-
-/* 테이블 컨테이너 */
-.table-container {
-  width: 100%;
-  overflow-x: auto;
-  overflow-y: auto;
-  max-height: 80vh;
-}
-
-.table-wrapper {
-  min-width: 1400px; /* 최소 너비 설정 */
-}
-
-/* 메인 테이블 스타일 */
-.requirements-table {
-  width: 100%;
-  border-collapse: collapse;
-  table-layout: fixed;
-  font-size: 14px;
-  background-color: #fff;
-}
-
-/* 테이블 헤더 */
-.requirements-table thead th {
-  background-color: #f5f5f5;
-  border: 1px solid #ddd;
-  padding: 12px 8px;
-  text-align: center;
-  font-weight: bold;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* 테이블 바디 */
-.requirements-table tbody td {
-  border: 1px solid #ddd;
-  padding: 8px;
-  vertical-align: top;
-  background-color: #fff;
-}
-
-/* 컬럼별 너비 설정 */
-.col-division {
-  width: 60px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.col-id {
-  width: 80px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.col-type {
-  width: 100px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.col-name {
-  width: 150px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.col-description {
-  width: 300px;
-  white-space: normal;
-  word-wrap: break-word;
-  word-break: break-all;
-  line-height: 1.4;
-}
-
-.col-category {
-  width: 100px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.col-priority {
-  width: 80px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.col-difficulty {
-  width: 80px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.col-source {
-  width: 100px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.col-page {
-  width: 100px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.col-date {
-  width: 100px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.col-modifier {
-  width: 80px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.col-reason {
-  width: 300px;
-  white-space: normal;
-  word-wrap: break-word;
-  word-break: break-all;
-  line-height: 1.4;
-}
-
-.col-approval {
-  width: 100px;
-  text-align: center;
-  vertical-align: middle;
-}
-
-/* 행 라벨 스타일 */
-.row-label {
-  background-color: #f8f9fa;
-  font-weight: bold;
-  text-align: center;
-}
-
-/* 클릭 가능한 행 */
-.clickable-row {
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.clickable-row:hover {
-  background-color: #f0f8ff;
-}
-
-.clickable-row.selected {
-  background-color: #e6f3ff;
-}
-
-/* 승인/반려 버튼 */
-.confirm-button {
-  padding: 6px 12px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: bold;
-  transition: background-color 0.2s;
-  width: 100%;
-  max-width: 80px;
-}
-
-.confirm-button.approve {
-  background-color: #28a745;
-  color: white;
-}
-
-.confirm-button.approve:hover {
-  background-color: #218838;
-}
-
-.confirm-button.reject {
-  background-color: #dc3545;
-  color: white;
-}
-
-.confirm-button.reject:hover {
-  background-color: #c82333;
-}
-
-/* 사이드바와 함께 사용될 때 */
-.main-content.with-sidebar {
-  margin-left: 250px;
-}
-
-.main-content {
-  transition: margin-left 0.3s;
-  padding: 20px;
-}
-
-/* 반응형 디자인 */
-@media (max-width: 1200px) {
-  .requirements-table {
-    font-size: 12px;
-  }
-
-  .col-description,
-  .col-reason {
-    width: 180px;
-  }
-}
-
-@media (max-width: 768px) {
-  .main-content.with-sidebar {
-    margin-left: 0;
-  }
-
-  .requirements-table {
-    font-size: 11px;
-  }
-
-  .col-description,
-  .col-reason {
-    width: 150px;
-  }
-}
-
-/* 내용이 변경된 셀을 위한 하이라이트 스타일 */
-.cell-changed {
-  background-color: #81c147; /* 연한 노란색 배경 */
-  font-weight: 600; /* 폰트 살짝 굵게 */
-  color: #81c147; /* 살짝 어두운 텍스트 색상 */
-  transition: background-color 0.3s ease;
-}
+.toggle-button { background: none; border: none; cursor: pointer; font-size: 16px; color: #9ca3af; }
+.button-group { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
+.confirm-button { padding: 5px 10px; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 500; transition: all 0.2s; width: 60px; }
+.confirm-button.approve { background-color: #10b981; color: white; }
+.confirm-button.approve:hover { background-color: #059669; }
+.confirm-button.reject { background-color: #ef4444; color: white; }
+.confirm-button.reject:hover { background-color: #dc2626; }
+.cell-changed { background-color: #f0fdf4 !important; }
+.cell-changed > .original-value { text-decoration: line-through; }
 </style>
