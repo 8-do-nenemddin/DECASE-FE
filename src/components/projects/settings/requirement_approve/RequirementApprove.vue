@@ -47,20 +47,20 @@
               </thead>
               <tbody>
               <template v-for="requirement in requirements" :key="requirement.id">
-                <tr @click="toggleRow(requirement.id)" class="clickable-row">
+                <tr @click="toggleRow(requirement.proposed.id)" class="clickable-row">
                   <td class="col-toggle sticky-col" style="left: 0;">
-                    <button @click.stop="toggleRow(requirement.id)" class="toggle-button">
-                      {{ expandedRows.includes(requirement.id) ? '▼' : '▶' }}
+                    <button @click.stop="toggleRow(requirement.proposed.id)" class="toggle-button">
+                      {{ expandedRows.includes(requirement.proposed.id) ? '▼' : '▶' }}
                     </button>
                   </td>
                   <td class="col-select sticky-col" style="left: 40px;">
-                    <input type="checkbox" v-model="selectedRequirements" :value="requirement.id" @click.stop />
+                    <input type="checkbox" v-model="selectedRequirements" :value="requirement.proposed.id" @click.stop />
                   </td>
                   <td class="col-approval sticky-col button-group" style="left: 90px;">
-                    <button @click.stop="approveRequirement(requirement.id)" class="confirm-button approve">승인</button>
-                    <button @click.stop="rejectRequirement(requirement.id)" class="confirm-button reject">반려</button>
+                    <button @click.stop="approveRequirement(requirement.proposed.id)" class="confirm-button approve">승인</button>
+                    <button @click.stop="rejectRequirement(requirement.proposed.id)" class="confirm-button reject">반려</button>
                   </td>
-                  <td class="col-id" :class="{ 'cell-changed': isChanged(requirement, 'id') }">{{ requirement.proposed.id }}</td>
+                  <td class="col-id" :class="{ 'cell-changed': isChanged(requirement, 'id') }">{{ requirement.proposed.idCode }}</td>
                   <td class="col-type" :class="{ 'cell-changed': isChanged(requirement, 'type') }">{{ requirement.proposed.type }}</td>
                   <td class="col-name" :class="{ 'cell-changed': isChanged(requirement, 'name') }">{{ requirement.proposed.name }}</td>
                   <td class="col-description" :class="{ 'cell-changed': isChanged(requirement, 'description') }">{{ requirement.proposed.description }}</td>
@@ -71,11 +71,11 @@
                   <td class="col-difficulty" :class="{ 'cell-changed': isChanged(requirement, 'difficulty') }">{{ requirement.proposed.difficulty }}</td>
                   <td class="col-source" :class="{ 'cell-changed': isChanged(requirement, 'source') }">{{ requirement.proposed.source }}</td>
                   <td class="col-page" :class="{ 'cell-changed': isChanged(requirement, 'sourcePage') }">{{ requirement.proposed.sourcePage }}</td>
-                  <td class="col-date" :class="{ 'cell-changed': isChanged(requirement, 'modifiedDate') }">{{ requirement.proposed.modifiedDate }}</td>
+                  <td class="col-date" :class="{ 'cell-changed': isChanged(requirement, 'modifiedDate') }">{{ formatDate(requirement.proposed.modifiedDate) }}</td>
                   <td class="col-modifier" :class="{ 'cell-changed': isChanged(requirement, 'modifier') }">{{ requirement.proposed.modifier }}</td>
                   <td class="col-reason" :class="{ 'cell-changed': isChanged(requirement, 'reason') }">{{ requirement.proposed.reason }}</td>
                 </tr>
-                <tr class="details-row" v-if="expandedRows.includes(requirement.id)">
+                <tr class="details-row" v-if="expandedRows.includes(requirement.proposed.id)">
                   <td></td>
                   <td colspan="16">
                     <div class="change-details-container">
@@ -164,9 +164,9 @@
                       <div class="change-item" v-if="isChanged(requirement, 'modifiedDate')">
                         <strong class="change-label">변경일자</strong>
                         <div class="change-content">
-                          <span class="original-value">{{ requirement.original.modifiedDate }}</span>
+                          <span class="original-value">{{ formatDate(requirement.original.modifiedDate) }}</span>
                           <span class="arrow">→</span>
-                          <span class="proposed-value">{{ requirement.proposed.modifiedDate }}</span>
+                          <span class="proposed-value">{{ formatDate(requirement.proposed.modifiedDate) }}</span>
                         </div>
                       </div>
                       <div class="change-item" v-if="isChanged(requirement, 'modifier')">
@@ -295,79 +295,13 @@ const successMessage = ref("");
 const projectStore = useProjectStore();
 const userId = projectStore.userId;
 
-// Hardcoded demo data for UI testing
-const requirements = ref([
-  {
-    id: 'REQ-001',
-    original: {
-      id: 'REQ-001',
-      type: '기능',
-      name: '로그인 기능',
-      description: '사용자는 이메일과 비밀번호로 로그인할 수 있어야 한다.',
-      category1: '인증',
-      category2: '로그인',
-      category3: '일반 사용자',
-      priority: '높음',
-      difficulty: '중간',
-      source: 'RFP',
-      sourcePage: '5',
-      modifiedDate: '2024-06-01',
-      modifier: '홍길동',
-      reason: '초기 정의'
-    },
-    proposed: {
-      id: 'REQ-001',
-      type: '기능',
-      name: '소셜 로그인 기능 추가',
-      description: '사용자는 Google 또는 Kakao 계정으로도 로그인할 수 있어야 한다.',
-      category1: '인증',
-      category2: '로그인',
-      category3: '소셜 연동',
-      priority: '높음',
-      difficulty: '높음',
-      source: '회의록',
-      sourcePage: '3',
-      modifiedDate: '2025-06-10',
-      modifier: '이영희',
-      reason: '고객 요청 사항 반영'
-    }
-  },
-  {
-    id: 'REQ-002',
-    original: {
-      id: 'REQ-002',
-      type: '비기능',
-      name: '응답 시간',
-      description: '모든 페이지는 3초 이내에 응답해야 한다.모든 페이지는 3초 이내에 응답해야 한다.모든 페이지는 3초 이내에 응답해야 한다.모든 페이지는 3초 이내에 응답해야 한다.모든 페이지는 3초 이내에 응답해야 한다.모든 페이지는 3초 이내에 응답해야 한다.모든 페이지는 3초 이내에 응답해야 한다.모든 페이지는 3초 이내에 응답해야 한다.모든 페이지는 3초 이내에 응답해야 한다.',
-      category1: '성능',
-      category2: '응답 속도',
-      category3: '웹 클라이언트',
-      priority: '중간',
-      difficulty: '중간',
-      source: 'RFP',
-      sourcePage: '7',
-      modifiedDate: '2024-06-01',
-      modifier: '김민수',
-      reason: '초기 정의, 모든 페이지는 3초 이내에 응답해야 한다.모든 페이지는 3초 이내에 응답해야 한다.모든 페이지는 3초 이내에 응답해야 한다.모든 페이지는 3초 이내에 응답해야 한다.모든 페이지는 3초 이내에 응답해야 한다.모든 페이지는 3초 이내에 응답해야 한다.모든 페이지는 3초 이내에 응답해야 한다.'
-    },
-    proposed: {
-      id: 'REQ-002',
-      type: '비기능',
-      name: '모바일 최적화 응답 시간',
-      description: '모바일 환경에서는 2초 이내에 응답해야 한다.',
-      category1: '성능',
-      category2: '응답 속도',
-      category3: '모바일',
-      priority: '높음',
-      difficulty: '높음',
-      source: '회의록',
-      sourcePage: '6',
-      modifiedDate: '2025-06-11',
-      modifier: '정지훈',
-      reason: '성능 개선 필요'
-    }
-  }
-]);
+// 날짜 포맷터: YYYY-MM-DD만 추출
+const formatDate = (dateStr) => {
+  return dateStr ? dateStr.split('T')[0] : '';
+};
+
+// 요구사항 목록
+const requirements = ref([]);
 
 // 수정된 요구사항 로드
 const loadModifiedRequirements = async () => {
@@ -375,7 +309,10 @@ const loadModifiedRequirements = async () => {
   error.value = "";
 
   try {
-    // 실제 API 호출
+    const response = await fetch(`/api/v1/projects/${projectStore.projectId}/requirements/pending`);
+    if (!response.ok) throw new Error("서버 오류: " + response.status);
+    const data = await response.json();
+    requirements.value = data;
   } catch (err) {
     console.error("요구사항 로드 오류:", err);
     error.value = err.message || "수정된 요구사항을 불러오는데 실패했습니다.";
@@ -402,14 +339,14 @@ const isChanged = (requirement, field) => {
 const approveRequirement = (requirementId) => {
   confirmAction.value = "approve";
   targetRequirementId.value = requirementId;
-  showConfirmModal.value = true;
+  showConfirmModal.value = true; // ✅ ensure modal opens
 };
 
 // 요구사항 반려
 const rejectRequirement = (requirementId) => {
   confirmAction.value = "reject";
   targetRequirementId.value = requirementId;
-  showConfirmModal.value = true;
+  showConfirmModal.value = true; // ✅ ensure modal opens
 };
 
 // 일괄 승인
@@ -435,10 +372,14 @@ const confirmActionHandler = async () => {
       // 단일 요구사항 처리
       const action = confirmAction.value === "approve" ? "승인" : "반려";
 
-      // 실제 API 호출
+      await fetch(`/api/v1/projects/${projectStore.projectId}/requirements/approve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify([{ pendingPk: targetRequirementId.value, status: confirmAction.value === "approve" ? 2 : 1 }])
+      });
 
       // 목록에서 제거
-      modifiedRequirements.value = modifiedRequirements.value.filter(
+      requirements.value = requirements.value.filter(
           req => req.id !== targetRequirementId.value
       );
 
@@ -447,10 +388,17 @@ const confirmActionHandler = async () => {
       // 일괄 처리
       const action = confirmAction.value === "approve" ? "승인" : "반려";
 
-      // 실제 API 호출
+      await fetch(`/api/v1/projects/${projectStore.projectId}/requirements/approve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(selectedRequirements.value.map(id => ({
+          pendingPk: id,
+          status: confirmAction.value === "approve" ? 2 : 1
+        })))
+      });
 
       // 목록에서 제거
-      modifiedRequirements.value = modifiedRequirements.value.filter(
+      requirements.value = requirements.value.filter(
           req => !selectedRequirements.value.includes(req.id)
       );
 
@@ -481,7 +429,7 @@ const closeSuccessModal = () => {
 };
 
 onMounted(() => {
-  // For UI testing: requirements are already hardcoded above and will show on mount.
+  loadModifiedRequirements();
 });
 const expandedRows = ref([]);
 const toggleRow = (id) => {
@@ -594,7 +542,7 @@ const toggleRow = (id) => {
 .col-toggle { width: 40px; }
 .col-select { width: 50px; }
 .col-approval { width: 90px; }
-.col-id { width: 80px; }
+.col-id { width: 150px; }
 .col-type, .col-category, .col-priority, .col-difficulty, .col-source, .col-page, .col-modifier { width: 90px; }
 .col-name { width: 220px; text-align: left;}
 .col-description { width: 350px; white-space: normal; word-wrap: break-word; text-align: left; line-height: 1.5; }
@@ -614,4 +562,92 @@ const toggleRow = (id) => {
 .confirm-button.reject:hover { background-color: #dc2626; }
 .cell-changed { background-color: #f0fdf4 !important; }
 .cell-changed > .original-value { text-decoration: line-through; }
+/* Modal overlay and modal styles for floating modal */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-container {
+  background: #fff;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+  overflow: hidden;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-title {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 0;
+}
+
+.modal-close-button {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.modal-body {
+  padding: 1.5rem;
+}
+
+.modal-message {
+  margin: 0 0 1rem;
+  font-size: 15px;
+  color: #374151;
+}
+
+.modal-warning {
+  margin: 0;
+  font-size: 13px;
+  color: #ef4444;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.cancel-button,
+.confirm-button {
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.cancel-button {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.confirm-button.approve {
+  background: #10b981;
+  color: white;
+}
+
+.confirm-button.reject {
+  background: #ef4444;
+  color: white;
+}
 </style>
