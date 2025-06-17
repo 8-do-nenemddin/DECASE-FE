@@ -361,7 +361,7 @@ const loadAllData = async () => {
 const fetchUploadedFiles = async () => {
   try {
     const response = await fetch(
-      `http://localhost:8080/api/v1/projects/${projectId.value}/document/uploads`,
+      `/api/v1/projects/${projectId.value}/document/uploads`,
       {
         method: "GET",
         headers: { "Content-Type": "application/json" },
@@ -400,7 +400,7 @@ const fetchUploadedFiles = async () => {
 const fetchGeneratedFiles = async () => {
   try {
     const response = await fetch(
-      `http://localhost:8080/api/v1/projects/${projectId.value}/revision`,
+      `/api/v1/projects/${projectId.value}/revision`,
       {
         method: "GET",
         headers: { "Content-Type": "application/json" },
@@ -468,7 +468,7 @@ const getFileIconByName = (fileName) => {
 const downloadGeneratedFile = async (file) => {
   try {
     let response = await fetch(
-      `http://localhost:8080/api/v1/projects/${projectId.value}/requirements/downloads?revisionCount=${file.revision}`
+      `/api/v1/projects/${projectId.value}/requirements/downloads?revisionCount=${file.revision}`
     );
 
     if (!response.ok) throw new Error(`다운로드 실패: ${response.status}`);
