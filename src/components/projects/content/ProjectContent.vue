@@ -2,6 +2,7 @@
   <div class="m-project-content-container">
     <!-- 각 컴포넌트를 wrapper로 감싸서 전체 너비 보장 -->
     <div class="m-content-wrapper">
+<<<<<<< HEAD
       <!-- 1. selectedFile이 있는 경우 -->
       <template v-if="selectedFile">
         <AsIsReportContent
@@ -53,6 +54,36 @@
       <!-- 3. mockup 파일은 항상 별도 분기 -->
       <MockUpViewContent
         v-if="activeMockupFile"
+=======
+      <BasicContent v-if="!selectedFile && !activeMockupFile" />
+
+      <AsIsReportContent
+        v-else-if="selectedFile?.type === 'as-is'"
+        :docId="selectedFile.docId"
+        :file="selectedFile.file"
+      />
+
+      <UploadContent
+        v-else-if="selectedFile?.type === 'uploaded'"
+        :docId="selectedFile.docId"
+        :file="selectedFile.file"
+      />
+
+      <RequirementsContent
+        v-else-if="selectedFile?.type === 'generated'"
+        ref="requirementsContentRef"
+        :projectId="selectedFile.projectId"
+        :revision="
+          projectStore.projectRevision >= 1
+            ? projectStore.projectRevision
+            : selectedFile.revision
+        "
+        @mockupFileSelected="handleMockupFileSelected"
+      />
+
+      <MockUpViewContent
+        v-else-if="activeMockupFile"
+>>>>>>> e7b9530c005b2468ec4104e77cd1e8a7dc2c451e
         :activeFile="activeMockupFile"
       />
     </div>
@@ -67,8 +98,11 @@ import RequirementsContent from "./RequirementsContent.vue";
 import AsIsReportContent from "./AsisContent.vue"; // AS-IS 컴포넌트 추가
 import MockUpViewContent from "./MockUpViewContent.vue";
 import { useProjectStore } from "../../../stores/projectStore";
+<<<<<<< HEAD
 import SrsFailedContent from "./SrsFailedContent.vue";
 import GeneratingContent from "./GeneratingContent.vue";
+=======
+>>>>>>> e7b9530c005b2468ec4104e77cd1e8a7dc2c451e
 
 const projectStore = useProjectStore();
 const projectId = computed(() => projectStore.projectId);
@@ -127,6 +161,7 @@ const handleMockupFileSelected = (file) => {
   console.log("Updated activeMockupFile:", activeMockupFile.value); // 디버깅용 로그 추가
 };
 
+<<<<<<< HEAD
 const srsStatus = ref(null); // "PROCESSING", "FAILED", "SUCCESS" 등
 const srsMessage = ref("");
 
@@ -155,12 +190,21 @@ const handleRetry = () => {
   fetchSrsStatus();
 };
 
+=======
+>>>>>>> e7b9530c005b2468ec4104e77cd1e8a7dc2c451e
 // 외부에서 접근할 수 있도록 expose
 defineExpose({
   handleFileSelected,
   handleSearch,
   clearSelection,
   handleMockupFileSelected,
+<<<<<<< HEAD
+=======
+});
+
+onMounted(() => {
+  console.log("ProjectContent 마운트됨, projectId:", projectId.value);
+>>>>>>> e7b9530c005b2468ec4104e77cd1e8a7dc2c451e
 });
 </script>
 

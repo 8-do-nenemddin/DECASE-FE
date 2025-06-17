@@ -81,10 +81,13 @@ const navigateToProject = async (projectId) => {
 
   if (selectedProject) {
     try {
+<<<<<<< HEAD
       console.log(
           "Fetching revision count for project:",
           selectedProject.projectId
       );
+=======
+>>>>>>> e7b9530c005b2468ec4104e77cd1e8a7dc2c451e
       const response = await fetch(`/api/v1/projects/${projectId}/revision`);
       const revisions = await response.json();
       const revisionCount = revisions.length || 0;

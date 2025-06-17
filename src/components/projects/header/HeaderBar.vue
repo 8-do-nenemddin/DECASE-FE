@@ -46,10 +46,10 @@
         <!-- 추후 수정 -->
         <!-- disabled 조건 바꾸기 -->
         <button
-            class="icon-button upload-btn"
-            @click="openSourceUploadModal"
-            title="파일 업로드"
-            :disabled="projectStore.projectRevision === 0"
+          class="icon-button upload-btn"
+          @click="openSourceUploadModal"
+          title="파일 업로드"
+          :disabled="projectStore.projectRevision === 0"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -444,8 +444,6 @@ const handleSearch = (searchParams) => {
   letter-spacing: 0.02em;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui,
     sans-serif;
-  margin-top: 5px !important; /* 로고 텍스트도 아래로 */
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
   margin-top: 5px !important; /* 로고 텍스트도 아래로 */
 }
 
