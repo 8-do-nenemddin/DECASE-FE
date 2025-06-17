@@ -117,7 +117,7 @@
               <polyline points="17 21 17 13 7 13 7 21" />
               <polyline points="7 3 7 8 15 8" />
             </svg>
-            <span>저장 ({{ modifiedRows.size }})</span>
+            <span>수정 요청 ({{ modifiedRows.size }})</span>
           </button>
           <button
             @click="cancelChanges"
@@ -206,6 +206,7 @@ const modifiedRows = ref(new Set());
 const searchParams = ref(null);
 const mockupExists = ref(true); // 초기값은 false
 const gridApi = ref(null);
+const fullList = ref([]);
 
 // 컬럼 정의
 const columnDefs = ref([
@@ -422,28 +423,19 @@ function transformApiDataToTableData(apiData) {
       ? item.createdDate.replace(/-/g, ".")
       : "";
 
+    // Store raw values for type, priority, and difficulty
     return {
       reqPk: item.reqPk,
       reqIdCode: item.reqIdCode,
       revisionCount: item.revisionCount,
-      type: item.type === "FR" ? "기능" : "비기능",
+      type: item.type, // "FR" or "NFR"
       level1: item.level1 || "",
       level2: item.level2 || "",
       level3: item.level3 || "",
       name: item.name || "",
       description: item.description || "",
-      priority:
-        item.priority === "HIGH"
-          ? "상"
-          : item.priority === "MIDDLE"
-          ? "중"
-          : "하",
-      difficulty:
-        item.difficulty === "HIGH"
-          ? "상"
-          : item.difficulty === "MIDDLE"
-          ? "중"
-          : "하",
+      priority: item.priority, // "HIGH" | "MIDDLE" | "LOW"
+      difficulty: item.difficulty, // "HIGH" | "MIDDLE" | "LOW"
       sourcesDisplay: sourcesDisplay,
       sourceIds: sourceIds,
       managementStatus: item.isDeleted ? "삭제" : "등록",
@@ -457,132 +449,27 @@ function transformApiDataToTableData(apiData) {
   });
 }
 
-// 검색 이벤트 핸들러
-const handleSearch = async (params) => {
+// 검색 이벤트 핸들러 (로컬에서 필터링, API 호출하지 않음)
+const handleSearch = (params) => {
+  loading.value = true;
   try {
-    loading.value = true;
-    error.value = null;
-    searchParams.value = params;
-
-    if (!props.projectId || !props.revision) {
-      error.value = "프로젝트 ID 또는 리비전 정보가 없습니다.";
-      return;
-    }
-
-    // 검색 파라미터 상세 로깅
-    console.log("=== 검색 파라미터 상세 정보 ===");
-    console.log("1. 기본 정보:");
-    console.log("- 프로젝트 ID:", props.projectId);
-    console.log("- 리비전:", props.revision);
-    console.log("2. 검색 조건:");
-    console.log("- 검색어:", params.query);
-    console.log("- 대분류:", params.level1);
-    console.log("- 중분류:", params.level2);
-    console.log("- 소분류:", params.level3);
-    console.log("- 유형:", params.type);
-    console.log("- 중요도:", params.priority);
-    console.log("- 난이도:", params.difficulty);
-    console.log("- 문서 유형:", params.docType);
-    console.log("3. 전체 파라미터 객체:", params);
-
-    const queryParams = new URLSearchParams();
-    if (params.query) queryParams.append("query", params.query);
-    if (params.level1) queryParams.append("level1", params.level1);
-    if (params.level2) queryParams.append("level2", params.level2);
-    if (params.level3) queryParams.append("level3", params.level3);
-
-    // type 파라미터 처리 (0: 기능, 1: 비기능)
-    if (params.type !== undefined && params.type !== null) {
-      queryParams.append("type", params.type);
-    }
-
-    // difficulty 파라미터 처리 (0: 상, 1: 중, 2: 하)
-    if (params.difficulty !== undefined && params.difficulty !== null) {
-      queryParams.append("difficulty", params.difficulty);
-    }
-
-    // priority 파라미터 처리 (0: 상, 1: 중, 2: 하)
-    if (params.priority !== undefined && params.priority !== null) {
-      queryParams.append("priority", params.priority);
-    }
-
-    if (params.docType && Array.isArray(params.docType)) {
-      params.docType.forEach((type) => queryParams.append("docType", type));
-    }
-
-    // 리비전 정보 추가
-    queryParams.append("revisionCount", props.revision);
-
-    const apiUrl = `/api/v1/projects/${
-      props.projectId
-    }/documents/search?${queryParams.toString()}`;
-
-    // API URL 로깅
-    console.log("=== API 요청 정보 ===");
-    console.log("1. 요청 URL:", apiUrl);
-    console.log("2. 쿼리 파라미터:");
-    for (const [key, value] of queryParams.entries()) {
-      console.log(`- ${key}: ${value}`);
-    }
-
-    const response = await fetch(apiUrl, {
-      method: "GET",
-      headers: {
-        Accept: "*/*",
-        "Content-Type": "application/json",
-      },
-      credentials: "include", // 쿠키 포함
+    rowData.value = fullList.value.filter(item => {
+      const nameMatch = !params.query || item.name.includes(params.query);
+      const level1Match = !params.level1 || item.level1 === params.level1;
+      const level2Match = !params.level2 || item.level2 === params.level2;
+      const level3Match = !params.level3 || item.level3 === params.level3;
+      // Use raw values for type/priority/difficulty
+      const typeMatch = !params.type || item.type === params.type;
+      const priorityMatch = !params.priority || item.priority === params.priority;
+      const difficultyMatch = !params.difficulty || item.difficulty === params.difficulty;
+      const docTypeMatch = !params.docType?.length || item._originalApiData.sources?.some(source =>
+        params.docType.some(prefix => source.docId?.startsWith(prefix))
+      );
+      return nameMatch && level1Match && level2Match && level3Match &&
+             typeMatch && priorityMatch && difficultyMatch && docTypeMatch;
     });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("API Error Response:", errorText);
-      throw new Error(`검색 요청이 실패했습니다. (${response.status})`);
-    }
-
-    const responseData = await response.json();
-    console.log("Search API Response:", responseData);
-
-    // 응답 데이터 구조 확인 및 처리
-    let apiData;
-    if (responseData && responseData.data) {
-      apiData = responseData.data;
-    } else if (Array.isArray(responseData)) {
-      apiData = responseData;
-    } else {
-      console.error("예상치 못한 응답 구조:", responseData);
-      throw new Error("응답 데이터 구조가 올바르지 않습니다.");
-    }
-
-    if (!Array.isArray(apiData) || apiData.length === 0) {
-      console.warn("검색 결과가 없습니다.");
-      rowData.value = [];
-      return;
-    }
-
-    // 데이터 변환 및 그리드 업데이트
-    const transformedData = transformApiDataToTableData(apiData);
-    console.log("변환된 데이터:", transformedData);
-
-    // rowData를 먼저 업데이트
-    rowData.value = transformedData;
-    modifiedRows.value.clear();
-
-    // gridApi가 준비되었는지 확인하고 데이터 설정
-    await nextTick();
-    if (gridApi.value && typeof gridApi.value.setRowData === "function") {
-      gridApi.value.setRowData(transformedData);
-      gridApi.value.refreshCells();
-      gridApi.value.sizeColumnsToFit();
-    } else {
-      console.warn("AG Grid가 아직 초기화되지 않았습니다.");
-    }
-
-    console.log("검색 결과 로드 완료. 결과 수:", transformedData.length);
   } catch (err) {
-    console.error("❌ 검색 실패:", err);
-    error.value = err.message || "검색 중 오류가 발생했습니다.";
-    rowData.value = [];
+    console.error("검색 오류", err);
   } finally {
     loading.value = false;
   }
@@ -599,37 +486,7 @@ async function loadDataFromAPI() {
   error.value = null;
 
   try {
-    let apiUrl;
-    if (searchParams.value) {
-      // 검색 파라미터가 있는 경우 검색 API 사용
-      const queryParams = new URLSearchParams();
-      if (searchParams.value.query)
-        queryParams.append("query", searchParams.value.query);
-      if (searchParams.value.level1)
-        queryParams.append("level1", searchParams.value.level1);
-      if (searchParams.value.level2)
-        queryParams.append("level2", searchParams.value.level2);
-      if (searchParams.value.level3)
-        queryParams.append("level3", searchParams.value.level3);
-      if (searchParams.value.type)
-        queryParams.append("type", searchParams.value.type);
-      if (searchParams.value.difficulty)
-        queryParams.append("difficulty", searchParams.value.difficulty);
-      if (searchParams.value.priority)
-        queryParams.append("priority", searchParams.value.priority);
-      if (searchParams.value.docType) {
-        searchParams.value.docType.forEach((type) =>
-          queryParams.append("docType", type)
-        );
-      }
-
-      apiUrl = `/api/v1/projects/${
-        props.projectId
-      }/documents/search?${queryParams.toString()}`;
-    } else {
-      // 일반 요구사항 로드
-      apiUrl = `/api/v1/projects/${props.projectId}/requirements/generated?revisionCount=${props.revision}`;
-    }
+    let apiUrl = `/api/v1/projects/${props.projectId}/requirements/generated?revisionCount=${props.revision}`;
 
     console.log("API URL:", apiUrl);
 
@@ -680,11 +537,13 @@ async function loadDataFromAPI() {
     if (!Array.isArray(apiData) || apiData.length === 0) {
       console.warn("검색 결과가 없습니다.");
       rowData.value = [];
+      fullList.value = [];
       return;
     }
 
     const transformedData = transformApiDataToTableData(apiData);
     rowData.value = transformedData;
+    fullList.value = transformedData;
     modifiedRows.value.clear();
 
     console.log("데이터 로드 완료:", transformedData);
@@ -974,23 +833,23 @@ const updateColumnDefs = () => {
       width: 140,
       pinned: "left",
     },
-    {
-      field: "type",
-      headerName: "요구사항\n 유형",
-      editable: true,
-      width: 50,
-      cellEditor: "agSelectCellEditor",
-      cellEditorParams: {
-        values: ["기능", "비기능"],
-      },
-      valueFormatter: (params) => {
-        return params.value === "FR"
-          ? "기능"
-          : params.value === "NFR"
-          ? "비기능"
-          : params.value;
-      },
+  {
+    field: "type",
+    headerName: "요구사항\n 유형",
+    editable: true,
+    width: 50,
+    cellEditor: "agSelectCellEditor",
+    cellEditorParams: {
+      values: ["기능", "비기능"],
     },
+    valueFormatter: (params) => {
+      return params.value === "FR"
+        ? "기능"
+        : params.value === "NFR"
+        ? "비기능"
+        : params.value;
+    },
+  },
     {
       field: "level1",
       headerName: "대분류",
@@ -1037,34 +896,34 @@ const updateColumnDefs = () => {
       cellEditor: "agLargeTextCellEditor",
       cellEditorPopup: true,
     },
-    {
-      field: "priority",
-      headerName: "중요도",
-      editable: true,
-      width: 50,
-      cellEditor: "agSelectCellEditor",
-      cellEditorParams: {
-        values: ["상", "중", "하"],
-      },
-      valueFormatter: (params) => {
-        const priorityMap = { HIGH: "상", MIDDLE: "중", LOW: "하" };
-        return priorityMap[params.value] || params.value;
-      },
+  {
+    field: "priority",
+    headerName: "중요도",
+    editable: true,
+    width: 50,
+    cellEditor: "agSelectCellEditor",
+    cellEditorParams: {
+      values: ["상", "중", "하"],
     },
-    {
-      field: "difficulty",
-      headerName: "난이도",
-      editable: true,
-      width: 50,
-      cellEditor: "agSelectCellEditor",
-      cellEditorParams: {
-        values: ["상", "중", "하"],
-      },
-      valueFormatter: (params) => {
-        const difficultyMap = { HIGH: "상", MIDDLE: "중", LOW: "하" };
-        return difficultyMap[params.value] || params.value;
-      },
+    valueFormatter: (params) => {
+      const priorityMap = { HIGH: "상", MIDDLE: "중", LOW: "하" };
+      return priorityMap[params.value] || params.value;
     },
+  },
+  {
+    field: "difficulty",
+    headerName: "난이도",
+    editable: true,
+    width: 50,
+    cellEditor: "agSelectCellEditor",
+    cellEditorParams: {
+      values: ["상", "중", "하"],
+    },
+    valueFormatter: (params) => {
+      const difficultyMap = { HIGH: "상", MIDDLE: "중", LOW: "하" };
+      return difficultyMap[params.value] || params.value;
+    },
+  },
     {
       field: "sourcesDisplay",
       headerName: "출처",
