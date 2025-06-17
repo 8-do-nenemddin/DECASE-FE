@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: decase-be
+  name: decase-fe
   namespace: skala-argocd
 spec:
   destination:
@@ -10,7 +10,7 @@ spec:
   project: class-2
   source:
     path: k8s
-    repoURL: https://github.com/8-do-nenemddin/DECASE-BE
+    repoURL: https://github.com/8-do-nenemddin/DECASE-FE
     targetRevision: HEAD
   syncPolicy:
     automated:
