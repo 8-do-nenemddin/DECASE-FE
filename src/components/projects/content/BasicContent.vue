@@ -46,7 +46,7 @@
               </svg>
             </div>
             <p class="upload-placeholder">
-              파일을 드래그하거나 클릭하여 선택하세요
+              파일을 드래그하거나 클릭해 선택하세요 <br>
               <small>PDF 파일 지원 (최대 1GB)</small>
             </p>
           </div>
@@ -118,7 +118,7 @@
               </svg>
             </div>
             <p class="upload-placeholder">
-              파일을 드래그하거나 클릭하여 선택하세요
+              추후 지원될 예정입니다 <br>
               <small>PDF 파일 지원 (최대 1GB)</small>
             </p>
           </div>
