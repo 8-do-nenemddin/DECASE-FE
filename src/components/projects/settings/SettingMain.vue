@@ -19,6 +19,9 @@
               <!-- 프로젝트 정보 수정 -->
               <EditProjectInfo v-if="currentComponent === 'ProjectInfo'" />
 
+              <!-- 요구사항 수정 승인 -->
+              <RequirementApprove v-if="currentComponent === 'RequirementApprove'" />
+
               <!-- 요구사항 추적 매트릭스 -->
               <ViewMatrix v-if="currentComponent === 'ProjectMatrix'" />
 
@@ -43,6 +46,7 @@ import EditProjectInfo from "./edit_project/EditProjectInfo.vue";
 import ViewMatrix from "./view_matrix/ViewMatrix.vue";
 import ManageRight from "./manage_right/ManageRight.vue";
 import Invitation from "./invitation/Invitation.vue";
+import RequirementApprove from "./requirement_approve/RequirementApprove.vue";
 
 const props = defineProps({
   projectId: {
