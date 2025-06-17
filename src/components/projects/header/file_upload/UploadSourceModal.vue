@@ -221,7 +221,7 @@ const handleUpload = async () => {
 
     formData.append('types', JSON.stringify(types));
 
-    await fetch(`http://localhost:8080/api/v1/projects/${projectId.value}/documents/uploads?memberId=${memberId.value}`, {
+    await fetch(`/api/v1/projects/${projectId.value}/documents/uploads?memberId=${memberId.value}`, {
       method: 'POST',
       body: formData,
     });
