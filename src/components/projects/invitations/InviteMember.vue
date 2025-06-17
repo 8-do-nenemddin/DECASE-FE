@@ -58,7 +58,7 @@ const inviteToken = props.token || route.params.token;
 
 onMounted(async () => {
   try {
-    const res = await fetch(`http://localhost:8080/api/v1/projects/members/invitation/${inviteToken}`);
+    const res = await fetch(`/api/v1/projects/members/invitation/${inviteToken}`);
     if (!res.ok) throw new Error("초대 정보 로드 실패");
 
     const result = await res.json();
@@ -84,7 +84,7 @@ const closeParticipationModal = () => {
 
 const acceptParticipation = async () => {
   try {
-    const res = await fetch(`http://localhost:8080/api/v1/projects/invitation?token=${inviteToken}`, {
+    const res = await fetch(`/api/v1/projects/invitation?token=${inviteToken}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -105,7 +105,7 @@ const acceptParticipation = async () => {
     }
 
     // 성공 시 홈으로 이동
-    window.location.href = 'http://localhost:5173/home';
+    window.location.href = '/home';
   } catch (err) {
     console.error(err);
     alert('프로젝트 참여에 실패했습니다.');
@@ -125,7 +125,7 @@ const declineParticipation = () => {
     }
   } else {
     // 사용자가 취소한 경우 홈으로 이동
-    window.location.href = 'http://localhost:5173/home';
+    window.location.href = '/';
   }
 };
 </script>
