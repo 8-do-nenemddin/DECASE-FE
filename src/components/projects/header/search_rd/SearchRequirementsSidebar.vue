@@ -115,6 +115,8 @@
             </label>
           </div>
         </div>
+        <!-- 초기화 버튼 -->
+        <button class="reset-button" @click="resetFilters" style="margin-top:0px;">초기화</button>
       </div>
     </div>
   </div>
@@ -162,24 +164,24 @@ const options = reactive({
 
 // 검색 파라미터 생성 함수
 const createSearchParams = () => {
-  // Convert checkbox options to docType numbers
+  // Convert checkbox options to docType string prefixes
   const docTypes = [];
-  if (options.rfp) docTypes.push("1"); // RFP
-  if (options.functional) docTypes.push("2"); // MOMV (회의록 음성)
-  if (options.proposal) docTypes.push("3"); // MOMD (회의록)
-  if (options.additional) docTypes.push("4"); // EXTRA (추가파일)
+  if (options.rfp) docTypes.push("RFP"); // RFP
+  if (options.functional) docTypes.push("MOMV"); // MOMV (회의록 음성)
+  if (options.proposal) docTypes.push("MOMD"); // MOMD (회의록)
+  if (options.additional) docTypes.push("EXTRA"); // EXTRA (추가파일)
 
   // Map type values
   const typeMap = {
-    fr: 0, // 기능
-    nfr: 1, // 비기능
+    fr: "FR", // 기능
+    nfr: "NFR", // 비기능
   };
 
   // Map difficulty and priority values
   const levelMap = {
-    high: 0,
-    medium: 1,
-    low: 2,
+    high: "HIGH",
+    medium: "MIDDLE",
+    low: "LOW",
   };
 
   const searchParams = {
@@ -292,6 +294,20 @@ onMounted(() => {
     fetchCategories();
   }
 });
+// 필터 초기화 함수
+const resetFilters = () => {
+  searchQuery.value = "";
+  filters.category = "";
+  filters.subcategory = "";
+  filters.detailCategory = "";
+  filters.type = "";
+  filters.priority = "";
+  filters.difficulty = "";
+  options.rfp = false;
+  options.proposal = false;
+  options.additional = false;
+  options.functional = false;
+};
 </script>
 
 <style scoped>
@@ -528,5 +544,22 @@ onMounted(() => {
 .sidebar {
   scrollbar-width: thin;
   scrollbar-color: #d1d5db #f9fafb;
+}
+
+.reset-button {
+  margin-top: 20px;
+  padding: 10px 16px;
+  background: #e53e3e;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  transition: background 0.3s ease;
+}
+
+.reset-button:hover {
+  background: #c53030;
 }
 </style>

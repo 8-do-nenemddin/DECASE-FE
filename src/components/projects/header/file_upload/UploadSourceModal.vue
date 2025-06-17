@@ -33,7 +33,7 @@
           </div>
           <h2 class="modal-title">소스 업로드</h2>
           <p class="modal-description">
-            업로드할 파일을 선택하거나 드래그 앤 드롭해주세요.<br />
+            업로드할 파일을 선택하거나 드래그 앤 드롭해주세요 <br/>
             지원 파일 형식: PDF, Excel, Word, WAV
           </p>
           <input
