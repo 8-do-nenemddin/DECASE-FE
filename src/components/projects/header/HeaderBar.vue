@@ -221,7 +221,7 @@ const showMockupSidebar = ref(false);
 
 const goToMain = () => {
   if (projectId) {
-    router.push(`/projects/${projectId}`);
+    router.push(`/projects/${projectId.value}`);
     console.log("다시 프로젝트");
   }
 };
