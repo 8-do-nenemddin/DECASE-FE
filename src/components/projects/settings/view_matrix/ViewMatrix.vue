@@ -1,768 +1,698 @@
 <template>
-  <div class="app-container">
-    <!-- 메인 콘텐츠 -->
-    <div class="main-content" :class="{ 'with-sidebar': showSidebar }">
-      <div class="table-container">
-        <div class="table-wrapper">
-          <table class="requirements-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>요구사항 설명</th>
-                <th>우선순위</th>
-                <th>상태</th>
-                <th>담당자</th>
-                <th>마감일</th>
-                <th>관련 기능</th>
-                <th>수정자</th>
-                <th>최종 수정일</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr 
-                v-for="requirement in requirements" 
-                :key="requirement.id"
-                @click="openSidebar(requirement)"
-                :class="{ 'selected': selectedRequirement?.id === requirement.id }"
-                class="clickable-row"
-              >
-                <td class="id-cell">{{ requirement.id }}</td>
-                <td class="description-cell">{{ requirement.description }}</td>
-                <td>
-                  <span :class="getPriorityClass(requirement.priority)">
-                    {{ requirement.priority }}
-                  </span>
-                </td>
-                <td>
-                  <span :class="getStatusClass(requirement.status)">
-                    {{ requirement.status }}
-                  </span>
-                </td>
-                <td>{{ requirement.assignee }}</td>
-                <td>{{ requirement.dueDate }}</td>
-                <td>{{ requirement.relatedFeature }}</td>
-                <td>{{ requirement.modifier }}</td>
-                <td>{{ requirement.lastModified }}</td>
-              </tr>
-            </tbody>
-          </table>
+  <div class="change-history-container">
+    <div class="filters">
+      <div class="filters-row">
+        <div class="filter-group">
+          <select id="changeType" v-model="selectedChangeType" @change="filterHistory">
+            <option value="">전체</option>
+            <option value="ADD">추가</option>
+            <option value="MOD">수정</option>
+            <option value="DEL">삭제</option>
+          </select>
+        </div>
+        <div class="filter-group search-group">
+          <div class="search-input-wrapper">
+            <input 
+              id="searchInput"
+              type="text" 
+              v-model="searchKeyword" 
+              @input="filterHistory"
+              placeholder="요구사항 이름 또는 코드를 입력하세요"
+            />
+            <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m21 21-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+          </div>
+        </div>
+        <div class="filter-actions">
+          <button class="reset-btn" @click="resetFilters">초기화</button>
         </div>
       </div>
     </div>
 
-    <!-- 사이드바 컴포넌트 -->
+    <div class="table-container">
+      <table class="history-table">
+        <thead>
+          <tr>
+            <th>변경유형</th>
+            <th>요구사항 코드</th>
+            <th>요구사항 이름</th>
+            <th>버전</th>
+            <th>수정자</th>
+            <th>수정일시</th>
+            <th>변경 이력</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr 
+            v-for="item in paginatedHistory" 
+            :key="item.reqIdCode + '-' + item.revisionNumber"
+            class="history-row"
+            :class="getChangeTypeClass(item.changeType)"
+            @click="handleRowClick(item)"
+          >
+            <td>
+              <span class="change-badge" :class="getChangeTypeClass(item.changeType)">
+                {{ getChangeTypeText(item.changeType) }}
+              </span>
+            </td>
+            <td class="req-code">{{ item.reqIdCode }}</td>
+            <td class="req-name">{{ item.name }}</td>
+            <td class="revision">Version. {{ item.version }}</td>
+            <td class="modifier">{{ item.modifiedByName }}</td>
+            <td class="date">{{ formatDate(item.revisionDate) }}</td>
+            <td>
+              <button 
+                class="detail-btn"
+                @click.stop="openViewMatrix(item)">
+                상세보기
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div v-if="paginatedHistory.length === 0" class="no-data">
+        검색 결과가 없습니다.
+      </div>
+    </div>
     <Transition name="slide-right">
       <ViewMatrixSideBar
-        v-if="showSidebar"
-        :isOpen="showSidebar"
-        :selectedRequirement="selectedRequirement"
-        :requirementHistories="requirementHistories"
-        @close="closeSidebar"
+        v-if="showViewMatrix"
+        :isOpen="showViewMatrix"
+        :reqIdCode="selectedReqIdCode"
+        @close="closeViewMatrix"
       />
     </Transition>
+
+    <!-- 상세 정보 모달 -->
+    <div v-if="selectedItem" class="modal-overlay" @click="closeDetail">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h3>{{ selectedItem.name }}</h3>
+          <button class="close-btn" @click="closeDetail">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="detail-info">
+            <div class="info-row">
+              <strong>요구사항 코드:</strong> {{ selectedItem.reqIdCode }}
+            </div>
+            <div class="info-row">
+              <strong>버전:</strong> Version. {{ selectedItem.version }}
+            </div>
+            <div class="info-row">
+              <strong>변경 유형:</strong> 
+              <span class="change-badge" :class="getChangeTypeClass(selectedItem.changeType)">
+                {{ getChangeTypeText(selectedItem.changeType) }}
+              </span>
+            </div>
+            <div class="info-row">
+              <strong>Level1:</strong> {{ selectedItem.level1 }}
+            </div>
+            <div class="info-row">
+              <strong>Level2:</strong> {{ selectedItem.level2 }}
+            </div>
+            <div class="info-row">
+              <strong>Level3:</strong> {{ selectedItem.level3 }} 
+            </div>
+            <div class="info-row">
+              <strong>우선순위:</strong> {{ selectedItem.priority === "HIGH" ? "상" : selectedItem.priority === "MIDDLE" ? "중" : "하"}} 
+            </div>
+            <div class="info-row">
+              <strong>난이도:</strong> {{ selectedItem.difficulty === "HIGH" ? "상" : selectedItem.difficulty === "MIDDLE" ? "중" : "하"}} 
+            </div>
+            <div class="info-row">
+              <strong>수정자:</strong> {{ selectedItem.modifiedByName }}
+            </div>
+            <div class="info-row">
+              <strong>수정일시:</strong> {{ formatDate(selectedItem.revisionDate) }}
+            </div>
+            <div class="info-row">
+              <strong>수정 사유:</strong> {{ selectedItem.modReason || "-" }}
+            </div>
+          </div>
+          <div class="description-section" v-if="selectedItem.description">
+            <h4>상세 설명</h4>
+            <div class="description-content" v-html="formatDescription(selectedItem.description)"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pagination">
+      <button 
+        @click="prevPage" 
+        :disabled="currentPage === 1"
+        class="page-btn"
+      >
+        이전
+      </button>
+      <span class="page-info">
+        {{ currentPage }} / {{ totalPages }}
+      </span>
+      <button 
+        @click="nextPage" 
+        :disabled="currentPage === totalPages"
+        class="page-btn"
+      >
+        다음
+      </button>
+    </div>
   </div>
 </template>
 
 <script>
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import ViewMatrixSideBar from './ViewMatrixSideBar.vue'
+import { useProjectStore } from '../../../../stores/projectStore'
 
 export default {
-  name: 'ViewMatrix',
-  components: {
-    ViewMatrixSideBar
-  },
+  name: 'ChangeHistory',
+  components: { ViewMatrixSideBar },
   setup() {
-    const showSidebar = ref(false)
-    const selectedRequirement = ref(null)
+    const historyData = ref([])
+    const selectedChangeType = ref('')
+    const searchKeyword = ref('')
+    const currentPage = ref(1)
+    const itemsPerPage = ref(10)
+    const selectedItem = ref(null)
+    const showViewMatrix = ref(false)
+    const selectedReqIdCode = ref('')
+    const projectStore = useProjectStore()
+    const projectId = computed(() => projectStore.projectId)
 
-    const requirements = ref([
-      {
-        id: "REQ-001",
-        description: "사용자는 로그인할 수 있어야 한다.",
-        priority: "높음",
-        status: "완료",
-        assignee: "김철수",
-        dueDate: "2025-06-15",
-        relatedFeature: "로그인 시스템",
-        modifier: "이영희",
-        lastModified: "2025-06-10"
-      },
-      {
-        id: "REQ-002",
-        description: "사용자는 비밀번호를 재설정할 수 있어야 한다.",
-        priority: "중간",
-        status: "진행 중",
-        assignee: "이영희",
-        dueDate: "2025-06-20",
-        relatedFeature: "비밀번호 관리",
-        modifier: "박민수",
-        lastModified: "2025-06-08"
-      },
-      {
-        id: "REQ-003",
-        description: "사용자는 프로필을 업데이트할 수 있어야 한다.",
-        priority: "낮음",
-        status: "대기 중",
-        assignee: "박민수",
-        dueDate: "2025-06-30",
-        relatedFeature: "프로필 관리",
-        modifier: "김철수",
-        lastModified: "2025-06-05"
-      },
-      {
-        id: "REQ-004",
-        description: "시스템은 실시간 알림을 제공해야 한다.",
-        priority: "높음",
-        status: "진행 중",
-        assignee: "정민지",
-        dueDate: "2025-06-25",
-        relatedFeature: "알림 시스템",
-        modifier: "정민지",
-        lastModified: "2025-06-09"
-      },
-      {
-        id: "REQ-005",
-        description: "사용자는 데이터를 Excel/CSV 형태로 내보낼 수 있어야 한다.",
-        priority: "중간",
-        status: "대기 중",
-        assignee: "홍길동",
-        dueDate: "2025-07-05",
-        relatedFeature: "데이터 관리",
-        modifier: "홍길동",
-        lastModified: "2025-06-07"
+    const loadHistoryDatas = async () => {
+      try {
+        const response = await fetch(`/api/v1/matrix/projects/${projectId.value}`)
+        const result = await response.json()
+
+        if (result.status === 200) {
+          historyData.value = result.data || []
+          selectedReqIdCode.value = historyData.reqIdCode;
+        } else {
+          console.error('Failed to load history data:', result.message)
+          historyData.value = []
+        }
+      } catch (error) {
+        console.error('Failed to load history data:', error)
+        historyData.value = []
       }
-    ])
+    }
 
-    const requirementHistories = ref({
-      "REQ-001": [
-        {
-          action: "상태 변경",
-          date: "2025-06-10 14:30",
-          user: "이영희",
-          description: "테스트 완료 후 상태 변경",
-          changes: [
-            { field: "상태", old: "진행 중", new: "완료" }
-          ]
-        },
-        {
-          action: "담당자 변경",
-          date: "2025-06-08 09:15",
-          user: "프로젝트 매니저",
-          description: "업무 재분배로 인한 담당자 변경",
-          changes: [
-            { field: "담당자", old: "박민수", new: "김철수" }
-          ]
-        },
-        {
-          action: "요구사항 생성",
-          date: "2025-06-01 10:00",
-          user: "김철수",
-          description: "초기 요구사항 등록"
-        }
-      ],
-      "REQ-002": [
-        {
-          action: "우선순위 변경",
-          date: "2025-06-08 16:20",
-          user: "박민수",
-          description: "비즈니스 우선순위 조정",
-          changes: [
-            { field: "우선순위", old: "낮음", new: "중간" }
-          ]
-        },
-        {
-          action: "상태 변경",
-          date: "2025-06-07 11:45",
-          user: "이영희",
-          description: "개발 시작",
-          changes: [
-            { field: "상태", old: "대기 중", new: "진행 중" }
-          ]
-        },
-        {
-          action: "요구사항 생성",
-          date: "2025-06-02 14:30",
-          user: "이영희",
-          description: "보안 강화를 위한 요구사항 추가"
-        }
-      ],
-      "REQ-003": [
-        {
-          action: "마감일 연장",
-          date: "2025-06-05 13:10",
-          user: "김철수",
-          description: "다른 프로젝트 우선순위로 인한 일정 조정",
-          changes: [
-            { field: "마감일", old: "2025-06-25", new: "2025-06-30" }
-          ]
-        },
-        {
-          action: "요구사항 생성",
-          date: "2025-06-03 09:00",
-          user: "박민수",
-          description: "사용자 경험 개선을 위한 요구사항"
-        }
-      ],
-      "REQ-004": [
-        {
-          action: "상태 변경",
-          date: "2025-06-09 10:30",
-          user: "정민지",
-          description: "개발 시작",
-          changes: [
-            { field: "상태", old: "대기 중", new: "진행 중" }
-          ]
-        },
-        {
-          action: "요구사항 생성",
-          date: "2025-06-04 16:00",
-          user: "정민지",
-          description: "실시간 커뮤니케이션 기능 추가"
-        }
-      ],
-      "REQ-005": [
-        {
-          action: "요구사항 수정",
-          date: "2025-06-07 14:20",
-          user: "홍길동",
-          description: "내보내기 형식 구체화",
-          changes: [
-            { field: "설명", old: "사용자는 데이터를 내보낼 수 있어야 한다.", new: "사용자는 데이터를 Excel/CSV 형태로 내보낼 수 있어야 한다." }
-          ]
-        },
-        {
-          action: "요구사항 생성",
-          date: "2025-06-06 11:00",
-          user: "홍길동",
-          description: "데이터 관리 기능 강화"
-        }
-      ]
+    const filteredHistory = computed(() => {
+      let filtered = historyData.value
+      if (selectedChangeType.value) {
+        filtered = filtered.filter(item => item.changeType === selectedChangeType.value)
+      }
+      if (searchKeyword.value) {
+        const keyword = searchKeyword.value.toLowerCase()
+        filtered = filtered.filter(item =>
+          item.name.toLowerCase().includes(keyword) ||
+          item.reqIdCode.toLowerCase().includes(keyword)
+        )
+      }
+      return filtered.sort((a, b) => new Date(b.revisionDate) - new Date(a.revisionDate))
     })
 
-    const openSidebar = (requirement) => {
-      selectedRequirement.value = requirement
-      showSidebar.value = true
-    }
+    const paginatedHistory = computed(() => {
+      const start = (currentPage.value - 1) * itemsPerPage.value
+      return filteredHistory.value.slice(start, start + itemsPerPage.value)
+    })
 
-    const closeSidebar = () => {
-      showSidebar.value = false
-      setTimeout(() => {
-        selectedRequirement.value = null
-      }, 300)
-    }
+    const totalPages = computed(() => Math.ceil(filteredHistory.value.length / itemsPerPage.value))
 
-    const getPriorityClass = (priority) => {
-      const classMap = {
-        '높음': 'tag priority-high',
-        '중간': 'tag priority-medium',
-        '낮음': 'tag priority-low'
-      }
-      return classMap[priority] || 'tag'
-    }
+    const formatDate = (dateString) => new Date(dateString).toLocaleString('ko-KR', {
+      year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'
+    })
 
-    const getStatusClass = (status) => {
-      const classMap = {
-        '완료': 'tag status-complete',
-        '진행 중': 'tag status-in-progress',
-        '대기 중': 'tag status-pending'
-      }
-      return classMap[status] || 'tag'
+    const getChangeTypeText = (type) => ({ ADD: '추가', MOD: '수정', DEL: '삭제' }[type] || type)
+    const getChangeTypeClass = (type) => ({ ADD: 'change-add', MOD: 'change-mod', DEL: 'change-del' }[type] || '')
+    const formatDescription = (desc) => desc?.replace(/\[([^\]]+)\]/g, '<strong>[$1]</strong>').replace(/\n/g, '<br>') || ''
+
+    const handleRowClick = (item) => { selectedItem.value = item }
+    const closeDetail = () => { selectedItem.value = null }
+    const openViewMatrix = (item) => {
+      selectedReqIdCode.value = item.reqIdCode
+      showViewMatrix.value = true
+      selectedItem.value = null
     }
+    const closeViewMatrix = () => {
+      showViewMatrix.value = false
+      selectedReqIdCode.value = ''
+      selectedItem.value = null}
+    const filterHistory = () => { currentPage.value = 1 }
+    const resetFilters = () => {
+      selectedChangeType.value = ''
+      searchKeyword.value = ''
+      currentPage.value = 1
+    }
+    const prevPage = () => { if (currentPage.value > 1) currentPage.value-- }
+    const nextPage = () => { if (currentPage.value < totalPages.value) currentPage.value++ }
+
+    onMounted(() => {
+      loadHistoryDatas()
+    })
 
     return {
-      showSidebar,
-      selectedRequirement,
-      requirements,
-      requirementHistories,
-      openSidebar,
-      closeSidebar,
-      getPriorityClass,
-      getStatusClass
+      selectedChangeType, searchKeyword, currentPage, selectedItem,
+      selectedReqIdCode, showViewMatrix, paginatedHistory, totalPages,
+      formatDate, getChangeTypeText, getChangeTypeClass, formatDescription,
+      handleRowClick, closeDetail, openViewMatrix, closeViewMatrix,
+      filterHistory, resetFilters, prevPage, nextPage
     }
   }
 }
 </script>
 
 <style scoped>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+.change-history-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-.app-container {
-  display: flex;
-  width: 80%;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-  background: transparent;
-  color: #2d3748;
-}
-
-/* 메인 콘텐츠 */
-.main-content {
-  flex: 1;
-  width: 90%;
-  min-width: 90%;
-  padding: 0;
-  background: transparent;
-  overflow-y: auto;
-  transition: margin-right 0.3s ease;
-  max-width: 90%;
-}
-
-.main-content.with-sidebar {
-  margin-right: 40%;
-}
-
-/* 테이블 컨테이너 */
-.table-container {
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  width: 100%;
-  margin: 0;
-}
-
-.table-wrapper {
-  overflow-x: auto;
-  width: 100%;
-}
-
-.requirements-table {
-  width: 100%;
-  min-width: 1200px;
-  border-collapse: collapse;
+.filters {
   background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  padding: 24px;
+  margin-bottom: 24px;
 }
 
-.requirements-table th {
-  color: black;
-  padding: 1.25rem 1rem;
-  text-align: left;
-  font-weight: 700;
-  font-size: 0.875rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  white-space: nowrap;
-  position: sticky;
-  top: 0;
-  z-index: 10;
+.filters-row {
+  display: flex;
+  align-items: end;
+  gap: 20px;
+  flex-wrap: wrap;
 }
 
-.requirements-table td {
-  padding: 1rem;
-  border-bottom: 1px solid #f1f5f9;
-  font-size: 0.875rem;
-  vertical-align: middle;
-  white-space: nowrap;
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 150px;
 }
 
-.id-cell {
-  font-family: 'Monaco', 'Menlo', monospace;
+.filter-group.search-group {
+  flex: 1;
+  min-width: 300px;
+}
+
+.filter-group label {
   font-weight: 600;
-  color: #4f46e5;
-  min-width: 100px;
+  color: #374151;
+  font-size: 0.875rem;
+  margin-bottom: 4px;
 }
 
-.description-cell {
-  white-space: normal;
-  max-width: 350px;
-  line-height: 1.4;
-  font-weight: 500;
-}
-
-.clickable-row {
-  cursor: pointer;
+.filter-group select {
+  padding: 12px 16px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+  background: white;
   transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.filter-group select:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.search-input-wrapper {
   position: relative;
 }
 
-.clickable-row:hover {
-  background: linear-gradient(135deg, #f8faff 0%, #f0f4ff 100%);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+.search-input-wrapper input {
+  width: 100%;
+  padding: 12px 16px 12px 44px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: all 0.2s ease;
 }
 
-.clickable-row.selected {
-  background: linear-gradient(135deg, #ebf4ff 0%, #dbeafe 100%);
-  border-left: 4px solid #4f46e5;
-  box-shadow: 0 4px 20px rgba(102, 126, 234, 0.2);
+.search-input-wrapper input:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
 }
 
-/* 태그 스타일 */
-.tag {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.375rem 0.875rem;
-  border-radius: 20px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+.search-input-wrapper input::placeholder {
+  color: #9ca3af;
+}
+
+.search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  color: #6b7280;
+  pointer-events: none;
+}
+
+.filter-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.reset-btn {
+  padding: 12px 20px;
+  background: #f3f4f6;
+  color: #374151;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.2s ease;
   white-space: nowrap;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.priority-high {
-  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
-  color: #dc2626;
-  border: 1px solid #f87171;
+.reset-btn:hover {
+  background: #e5e7eb;
+  border-color: #d1d5db;
 }
 
-.priority-medium {
-  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-  color: #d97706;
-  border: 1px solid #f59e0b;
+.table-container {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
 }
 
-.priority-low {
-  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-  color: #059669;
-  border: 1px solid #10b981;
+.history-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
 }
 
-.status-complete {
-  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-  color: #059669;
-  border: 1px solid #10b981;
+.history-table th {
+  background: #f8fafc;
+  padding: 12px;
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 2px solid #e5e7eb;
+  white-space: nowrap;
 }
 
-.status-in-progress {
-  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-  color: #2563eb;
-  border: 1px solid #3b82f6;
+.history-table td {
+  padding: 12px;
+  border-bottom: 1px solid #f3f4f6;
+  vertical-align: middle;
 }
 
-.status-pending {
-  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
-  color: #475569;
-  border: 1px solid #64748b;
+.history-row {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
 }
 
-.slide-right-enter-active,
-.slide-right-leave-active {
-  transition: transform 0.3s ease;
+.history-row:hover {
+  background-color: #f9fafb;
 }
 
-.slide-right-enter-from,
-.slide-right-leave-to {
-  transform: translateX(100%);
+.history-row.change-add {
+  border-left: 3px solid #10b981;
 }
 
-.slide-right-enter-to,
-.slide-right-leave-from {
-  transform: translateX(0);
+.history-row.change-mod {
+  border-left: 3px solid #f59e0b;
 }
 
-/* 사이드바 스타일 - 컴포넌트 내부에서 정의 */
-:deep(.sidebar) {
+.history-row.change-del {
+  border-left: 3px solid #ef4444;
+}
+
+.change-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: white;
+}
+
+.change-badge.change-add {
+  background: #10b981;
+}
+
+.change-badge.change-mod {
+  background: #f59e0b;
+}
+
+.change-badge.change-del {
+  background: #ef4444;
+}
+
+.req-code {
+  font-family: 'Courier New', monospace;
+  color: #4f46e5;
+  font-weight: 600;
+}
+
+.req-name {
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.revision {
+  font-weight: 600;
+  color: #4f46e5;
+}
+
+.date {
+  color: #6b7280;
+  font-size: 0.85rem;
+}
+
+.mod-reason {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.detail-btn {
+  padding: 6px 12px;
+  background: #4f46e5;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: background-color 0.2s ease;
+}
+
+.detail-btn:hover {
+  background: #4338ca;
+}
+
+.no-data {
+  text-align: center;
+  padding: 40px;
+  color: #6b7280;
+  font-size: 1rem;
+}
+
+/* 모달 스타일 */
+.modal-overlay {
   position: fixed;
   top: 0;
+  left: 0;
   right: 0;
-  width: 40%;
-  height: 100vh;
-  background: rgba(255, 255, 255, 0.98);
-  border-left: 2px solid rgba(0, 0, 0, 0.1);
-  transform: translateX(100%);
-  transition: transform 0.3s ease;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   z-index: 1000;
-  overflow-y: auto;
-  box-shadow: -5px 0 25px rgba(0, 0, 0, 0.1);
 }
 
-:deep(.sidebar.open) {
-  transform: translateX(0);
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  width: 1100px;          /* 고정 너비 */
+  height: 700px;         /* 고정 높이 */
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  overflow: hidden;      /* 전체 모달의 overflow 숨김 */
 }
 
-:deep(.sidebar-header) {
-  padding: 2rem;
-  background: linear-gradient(135deg, black 0%, gray 100%);
-  color: white;
+.modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  border-bottom: 1px solid #e5e7eb;
+  flex-shrink: 0;        /* 헤더 크기 고정 */
+  background: white;     /* 헤더 배경 고정 */
 }
 
-:deep(.sidebar-title) {
+.modal-header h3 {
+  margin: 0;
+  color: #1f2937;
   font-size: 1.25rem;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
 }
 
-:deep(.requirement-id) {
-  background: rgba(255, 255, 255, 0.2);
-  padding: 0.375rem 0.75rem;
-  border-radius: 8px;
-  font-family: 'Monaco', 'Menlo', monospace;
-  font-size: 0.875rem;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-}
-
-:deep(.close-button) {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: white;
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
   cursor: pointer;
-  padding: 0.75rem;
-  border-radius: 10px;
-  transition: all 0.2s ease;
+  color: #6b7280;
+  padding: 0;
+  width: 30px;
+  height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-:deep(.close-button:hover) {
-  background: rgba(255, 255, 255, 0.2);
-  transform: scale(1.05);
+.close-btn:hover {
+  color: #374151;
 }
 
-:deep(.sidebar-content) {
-  padding: 2rem;
+.modal-body {
+  padding: 20px;
+  overflow-y: auto;      /* 본문만 스크롤 */
+  flex: 1;               /* 남은 공간 모두 사용 */
 }
 
-:deep(.requirement-info) {
-  margin-bottom: 2.5rem;
+.detail-info {
+  margin-bottom: 20px;
 }
 
-:deep(.requirement-title) {
-  margin: 0 0 1.5rem 0;
-  color: #1e293b;
-  font-size: 1.25rem;
-  line-height: 1.5;
-  font-weight: 600;
-}
-
-:deep(.info-grid) {
-  display: grid;
-  gap: 1rem;
-}
-
-:deep(.info-item) {
+.info-row {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 1rem;
-  background: rgba(248, 250, 252, 0.8);
-  border-radius: 12px;
-  border: 1px solid #e2e8f0;
+  gap: 10px;
+  margin-bottom: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid #f3f4f6;
 }
 
-:deep(.label) {
-  font-weight: 600;
-  color: #475569;
-  font-size: 0.875rem;
+.info-row:last-child {
+  border-bottom: none;
 }
 
-:deep(.value) {
-  font-weight: 500;
-  color: #1e293b;
+.description-section h4 {
+  color: #1f2937;
+  margin-bottom: 10px;
+  font-size: 1.1rem;
 }
 
-:deep(.section-title) {
-  margin: 0 0 1.5rem 0;
-  color: #1e293b;
-  font-size: 1.125rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 2px solid #e2e8f0;
-  font-weight: 700;
-}
-
-:deep(.history-timeline) {
-  position: relative;
-  padding-left: 2rem;
-}
-
-:deep(.history-timeline::before) {
-  content: '';
-  position: absolute;
-  left: 0.75rem;
-  top: 0;
-  bottom: 0;
-  width: 3px;
-  background: linear-gradient(to bottom, #667eea, #764ba2);
-  border-radius: 2px;
-}
-
-:deep(.history-item) {
-  position: relative;
-  margin-bottom: 2rem;
-  padding-left: 2rem;
-}
-
-:deep(.history-dot) {
-  position: absolute;
-  left: -1.25rem;
-  top: 0.5rem;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  border: 4px solid white;
-  box-shadow: 0 0 0 2px #667eea, 0 2px 8px rgba(102, 126, 234, 0.3);
-}
-
-:deep(.history-content) {
-  background: rgba(255, 255, 255, 0.8);
-  padding: 1.5rem;
-  border-radius: 16px;
-  border: 1px solid rgba(226, 232, 240, 0.8);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  backdrop-filter: blur(5px);
-}
-
-:deep(.history-header) {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.75rem;
-}
-
-:deep(.history-action) {
-  font-weight: 700;
-  color: #1e293b;
-  font-size: 0.95rem;
-}
-
-:deep(.history-date) {
-  font-size: 0.75rem;
-  color: #64748b;
-  font-family: 'Monaco', 'Menlo', monospace;
-  background: #f1f5f9;
-  padding: 0.25rem 0.5rem;
+.description-content {
+  line-height: 1.6;
+  color: #374151;
+  background: #f9fafb;
+  padding: 15px;
   border-radius: 6px;
+  border-left: 4px solid #4f46e5;
 }
 
-:deep(.history-details) {
-  margin-bottom: 1rem;
-}
-
-:deep(.history-user) {
-  font-weight: 600;
-  color: #4338ca;
-  margin-bottom: 0.25rem;
-}
-
-:deep(.history-description) {
-  color: #64748b;
-  font-size: 0.875rem;
-  line-height: 1.4;
-}
-
-:deep(.history-changes) {
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid #e2e8f0;
-}
-
-:deep(.change-item) {
+.pagination {
   display: flex;
+  justify-content: center;
   align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 0.5rem;
-  font-size: 0.8rem;
-  flex-wrap: wrap;
+  gap: 15px;
+  margin-top: 20px;
+  padding: 20px;
 }
 
-:deep(.change-field) {
+.page-btn {
+  padding: 8px 16px;
+  background: #4f46e5;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
   font-weight: 600;
-  color: #475569;
-  min-width: 60px;
+  transition: background-color 0.2s ease;
 }
 
-:deep(.change-old) {
-  background: linear-gradient(135deg, #fee2e2, #fecaca);
-  color: #dc2626;
-  padding: 0.375rem 0.75rem;
-  border-radius: 8px;
-  font-weight: 500;
-  border: 1px solid #f87171;
+.page-btn:hover:not(:disabled) {
+  background: #4338ca;
 }
 
-:deep(.change-arrow) {
-  color: #64748b;
-  font-weight: bold;
-  font-size: 1rem;
+.page-btn:disabled {
+  background: #d1d5db;
+  cursor: not-allowed;
 }
 
-:deep(.change-new) {
-  background: linear-gradient(135deg, #d1fae5, #a7f3d0);
-  color: #059669;
-  padding: 0.375rem 0.75rem;
-  border-radius: 8px;
-  font-weight: 500;
-  border: 1px solid #10b981;
+.page-info {
+  font-weight: 600;
+  color: #374151;
+  padding: 0 10px;
 }
 
-:deep(.overlay) {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.4);
-  opacity: 1;
-  transition: opacity 0.3s ease;
-  z-index: 900;
-}
-
-/* 반응형 디자인 */
-@media (max-width: 1024px) {
-  .main-content.with-sidebar {
-    margin-right: 0;
+@media (max-width: 1200px) {
+  .history-table {
+    font-size: 12px;
   }
   
-  :deep(.sidebar) {
-    width: 50%;
+  .history-table th,
+  .history-table td {
+    padding: 8px;
+  }
+  
+  .req-name {
+    max-width: 200px;
+  }
+  
+  .mod-reason {
+    max-width: 150px;
   }
 }
 
 @media (max-width: 768px) {
-  .main-content {
-    padding: 0;
+  .filters-row {
+    flex-direction: column;
+    align-items: stretch;
   }
-
+  
+  .filter-group {
+    min-width: auto;
+  }
+  
+  .filter-group.search-group {
+    min-width: auto;
+  }
+  
+  .filter-actions {
+    justify-content: center;
+  }
+  
   .table-container {
-    margin: 0;
+    overflow-x: auto;
   }
-
-  .requirements-table th,
-  .requirements-table td {
-    padding: 0.75rem 0.5rem;
-    font-size: 0.8rem;
+  
+  .history-table {
+    min-width: 800px;
   }
-
-  .description-cell {
-    max-width: 200px;
+  
+  .modal-content {
+    margin: 20px;
+    max-width: none;
+    max-height: calc(100vh - 40px);
   }
+}
 
-  :deep(.sidebar) {
-    width: 100%;
-  }
-
-  :deep(.sidebar-content) {
-    padding: 1.5rem;
-  }
-
-  :deep(.info-item) {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
-  }
-
-  :deep(.change-item) {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
+@media (max-width: 768px) {
+  .modal-content {
+    width: calc(100vw - 40px);  /* 모바일에서는 반응형 */
+    height: calc(100vh - 40px); /* 모바일에서는 반응형 */
+    margin: 20px;
+    max-width: none;
+    max-height: none;
   }
 }
 </style>

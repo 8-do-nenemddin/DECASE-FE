@@ -283,20 +283,12 @@ const memberIndexToDelete = ref(null);
 import { useProjectStore } from "/src/stores/projectStore";
 
 const projectStore = useProjectStore();
-
-const props = defineProps({
-  projectId: {
-    type: String,
-    required: true,
-  },
-});
-
+const projectId = ref(projectStore.projectId);
 const members = ref([]);
-const projectId = props.projectId;
 
 const fetchProjectMembers = async () => {
   try {
-    const response = await fetch(`/api/v1/projects/${projectId}/members`);
+    const response = await fetch(`/api/v1/projects/${projectId.value}/members`);
     const result = await response.json();
 
     console.log(result);
@@ -329,13 +321,12 @@ const getNewPermission = (currentPermission) => {
 // 권한 변경 확인Unresolved variable memberId
 const confirmPermissionChange = async () => {
   if (selectedMember.value) {
-    const projectId = props.projectId;
     const memberId = selectedMember.value.memberId;
     const newPermission = getNewPermission(selectedMember.value.permission);
 
     try {
       const response = await fetch(
-        `/api/v1/projects/${projectId}/members/${memberId}/status`,
+        `/api/v1/projects/${projectId.value}/members/${memberId}/status`,
         {
           method: "PATCH",
           headers: {
@@ -380,11 +371,10 @@ const showDeleteModal = (member, index) => {
 // 삭제 확인
 const confirmDelete = async () => {
   if (memberIndexToDelete.value !== null && memberToDelete.value) {
-    const projectId = props.projectId;
     const memberId = memberToDelete.value.memberId;
 
     try {
-      const response = await fetch(`/api/v1/projects/${projectId}/members`, {
+      const response = await fetch(`/api/v1/projects/${projectId.value}/members`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
@@ -429,7 +419,7 @@ const handleSendInvitations = async (invitationData) => {
 
   try {
     const response = await fetch(
-      `/api/v1/projects/${props.projectId}/members`,
+      `/api/v1/projects/${projectId.value}/members`,
       {
         method: "POST",
         headers: {
