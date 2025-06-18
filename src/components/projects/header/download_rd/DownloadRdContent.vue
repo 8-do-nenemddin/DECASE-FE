@@ -29,22 +29,49 @@
         v-for="(file, index) in files" 
         :key="index" 
         class="file-item"
+        :class="{ 'downloading': file.isDownloading, 'completed': file.isCompleted, 'error': file.hasError }"
       >
         <div class="file-info">
           <div class="file-icon">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg v-if="!file.isDownloading && !file.isCompleted && !file.hasError" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
               <polyline points="14,2 14,8 20,8"></polyline>
               <line x1="16" y1="13" x2="8" y2="13"></line>
               <line x1="16" y1="17" x2="8" y2="17"></line>
             </svg>
+            <div v-else-if="file.isDownloading" class="loading-spinner"></div>
+            <svg v-else-if="file.isCompleted" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="20,6 9,17 4,12"></polyline>
+            </svg>
+            <svg v-else-if="file.hasError" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="15" y1="9" x2="9" y2="15"></line>
+              <line x1="9" y1="9" x2="15" y2="15"></line>
+            </svg>
           </div>
           <div class="file-details">
             <span class="file-name">{{ file.name }}</span>
             <span class="file-size">{{ file.size }}</span>
+            <span v-if="file.hasError" class="error-message">다운로드 실패</span>
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- 진행률 표시 -->
+    <div v-if="isProcessing" class="progress-section">
+      <div class="progress-bar">
+        <div 
+          class="progress-fill" 
+          :style="{ width: `${downloadProgress}%` }"
+        ></div>
+      </div>
+      <p class="progress-text">{{ currentStep }} ({{ downloadProgress }}%)</p>
+    </div>
+
+    <!-- 에러 메시지 -->
+    <div v-if="errorMessage" class="error-section">
+      <p class="error-text">{{ errorMessage }}</p>
     </div>
 
     <div class="button-group">
@@ -77,24 +104,148 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 import SuccessDownloadModal from './SuccessDownloadModal.vue'
+import { useProjectStore } from '../../../../stores/projectStore'
+import JSZip from 'jszip'
 
 const emit = defineEmits(['close', 'confirm'])
 
 const currentView = ref('download')
 const isProcessing = ref(false)
+const downloadProgress = ref(0)
+const currentStep = ref('')
+const errorMessage = ref('')
+const projectStore = useProjectStore()
+const projectId = ref(projectStore.projectId)
+const projectName = ref(projectStore.projectName)
 
 const files = ref([
-  { name: 'Project1_요구사항_정의서.xlsx', size: '2.3 MB' },
-  { name: 'Project1_조건표.xlsx', size: '1.8 MB' },
-  { name: 'Project1_요구사항_정의서_추적_매트릭스.xlsx', size: '3.1 MB' }
+  { 
+    name: `${projectName.value}_조견표.xlsx`, 
+    size: '2.3 MB',
+    apiUrl: `/api/v1/projects/${projectId.value}/mapping-table/downloads`,
+    isDownloading: false,
+    isCompleted: false,
+    hasError: false
+  },
+  { 
+    name: `${projectName.value}_요구사항 정의서.xlsx`, 
+    size: '1.8 MB',
+    apiUrl: `/api/v1/projects/${projectId.value}/requirements/downloads`,
+    isDownloading: false,
+    isCompleted: false,
+    hasError: false
+  },
+  { 
+    name: `${projectName.value}_요구사항 추적 매트릭스.xlsx`, 
+    size: '3.1 MB',
+    apiUrl: `/api/v1/matrix/projects/${projectId.value}/downloads`,
+    isDownloading: false,
+    isCompleted: false,
+    hasError: false
+  }
 ])
 
 const handleConfirm = async () => {
   isProcessing.value = true
-  await new Promise(resolve => setTimeout(resolve, 1500))
-  isProcessing.value = false
-  currentView.value = 'confirm'
-  emit('confirm')
+  downloadProgress.value = 0
+  errorMessage.value = ''
+  currentStep.value = '다운로드 준비 중...'
+
+  try {
+    const zip = new JSZip()
+    const totalSteps = files.value.length + 1 // API 호출 + ZIP 생성
+    let completedSteps = 0
+
+    // 각 파일 상태 초기화
+    files.value.forEach(file => {
+      file.isDownloading = false
+      file.isCompleted = false
+      file.hasError = false
+    })
+
+    // 각 API에서 파일 다운로드
+    for (let i = 0; i < files.value.length; i++) {
+      const file = files.value[i]
+      file.isDownloading = true
+      currentStep.value = `${file.name} 다운로드 중...`
+
+      try {
+        const fileBlob = await downloadFile(file.apiUrl)
+        zip.file(file.name, fileBlob)
+        
+        file.isDownloading = false
+        file.isCompleted = true
+        completedSteps++
+        downloadProgress.value = Math.round((completedSteps / totalSteps) * 100)
+        
+      } catch (error) {
+        console.error(`파일 다운로드 실패: ${file.name}`, error)
+        file.isDownloading = false
+        file.hasError = true
+        
+        // 실패한 파일은 에러 정보를 텍스트 파일로 추가
+        zip.file(`${file.name}_error.txt`, `다운로드 실패: ${error.message}`)
+        completedSteps++
+        downloadProgress.value = Math.round((completedSteps / totalSteps) * 100)
+      }
+    }
+
+    // ZIP 파일 생성
+    currentStep.value = 'ZIP 파일 생성 중...'
+    const zipBlob = await zip.generateAsync({ 
+      type: 'blob',
+      compression: 'DEFLATE',
+      compressionOptions: { level: 6 }
+    })
+
+    downloadProgress.value = 100
+    currentStep.value = '다운로드 완료!'
+
+    // ZIP 파일 자동 다운로드
+    const currentDate = new Date().toISOString().split('T')[0]
+    const zipFileName = `요구사항정의서_${projectId.value}_${currentDate}.zip`
+    downloadBlob(zipBlob, zipFileName)
+
+    // 성공 모달로 전환
+    setTimeout(() => {
+      currentView.value = 'confirm'
+      emit('confirm')
+    }, 1000)
+
+  } catch (error) {
+    console.error('ZIP 다운로드 실패:', error)
+    errorMessage.value = `다운로드 실패: ${error.message}`
+  } finally {
+    isProcessing.value = false
+  }
+}
+
+const downloadFile = async (apiUrl) => {
+  const response = await fetch(apiUrl, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      // 필요한 경우 인증 헤더 추가
+      // 'Authorization': `Bearer ${token}`
+    }
+  })
+
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+  }
+
+  return await response.blob()
+}
+
+const downloadBlob = (blob, filename) => {
+  const url = window.URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  window.URL.revokeObjectURL(url)
 }
 
 const handleCancel = () => {
@@ -180,11 +331,26 @@ onUnmounted(() => {
   border: 1px solid #e0e0e0;
   border-radius: 4px;
   margin-bottom: 8px;
-  transition: background-color 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 .file-item:hover {
   background: #f0f0f0;
+}
+
+.file-item.downloading {
+  background: #e3f2fd;
+  border-color: #2196f3;
+}
+
+.file-item.completed {
+  background: #e8f5e8;
+  border-color: #4caf50;
+}
+
+.file-item.error {
+  background: #ffebee;
+  border-color: #f44336;
 }
 
 .file-item:last-child {
@@ -207,6 +373,28 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   color: white;
+  transition: all 0.2s ease;
+}
+
+.file-item.downloading .file-icon {
+  background: #2196f3;
+}
+
+.file-item.completed .file-icon {
+  background: #4caf50;
+}
+
+.file-item.error .file-icon {
+  background: #f44336;
+}
+
+.loading-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 1s linear infinite;
 }
 
 .file-details {
@@ -224,6 +412,55 @@ onUnmounted(() => {
 .file-size {
   font-size: 12px;
   color: #666;
+}
+
+.error-message {
+  font-size: 11px;
+  color: #f44336;
+  font-weight: 500;
+}
+
+/* Progress Section */
+.progress-section {
+  margin-bottom: 20px;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4CAF50, #45a049);
+  transition: width 0.3s ease;
+  border-radius: 4px;
+}
+
+.progress-text {
+  font-size: 12px;
+  color: #666;
+  text-align: center;
+  margin: 0;
+}
+
+/* Error Section */
+.error-section {
+  margin-bottom: 20px;
+  padding: 12px;
+  background: #ffebee;
+  border: 1px solid #ffcdd2;
+  border-radius: 4px;
+}
+
+.error-text {
+  font-size: 14px;
+  color: #f44336;
+  margin: 0;
 }
 
 /* Button Group */
