@@ -143,6 +143,10 @@
       </div>
     </div>
 
+    <div v-if="rowDeleteError" class="modification-notice" style="background-color: #fef3c7; border: 1px solid #f59e0b; color: #92400e;">
+      ⚠️ {{ rowDeleteError }}
+    </div>
+
     <div v-if="modifiedRows.size > 0" class="modification-notice">
       ⚠️ {{ modifiedRows.size }}개의 행이 수정되었습니다. 저장하기 전에 모든
       수정 사유를 입력해주세요. 수정 사유는 변경 이력에 자동 반영됩니다.
@@ -207,6 +211,7 @@ const searchParams = ref(null);
 const mockupExists = ref(true); // 초기값은 false
 const gridApi = ref(null);
 const fullList = ref([]);
+const rowDeleteError = ref("");
 
 // 컬럼 정의
 const columnDefs = ref([
@@ -314,22 +319,6 @@ const columnDefs = ref([
     width: 50,
   },
   {
-    field: "managementStatus",
-    headerName: "관리\n구분",
-    editable: true,
-    cellEditor: "agSelectCellEditor",
-    cellEditorParams: {
-      values: ["등록", "삭제"],
-    },
-    width: 50,
-    cellStyle: (params) => {
-      if (params.value === "삭제") {
-        return { backgroundColor: "#ffebee", color: "#c62828" };
-      }
-      return { backgroundColor: "#e8f5e8", color: "#2e7d32" };
-    },
-  },
-  {
     field: "modificationHistory",
     headerName: "변경이력",
     editable: true,
@@ -358,6 +347,18 @@ const columnDefs = ref([
         return { backgroundColor: "#ffebee", border: "1px solid #f44336" };
       }
       return null;
+    },
+  },
+  {
+    field: "actions",
+    headerName: "행 삭제",
+    width: 120,
+    cellRenderer: (params) => {
+      return `
+      <button class="row-delete-button" data-reqpk="${params.data.reqPk}">
+        삭제
+      </button>
+    `;
     },
   },
 ]);
@@ -389,6 +390,14 @@ function onGridReady(params) {
   // 그리드가 준비된 후에 데이터 로드
   nextTick(() => {
     loadDataFromAPI();
+  });
+
+  // ✅ 행 삭제 버튼 클릭 이벤트 처리
+  params.api.addEventListener('cellClicked', (event) => {
+    if (event.colDef.field === 'actions' && event.event.target?.classList.contains('row-delete-button')) {
+      const reqPk = event.data.reqPk;
+      handleRowDelete(reqPk);
+    }
   });
 }
 
@@ -438,7 +447,6 @@ function transformApiDataToTableData(apiData) {
       difficulty: item.difficulty, // "HIGH" | "MIDDLE" | "LOW"
       sourcesDisplay: sourcesDisplay,
       sourceIds: sourceIds,
-      managementStatus: item.isDeleted ? "삭제" : "등록",
       modificationHistory: modificationHistory,
       lastModifiedDate: lastModifiedDate,
       modification_reason: "",
@@ -619,7 +627,6 @@ async function saveBulkChanges(modifiedData) {
         difficulty: priorityMap[row.difficulty] || row.difficulty,
         name: row.name,
         description: row.description,
-        deleted: row.managementStatus === "삭제",
         modReason: row.modification_reason,
       };
 
@@ -686,14 +693,6 @@ function cancelChanges() {
     console.log("모든 변경사항이 취소되었습니다.");
   }
 }
-
-// function createMockup() {
-//   console.log(mockupExists.value)
-//   if (mockupExists.value === false) {
-//     console.log("....")
-//     mockupExists.value = true;
-//   }
-// }
 
 async function createMockup() {
   loading.value = true;
@@ -948,22 +947,6 @@ const updateColumnDefs = () => {
       width: 50,
     },
     {
-      field: "managementStatus",
-      headerName: "관리\n구분",
-      editable: true,
-      cellEditor: "agSelectCellEditor",
-      cellEditorParams: {
-        values: ["등록", "삭제"],
-      },
-      width: 50,
-      cellStyle: (params) => {
-        if (params.value === "삭제") {
-          return { backgroundColor: "#ffebee", color: "#c62828" };
-        }
-        return { backgroundColor: "#e8f5e8", color: "#2e7d32" };
-      },
-    },
-    {
       field: "modificationHistory",
       headerName: "변경이력",
       editable: true,
@@ -1043,6 +1026,50 @@ const viewMockup = () => {
 onUnmounted(() => {
   gridApi.value = null;
 });
+
+async function handleRowDelete(reqPk) {
+  // Find the row in rowData by reqPk
+  const row = rowData.value.find(item => item.reqPk === reqPk);
+  if (!row) {
+    rowDeleteError.value = "행 데이터를 찾을 수 없습니다.";
+    return;
+  }
+
+  const reason = row.modification_reason;
+  if (!reason || reason.trim() === "") {
+    row.isModified = true; // isModified를 true로 설정하여 cellStyle 반영
+    rowDeleteError.value = "삭제하려면 수정 이유를 먼저 입력해주세요.";
+    if (gridApi.value && typeof row.rowIndex !== "undefined") {
+      gridApi.value.refreshCells({
+        rowNodes: [gridApi.value.getRowNode(row.rowIndex)],
+        columns: ["modification_reason"],
+      });
+    }
+    return;
+  }
+
+  rowDeleteError.value = ""; // 에러 초기화
+
+  try {
+    const response = await fetch(`/api/v1/projects/${props.projectId}/requirments/${reqPk}/delete`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ reason: reason, memberId: userId }),
+    });
+
+    if (!response.ok) {
+      throw new Error("삭제 요청 실패");
+    }
+
+    alert("요구사항이 삭제되었습니다.");
+    loadDataFromAPI();
+  } catch (err) {
+    console.error("행 삭제 실패:", err);
+    rowDeleteError.value = "요구사항 삭제 중 오류가 발생했습니다.";
+  }
+}
 </script>
 
 <style scoped>
