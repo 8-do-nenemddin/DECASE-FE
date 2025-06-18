@@ -1235,11 +1235,13 @@ defineExpose({
 
 // 목업 보기 함수 추가
 const viewMockup = () => {
-  // 부모 컴포넌트에 목업 파일 선택 이벤트 발생
-  emit("mockupFileSelected", {
+  console.log("목업 보기 버튼 클릭됨");
+  const mockupData = {
     name: "index.html",
     revision: props.revision,
-  });
+  };
+  console.log("발생할 이벤트 데이터:", mockupData);
+  emit("mockupFileSelected", mockupData);
 };
 
 // 컴포넌트 언마운트 시 gridApi 초기화

@@ -417,23 +417,15 @@ const toggleItem = (index) => {
 const activeFile = ref(null);
 const viewerTab = ref("preview");
 
-const selectFile = async (file, fileIndex, sectionType) => {
-  try {
-    // 선택된 파일 상태 업데이트
-    Object.keys(selectedFiles).forEach((key) => (selectedFiles[key] = -1));
-    selectedFiles[sectionType] = fileIndex;
-
-    // 필요한 정보만 전달
-    const fileInfo = {
-      name: file.name,
-      revision: file.revision,
-    };
-
-    // 부모 컴포넌트에 파일 선택 이벤트 발생
-    emit("fileSelected", fileInfo);
-  } catch (error) {
-    console.error("파일 불러오기 실패:", error);
-  }
+const selectFile = (file, fileIndex, type) => {
+  console.log("목업 파일 선택됨:", file);
+  const fileData = {
+    name: file.name,
+    revision: file.revision,
+  };
+  console.log("발생할 이벤트 데이터:", fileData);
+  emit("fileSelected", fileData);
+  closeSidebar();
 };
 
 const isFileSelected = (fileIndex, sectionType) => {

@@ -106,6 +106,7 @@ const props = defineProps({
 
 const projectStore = useProjectStore();
 const projectId = computed(() => projectStore.projectId);
+const revision = computed(() => props.activeFile.revision);
 const viewerTab = ref("preview");
 const code = ref("");
 const isLoading = ref(false);
