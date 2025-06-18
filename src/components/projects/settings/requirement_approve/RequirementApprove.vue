@@ -312,7 +312,10 @@ const loadModifiedRequirements = async () => {
     const response = await fetch(`/api/v1/projects/${projectStore.projectId}/requirements/pending`);
     if (!response.ok) throw new Error("서버 오류: " + response.status);
     const data = await response.json();
-    requirements.value = data;
+    // idCode 기준 오름차순 정렬 (localeCompare 사용)
+    requirements.value = data.sort((a, b) => {
+      return a.proposed.idCode.localeCompare(b.proposed.idCode);
+    });
   } catch (err) {
     console.error("요구사항 로드 오류:", err);
     error.value = err.message || "수정된 요구사항을 불러오는데 실패했습니다.";
