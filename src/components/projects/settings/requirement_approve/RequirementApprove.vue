@@ -29,6 +29,7 @@
                 <th class="col-toggle sticky-col" style="left: 0;"></th>
                 <th class="col-select sticky-col" style="left: 40px;">선택</th>
                 <th class="col-approval sticky-col" style="left: 90px;">승인/반려</th>
+                <th class="col-request-type">요청 유형</th>
                 <th class="col-id">ID</th>
                 <th class="col-type">요구사항 유형</th>
                 <th class="col-name">요구사항명</th>
@@ -59,6 +60,9 @@
                   <td class="col-approval sticky-col button-group" style="left: 90px;">
                     <button @click.stop="approveRequirement(requirement.proposed.id)" class="confirm-button approve">승인</button>
                     <button @click.stop="rejectRequirement(requirement.proposed.id)" class="confirm-button reject">반려</button>
+                  </td>
+                  <td class="col-request-type">
+                    {{ requirement.proposed.isDelete ? "삭제 요청" : "수정 요청" }}
                   </td>
                   <td class="col-id" :class="{ 'cell-changed': isChanged(requirement, 'id') }">{{ requirement.proposed.idCode }}</td>
                   <td class="col-type" :class="{ 'cell-changed': isChanged(requirement, 'type') }">{{ requirement.proposed.type }}</td>
@@ -652,5 +656,11 @@ const toggleRow = (id) => {
 .confirm-button.reject {
   background: #ef4444;
   color: white;
+}
+
+.col-request-type {
+  width: 100px;
+  white-space: nowrap;
+  text-align: center;
 }
 </style>
