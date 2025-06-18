@@ -127,7 +127,7 @@
               <strong>수정일시:</strong> {{ formatDate(selectedItem.revisionDate) }}
             </div>
             <div class="info-row">
-              <strong>수정 사유:</strong> {{ item.modReason || '-' }}
+              <strong>수정 사유:</strong> {{ selectedItem.modReason || "-" }}
             </div>
           </div>
           <div class="description-section" v-if="selectedItem.description">
