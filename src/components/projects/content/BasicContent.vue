@@ -149,8 +149,6 @@
           <div class="progress-text">{{ Math.round(uploadProgressExtra) }}%</div>
         </div>
       </div>
-<<<<<<< HEAD
-=======
     </div>
 
     <!-- 요구사항정의서 생성 중 화면 -->
@@ -173,7 +171,6 @@
           </div>
         </div>
       </div>
->>>>>>> e7b9530c005b2468ec4104e77cd1e8a7dc2c451e
     </div>
 
     <!-- 요구사항정의서 생성 중 화면 -->
@@ -182,14 +179,8 @@
 </template>
 
 <script setup>
-<<<<<<< HEAD
-import { ref } from "vue";
-import { useProjectStore } from "/src/stores/projectStore";
-import GeneratingContent from "./GeneratingContent.vue";
-=======
 import { ref, watch } from "vue";
 import { useProjectStore } from "/src/stores/projectStore";
->>>>>>> e7b9530c005b2468ec4104e77cd1e8a7dc2c451e
 
 const projectStore = useProjectStore();
 
@@ -305,11 +296,7 @@ const handleSubmit = async () => {
     const data = await response.json();
 
     clearFile();
-<<<<<<< HEAD
-    // 업로드 성공 후 별도의 isGenerating 상태 관리 없이 projectRevision 값이 바뀌면 화면이 전환됨
-=======
     isGenerating.value = true;
->>>>>>> e7b9530c005b2468ec4104e77cd1e8a7dc2c451e
   } catch (error) {
     console.error("업로드 실패:", error);
     alert("파일 업로드 중 오류가 발생했습니다.");
@@ -390,15 +377,8 @@ const handleSubmitExtra = async () => {
 
 <style scoped>
 .main-content {
-<<<<<<< HEAD
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-=======
   width: 100%;
   min-height: calc(80vh);
->>>>>>> e7b9530c005b2468ec4104e77cd1e8a7dc2c451e
   padding: 40px;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     "Helvetica Neue", Arial, sans-serif;
@@ -426,15 +406,10 @@ const handleSubmitExtra = async () => {
   text-align: center;
 }
 
-<<<<<<< HEAD
-.upload-card:hover {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.06);
-=======
 .welcome-section {
   max-width: 800px; /* 필요시 최대 너비 설정 */
   margin: 0 auto; /* 중앙 정렬 */
   padding-top: 20vh; /* 수직 중앙 정렬을 위한 상단 패딩 */
->>>>>>> e7b9530c005b2468ec4104e77cd1e8a7dc2c451e
 }
 
 .upload-title {
