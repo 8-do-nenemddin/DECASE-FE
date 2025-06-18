@@ -1619,7 +1619,11 @@ onUnmounted(() => {
   width: 100%;
 }
 
+.row-height-buttons button svg rect {
+  fill: #9ca3af !important; /* 기본 색상을 회색으로 설정 */
+}
+
 .row-height-buttons button.active svg rect {
-  fill: #3b82f6 !important;
+  fill: #3b82f6 !important; /* 활성화된 버튼만 파란색으로 설정 */
 }
 </style>
