@@ -110,7 +110,7 @@
                 <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
               </svg>
             </span>
-            <span class="nav-text">권한 관리</span>
+            <span class="nav-text">멤버 관리</span>
           </button>
         </li>
 
