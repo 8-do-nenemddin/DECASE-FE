@@ -85,7 +85,7 @@
                 <rect x="3" y="14" width="7" height="7"></rect>
               </svg>
             </span>
-            <span class="nav-text">요구사항 추적 매트릭스</span>
+            <span class="nav-text">변경 이력 관리</span>
           </button>
         </li>
 

@@ -144,6 +144,27 @@
     </div>
 
     <!-- 요구사항정의서 생성 중 화면 -->
+
+    <div class="generating-card" v-if="isGenerating">
+      <div class="generating-content">
+        <div class="generating-icon">
+          <div class="spinner"></div>
+        </div>
+        <h2 class="generating-title">요구사항정의서 생성중입니다</h2>
+        <p class="generating-subtitle">
+          업로드된 RFP 파일을 분석하여 요구사항정의서를 생성하고 있습니다.
+          <br />
+          <strong>약 30분 정도 소요될 예정입니다.</strong>
+        </p>
+        <div class="generating-progress">
+          <div class="pulse-dots">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
+      </div>
+    </div>
     <GeneratingContent v-if="projectStore.projectRevision === 1" />
   </main>
 </template>
