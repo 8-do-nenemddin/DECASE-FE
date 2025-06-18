@@ -591,6 +591,12 @@ function saveChanges() {
   if (modifiedRowsData.length === 0) {
     return;
   }
+  // 수정 사유가 비어있는 행이 있는지 검사
+  const rowsWithoutReason = modifiedRowsData.filter((row) => !row.modification_reason || row.modification_reason.trim() === "");
+  if (rowsWithoutReason.length > 0) {
+    alert(`수정 사유가 입력되지 않은 행이 ${rowsWithoutReason.length}개 있습니다. 모든 수정 사유를 입력해주세요.`);
+    return;
+  }
   saveBulkChanges(modifiedRowsData);
 }
 
