@@ -4,19 +4,17 @@
       <div class="header-section">
         <div class="content-info">
           <h2 class="content-title">
-            <span>
-
-            </span>
+            <span> </span>
             <svg
-                width="23"
-                height="23"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
+              width="23"
+              height="23"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
             >
               <path
-                  d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
               ></path>
               <polyline points="14 2 14 8 20 8"></polyline>
               <line x1="16" y1="13" x2="8" y2="13"></line>
@@ -155,6 +153,58 @@
       <button @click="loadDataFromAPI" class="retry-button">다시 시도</button>
     </div>
 
+    <!-- 행 높이 조절 버튼: 표 바로 위에 위치 -->
+    <div
+      class="row-height-buttons"
+      style="
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        justify-content: flex-end;
+        margin-bottom: 8px;
+        margin-top: 8px;
+        margin-right: 10px;
+      "
+    >
+      <button
+        :class="{ active: rowHeightLevel === 1 }"
+        @click="setRowHeightLevel(1)"
+        title="좁게"
+        style="background: none; border: none; cursor: pointer"
+      >
+        <svg width="24" height="24">
+          <rect x="4" y="6" width="16" height="2" rx="1" fill="#3b82f6" />
+          <rect x="4" y="10" width="16" height="2" rx="1" fill="#3b82f6" />
+          <rect x="4" y="14" width="16" height="2" rx="1" fill="#3b82f6" />
+          <rect x="4" y="18" width="16" height="2" rx="1" fill="#3b82f6" />
+        </svg>
+      </button>
+      <button
+        :class="{ active: rowHeightLevel === 2 }"
+        @click="setRowHeightLevel(2)"
+        title="중간"
+        style="background: none; border: none; cursor: pointer"
+      >
+        <svg width="24" height="24">
+          <rect x="4" y="5" width="16" height="4" rx="1.5" fill="#3b82f6" />
+          <rect x="4" y="11" width="16" height="4" rx="1.5" fill="#3b82f6" />
+          <rect x="4" y="17" width="16" height="4" rx="1.5" fill="#3b82f6" />
+        </svg>
+      </button>
+      <button
+        :class="{ active: rowHeightLevel === 3 }"
+        @click="setRowHeightLevel(3)"
+        title="넓게"
+        style="background: none; border: none; cursor: pointer"
+      >
+        <svg width="24" height="24">
+          <rect x="4" y="4" width="16" height="5" rx="2.5" fill="#3b82f6" />
+          <rect x="4" y="11" width="16" height="5" rx="2.5" fill="#3b82f6" />
+          <rect x="4" y="18" width="16" height="5" rx="2.5" fill="#3b82f6" />
+        </svg>
+      </button>
+    </div>
+
     <div class="grid-wrapper" v-if="!error">
       <ag-grid-vue
         class="ag-theme-alpine"
@@ -206,6 +256,20 @@ const modifiedRows = ref(new Set());
 const searchParams = ref(null);
 const mockupExists = ref(true); // 초기값은 false
 const gridApi = ref(null);
+const rowHeightLevel = ref(1); // 1: 작게, 2: 중간, 3: 크게
+
+const rowHeightOptions = {
+  1: 28, // 글자 1개 높이
+  2: 200, // 문장 3개 정도
+  3: 500, // 글자 10개 정도
+};
+
+function setRowHeightLevel(level) {
+  rowHeightLevel.value = level;
+  if (gridApi.value) {
+    gridApi.value.resetRowHeights();
+  }
+}
 
 // 컬럼 정의
 const columnDefs = ref([
@@ -378,7 +442,7 @@ const gridOptions = {
   stopEditingWhenCellsLoseFocus: true,
   rowSelection: "multiple",
   animateRows: true,
-  getRowHeight: () => 60, //행높이
+  getRowHeight: () => rowHeightOptions[rowHeightLevel.value],
 };
 
 // 그리드 준비 완료 시
@@ -1549,5 +1613,9 @@ onUnmounted(() => {
   justify-content: center;
   height: 100%;
   width: 100%;
+}
+
+.row-height-buttons button.active svg rect {
+  fill: #3b82f6 !important;
 }
 </style>
