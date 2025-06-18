@@ -2,16 +2,13 @@
   <main class="main-content">
     <!-- 추후 수정-->
     <!-- v-if : Project 상태에 따라서 (요구사항 입력 전 / 요구사항 생성중 / 요구사항 생성완료)-->
-    <div
-      class="dual-upload-section"
-      v-if="projectStore.projectRevision === 0 && !isGenerating"
-    >
-      <!-- 첫 번째 업로드 카드 (RFP) -->
+    <div class="upload-container" v-if="projectStore.projectRevision === 0">
       <div class="upload-card">
-        <h2 class="upload-title">파일 업로드</h2>
+        <h2 class="upload-title">RFP 파일 업로드</h2>
         <p class="upload-subtitle">
           프로젝트 제안 요청서(RFP) 파일을 업로드해주세요.
         </p>
+
         <div
           class="upload-zone"
           :class="{ 'drag-over': isDragOver, uploading: isUploading }"
@@ -27,6 +24,7 @@
             accept=".pdf,.doc,.docx,.hwp,.zip"
             style="display: none"
           />
+
           <div v-if="!selectedFile" class="upload-empty">
             <div class="upload-icon">
               <svg
@@ -45,36 +43,24 @@
                 <line x1="12" y1="3" x2="12" y2="15" />
               </svg>
             </div>
-            <p class="upload-placeholder">
-              파일을 드래그하거나 클릭해 선택하세요 <br>
-              <small>PDF 파일 지원 (최대 1GB)</small>
-            </p>
           </div>
-          <div v-else class="file-preview">
-            <div class="file-icon">✓</div>
-            <div class="file-info">
-              <div class="file-name">{{ selectedFile.name }}</div>
-              <div class="file-size">{{ formatFileSize(selectedFile.size) }}</div>
+          <button
+            @click="handleSubmit"
+            :disabled="!selectedFile || isUploading"
+            class="submit-button"
+          >
+            <span v-if="isUploading">업로드 중...</span>
+            <span v-else>업로드 시작</span>
+          </button>
+          <div v-if="isUploading" class="progress-container">
+            <div class="progress-bar">
+              <div
+                class="progress-fill"
+                :style="{ width: uploadProgress + '%' }"
+              ></div>
             </div>
-            <button @click.stop="clearFile" class="clear-button">삭제</button>
+            <div class="progress-text">{{ Math.round(uploadProgress) }}%</div>
           </div>
-        </div>
-        <button
-          @click="handleSubmit"
-          :disabled="!selectedFile || isUploading"
-          class="submit-button"
-        >
-          <span v-if="isUploading">업로드 중...</span>
-          <span v-else>업로드 시작</span>
-        </button>
-        <div v-if="isUploading" class="progress-container">
-          <div class="progress-bar">
-            <div
-              class="progress-fill"
-              :style="{ width: uploadProgress + '%' }"
-            ></div>
-          </div>
-          <div class="progress-text">{{ Math.round(uploadProgress) }}%</div>
         </div>
       </div>
       <!-- 두 번째 업로드 카드 (추가 파일) -->
@@ -118,7 +104,7 @@
               </svg>
             </div>
             <p class="upload-placeholder">
-              추후 지원될 예정입니다 <br>
+              추후 지원될 예정입니다 <br />
               <small>PDF 파일 지원 (최대 1GB)</small>
             </p>
           </div>
@@ -126,9 +112,13 @@
             <div class="file-icon">✓</div>
             <div class="file-info">
               <div class="file-name">{{ selectedFileExtra.name }}</div>
-              <div class="file-size">{{ formatFileSize(selectedFileExtra.size) }}</div>
+              <div class="file-size">
+                {{ formatFileSize(selectedFileExtra.size) }}
+              </div>
             </div>
-            <button @click.stop="clearFileExtra" class="clear-button">삭제</button>
+            <button @click.stop="clearFileExtra" class="clear-button">
+              삭제
+            </button>
           </div>
         </div>
         <button
@@ -146,12 +136,15 @@
               :style="{ width: uploadProgressExtra + '%' }"
             ></div>
           </div>
-          <div class="progress-text">{{ Math.round(uploadProgressExtra) }}%</div>
+          <div class="progress-text">
+            {{ Math.round(uploadProgressExtra) }}%
+          </div>
         </div>
       </div>
     </div>
 
     <!-- 요구사항정의서 생성 중 화면 -->
+
     <div class="generating-card" v-if="isGenerating">
       <div class="generating-content">
         <div class="generating-icon">
@@ -172,15 +165,14 @@
         </div>
       </div>
     </div>
-
-    <!-- 요구사항정의서 생성 중 화면 -->
     <GeneratingContent v-if="projectStore.projectRevision === 1" />
   </main>
 </template>
 
 <script setup>
-import { ref, watch } from "vue";
+import { ref } from "vue";
 import { useProjectStore } from "/src/stores/projectStore";
+import GeneratingContent from "./GeneratingContent.vue";
 
 const projectStore = useProjectStore();
 
@@ -194,25 +186,6 @@ const isDragOver = ref(false);
 const isUploading = ref(false);
 // 업로드 진행률
 const uploadProgress = ref(0);
-// 요구사항정의서 생성 상태
-const isGenerating = ref(false);
-
-// 추가 파일 업로드용 ref
-const fileInputExtra = ref(null);
-const selectedFileExtra = ref(null);
-const isDragOverExtra = ref(false);
-const isUploadingExtra = ref(false);
-const uploadProgressExtra = ref(0);
-
-// projectRevision 변경 감지
-watch(
-  () => projectStore.projectRevision,
-  (newValue) => {
-    if (newValue === 1) {
-      isGenerating.value = false;
-    }
-  }
-);
 
 // 파일 업로드 영역을 클릭했을 때 숨겨진 input을 클릭시키는 함수
 const triggerFileInput = () => {
@@ -296,7 +269,7 @@ const handleSubmit = async () => {
     const data = await response.json();
 
     clearFile();
-    isGenerating.value = true;
+    // 업로드 성공 후 별도의 isGenerating 상태 관리 없이 projectRevision 값이 바뀌면 화면이 전환됨
   } catch (error) {
     console.error("업로드 실패:", error);
     alert("파일 업로드 중 오류가 발생했습니다.");
@@ -352,7 +325,10 @@ const handleSubmitExtra = async () => {
     formData.append("file", selectedFileExtra.value);
     formData.append("memberId", projectStore.userId);
     // 실제 업로드 엔드포인트는 상황에 따라 다를 수 있음
-    console.log("추가 파일을 서버로 업로드합니다:", selectedFileExtra.value.name);
+    console.log(
+      "추가 파일을 서버로 업로드합니다:",
+      selectedFileExtra.value.name
+    );
     const response = await fetch(
       `/api/v1/projects/${projectStore.projectId}/reference-files`,
       {
@@ -387,10 +363,11 @@ const handleSubmitExtra = async () => {
   justify-content: center;
 }
 
-.dual-upload-section {
+.upload-container {
   display: flex;
-  flex-wrap: wrap;
   gap: 40px;
+  width: 100%;
+  max-width: 1200px;
   justify-content: center;
 }
 
@@ -401,7 +378,7 @@ const handleSubmitExtra = async () => {
   background: #ffffff;
   border: 1px solid #e1e5e9;
   border-radius: 12px;
-  padding: 60px;
+  padding: 40px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
   text-align: center;
 }
@@ -475,9 +452,15 @@ const handleSubmitExtra = async () => {
 }
 
 /* 반응형 디자인 */
-@media (max-width: 768px) {
-  .welcome-section {
-    padding: 30px 20px;
+@media (max-width: 1024px) {
+  .upload-container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .upload-card {
+    width: 100%;
+    max-width: 600px;
   }
 }
 

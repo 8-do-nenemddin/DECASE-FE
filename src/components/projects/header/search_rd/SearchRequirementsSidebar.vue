@@ -116,7 +116,13 @@
           </div>
         </div>
         <!-- 초기화 버튼 -->
-        <button class="reset-button" @click="resetFilters" style="margin-top:0px;">초기화</button>
+        <button
+          class="reset-button"
+          @click="resetFilters"
+          style="margin-top: 0px"
+        >
+          초기화
+        </button>
       </div>
     </div>
   </div>
@@ -164,24 +170,24 @@ const options = reactive({
 
 // 검색 파라미터 생성 함수
 const createSearchParams = () => {
-  // Convert checkbox options to docType string prefixes
+  // Convert checkbox options to docType numbers
   const docTypes = [];
-  if (options.rfp) docTypes.push("RFP"); // RFP
-  if (options.functional) docTypes.push("MOMV"); // MOMV (회의록 음성)
-  if (options.proposal) docTypes.push("MOMD"); // MOMD (회의록)
-  if (options.additional) docTypes.push("EXTRA"); // EXTRA (추가파일)
+  if (options.rfp) docTypes.push("1"); // RFP
+  if (options.functional) docTypes.push("2"); // MOMV (회의록 음성)
+  if (options.proposal) docTypes.push("3"); // MOMD (회의록)
+  if (options.additional) docTypes.push("4"); // EXTRA (추가파일)
 
   // Map type values
   const typeMap = {
-    fr: "FR", // 기능
-    nfr: "NFR", // 비기능
+    fr: 0, // 기능
+    nfr: 1, // 비기능
   };
 
   // Map difficulty and priority values
   const levelMap = {
-    high: "HIGH",
-    medium: "MIDDLE",
-    low: "LOW",
+    high: 0,
+    medium: 1,
+    low: 2,
   };
 
   const searchParams = {
