@@ -6,27 +6,41 @@
     <div class="main-layout">
       <!-- 사이드바 컴포넌트 -->
       <SettingsSidebar
-          :current-component="currentComponent"
-          @change-component="handleChangeComponent"
+        :current-component="currentComponent"
+        @change-component="handleChangeComponent"
       />
 
       <!-- 메인 콘텐츠 -->
       <main class="content-area">
-        <div class="content-wrapper" :class="{ 'matrix-layout': currentComponent === 'ProjectMatrix' }">
+        <div
+          class="content-wrapper"
+          :class="{ 'matrix-layout': currentComponent === 'ProjectMatrix' }"
+        >
           <!-- 컴포넌트 전환 애니메이션 적용 -->
           <Transition name="slide-up" mode="out-in">
             <div :key="currentComponent">
               <!-- 프로젝트 정보 수정 -->
               <EditProjectInfo v-if="currentComponent === 'ProjectInfo'" />
 
+              <!-- 요구사항 수정 승인 -->
+              <RequirementApprove
+                v-if="currentComponent === 'RequirementApprove'"
+              />
+
               <!-- 요구사항 추적 매트릭스 -->
               <ViewMatrix v-if="currentComponent === 'ProjectMatrix'" />
 
               <!-- 권한 관리 -->
-              <ManageRight :project-id="projectId" v-if="currentComponent === 'ProjectRight'" />
+              <ManageRight
+                :project-id="projectId"
+                v-if="currentComponent === 'ProjectRight'"
+              />
 
               <!-- 초대 현황 -->
-              <Invitation :project-id="projectId" v-if="currentComponent === 'Invitation'" />
+              <Invitation
+                :project-id="projectId"
+                v-if="currentComponent === 'Invitation'"
+              />
             </div>
           </Transition>
         </div>
@@ -43,22 +57,22 @@ import EditProjectInfo from "./edit_project/EditProjectInfo.vue";
 import ViewMatrix from "./view_matrix/ViewMatrix.vue";
 import ManageRight from "./manage_right/ManageRight.vue";
 import Invitation from "./invitation/Invitation.vue";
+import RequirementApprove from "./requirement_approve/RequirementApprove.vue";
 
 const props = defineProps({
   projectId: {
     type: String,
-    required: true
-  }
+    required: true,
+  },
 });
 
-console.log(props.projectId)
+console.log(props.projectId);
 
 const currentComponent = ref("ProjectInfo"); // 기본 컴포넌트
 
 const handleChangeComponent = (componentName) => {
   currentComponent.value = componentName;
 };
-
 </script>
 
 <style>
@@ -67,13 +81,14 @@ const handleChangeComponent = (componentName) => {
   box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
   width: 100%;
   height: 100%;
   font-family: "Inter", "Pretendard", -apple-system, BlinkMacSystemFont,
-  "Segoe UI", Roboto, sans-serif;
+    "Segoe UI", Roboto, sans-serif;
   background-color: #f8fafc;
   color: #1f2937;
   line-height: 1.5;
@@ -116,7 +131,7 @@ html, body {
 .content-area {
   flex: 1;
   display: flex;
-  justify-content: center; /* 왼쪽 정렬로 변경 */ 
+  justify-content: center; /* 왼쪽 정렬로 변경 */
   overflow-y: auto;
   background: transparent;
   padding: 0; /* 패딩 제거 */
@@ -145,7 +160,9 @@ html, body {
 
 .content-wrapper.matrix-layout > * {
   width: 100% !important;
-  max-width: calc(100vw - 320px) !important; /* 사이드바 너비 고려한 최대 너비 */
+  max-width: calc(
+    100vw - 320px
+  ) !important; /* 사이드바 너비 고려한 최대 너비 */
   margin-left: 0 !important;
   align-self: flex-start;
   overflow-x: auto; /* 가로 스크롤 허용 */
@@ -480,7 +497,7 @@ html, body {
   .content-wrapper {
     max-width: 1200px;
   }
-  
+
   /* ViewMatrix는 적절한 너비 제한 */
   .content-wrapper.matrix-layout {
     max-width: 1500px !important; /* 매트릭스에 적합한 너비 */

@@ -46,7 +46,7 @@
               </svg>
             </div>
             <p class="upload-placeholder">
-              파일을 드래그하거나 클릭하여 선택하세요
+              파일을 드래그하거나 클릭해 선택하세요 <br />
               <small>PDF 파일 지원 (최대 1GB)</small>
             </p>
           </div>
@@ -54,7 +54,9 @@
             <div class="file-icon">✓</div>
             <div class="file-info">
               <div class="file-name">{{ selectedFile.name }}</div>
-              <div class="file-size">{{ formatFileSize(selectedFile.size) }}</div>
+              <div class="file-size">
+                {{ formatFileSize(selectedFile.size) }}
+              </div>
             </div>
             <button @click.stop="clearFile" class="clear-button">삭제</button>
           </div>
@@ -118,7 +120,7 @@
               </svg>
             </div>
             <p class="upload-placeholder">
-              파일을 드래그하거나 클릭하여 선택하세요
+              추후 지원될 예정입니다 <br />
               <small>PDF 파일 지원 (최대 1GB)</small>
             </p>
           </div>
@@ -126,9 +128,13 @@
             <div class="file-icon">✓</div>
             <div class="file-info">
               <div class="file-name">{{ selectedFileExtra.name }}</div>
-              <div class="file-size">{{ formatFileSize(selectedFileExtra.size) }}</div>
+              <div class="file-size">
+                {{ formatFileSize(selectedFileExtra.size) }}
+              </div>
             </div>
-            <button @click.stop="clearFileExtra" class="clear-button">삭제</button>
+            <button @click.stop="clearFileExtra" class="clear-button">
+              삭제
+            </button>
           </div>
         </div>
         <button
@@ -146,7 +152,9 @@
               :style="{ width: uploadProgressExtra + '%' }"
             ></div>
           </div>
-          <div class="progress-text">{{ Math.round(uploadProgressExtra) }}%</div>
+          <div class="progress-text">
+            {{ Math.round(uploadProgressExtra) }}%
+          </div>
         </div>
       </div>
     </div>
@@ -349,7 +357,10 @@ const handleSubmitExtra = async () => {
     formData.append("file", selectedFileExtra.value);
     formData.append("memberId", projectStore.userId);
     // 실제 업로드 엔드포인트는 상황에 따라 다를 수 있음
-    console.log("추가 파일을 서버로 업로드합니다:", selectedFileExtra.value.name);
+    console.log(
+      "추가 파일을 서버로 업로드합니다:",
+      selectedFileExtra.value.name
+    );
     const response = await fetch(
       `/api/v1/projects/${projectStore.projectId}/reference-files`,
       {
