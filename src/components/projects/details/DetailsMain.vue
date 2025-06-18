@@ -15,6 +15,9 @@
         <!-- 프로젝트 정보 수정 -->
         <ProjectInfo v-if="currentComponent === 'ProjectInfo'" />
 
+        <!-- 멤버 정보 수정 -->
+        <MemberInfo v-if="currentComponent === 'MemberInfo'" />
+
         <!-- 요구사항 추적 매트릭스 -->
         <ViewMatrix v-if="currentComponent === 'ProjectMatrix'" />
       </main>
@@ -26,8 +29,9 @@
 import { ref } from "vue";
 import DetailsSidebar from "./DetailsSidebar.vue";
 import ProjectInfo from "./project_detail/ProjectInfo.vue";
-import ViewMatrix from "./view_matrix/ViewMatrix.vue";
+import ViewMatrix from "../settings/view_matrix/ViewMatrix.vue";
 import SettingsHeader from "../settings/SettingsHeader.vue";
+import MemberInfo from "./member_info/MemberInfo.vue";
 
 const props = defineProps({
   projectId: {
