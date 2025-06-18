@@ -115,7 +115,7 @@
               <polyline points="17 21 17 13 7 13 7 21" />
               <polyline points="7 3 7 8 15 8" />
             </svg>
-            <span>저장 ({{ modifiedRows.size }})</span>
+            <span>수정 요청 ({{ modifiedRows.size }})</span>
           </button>
           <button
             @click="cancelChanges"
@@ -270,6 +270,7 @@ function setRowHeightLevel(level) {
     gridApi.value.resetRowHeights();
   }
 }
+const fullList = ref([]);
 
 // 컬럼 정의
 const columnDefs = ref([
@@ -486,6 +487,7 @@ function transformApiDataToTableData(apiData) {
       ? item.createdDate.replace(/-/g, ".")
       : "";
 
+    // Store raw values for type, priority, and difficulty
     return {
       reqPk: item.reqPk,
       reqIdCode: item.reqIdCode,
@@ -744,11 +746,13 @@ async function loadDataFromAPI() {
     if (!Array.isArray(apiData) || apiData.length === 0) {
       console.warn("검색 결과가 없습니다.");
       rowData.value = [];
+      fullList.value = [];
       return;
     }
 
     const transformedData = transformApiDataToTableData(apiData);
     rowData.value = transformedData;
+    fullList.value = transformedData;
     modifiedRows.value.clear();
 
     console.log("데이터 로드 완료:", transformedData);

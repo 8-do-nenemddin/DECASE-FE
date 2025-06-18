@@ -1,7 +1,11 @@
 <template>
   <!-- 프로젝트 참여 여부 모달 -->
   <Transition name="modal-fade">
-    <div v-if="showParticipationModal" class="modal-overlay" @click="closeParticipationModal">
+    <div
+      v-if="showParticipationModal"
+      class="modal-overlay"
+      @click="closeParticipationModal"
+    >
       <div class="modal-container" @click.stop>
         <div class="modal-header">
           <div class="modal-icon participation-icon">
@@ -12,13 +16,13 @@
             <span class="close-icon">✕</span>
           </button>
         </div>
-        
+
         <div class="modal-body">
           <p class="modal-message participation-message">
             {{ projectData.name }} 에 참여하시겠습니까?
           </p>
         </div>
-        
+
         <div class="modal-actions">
           <button @click="acceptParticipation" class="accept-button">
             <span class="accept-icon">✓</span>
@@ -41,15 +45,15 @@ import { useRoute } from "vue-router";
 const props = defineProps({
   token: {
     type: String,
-    required: true
-  }
+    required: true,
+  },
 });
 
 const showParticipationModal = ref(false);
 
 const projectData = reactive({
   name: "",
-  projectId: ""
+  projectId: "",
 });
 
 const route = useRoute();
@@ -58,7 +62,9 @@ const inviteToken = props.token || route.params.token;
 
 onMounted(async () => {
   try {
-    const res = await fetch(`http://localhost:8080/api/v1/projects/members/invitation/${inviteToken}`);
+    const res = await fetch(
+      `/api/v1/projects/members/invitation/${inviteToken}`
+    );
     if (!res.ok) throw new Error("초대 정보 로드 실패");
 
     const result = await res.json();
@@ -84,48 +90,53 @@ const closeParticipationModal = () => {
 
 const acceptParticipation = async () => {
   try {
-    const res = await fetch(`http://localhost:8080/api/v1/projects/invitation?token=${inviteToken}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
+    const res = await fetch(
+      `/api/v1/projects/invitation?token=${inviteToken}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
       }
-    });
+    );
 
     const result = await res.json();
     console.log(result);
 
     // joined: false이면 회원가입 안내
-    if (!res.ok ) {
-      alert('잘못된 접근입니다.');
-    }
-    else if (result.data.joined === false) {
-      alert('회원가입을 먼저 진행해주세요.');
+    if (!res.ok) {
+      alert("잘못된 접근입니다.");
+    } else if (result.data.joined === false) {
+      alert("회원가입을 먼저 진행해주세요.");
     } else {
-      alert('프로젝트 참여 완료되었습니다. 로그인 해주세요.');
+      alert("프로젝트 참여 완료되었습니다. 로그인 해주세요.");
     }
 
     // 성공 시 홈으로 이동
-    window.location.href = 'http://localhost:5173/home';
+    window.location.href = "/home";
   } catch (err) {
     console.error(err);
-    alert('프로젝트 참여에 실패했습니다.');
+    alert("프로젝트 참여에 실패했습니다.");
   }
 };
 
-
 const declineParticipation = () => {
   showParticipationModal.value = false;
-  
+
   // 사용자에게 확인 메시지 표시
-  if (confirm('창을 닫으시겠습니까? (창이 자동으로 닫히지 않으면 직접 닫아주세요)')) {
+  if (
+    confirm(
+      "창을 닫으시겠습니까? (창이 자동으로 닫히지 않으면 직접 닫아주세요)"
+    )
+  ) {
     try {
       window.close();
     } catch (e) {
-      alert('창을 직접 닫아주세요. (Ctrl+W 또는 탭 닫기 버튼)');
+      alert("창을 직접 닫아주세요. (Ctrl+W 또는 탭 닫기 버튼)");
     }
   } else {
     // 사용자가 취소한 경우 홈으로 이동
-    window.location.href = 'http://localhost:5173/home';
+    window.location.href = "/";
   }
 };
 </script>
@@ -164,7 +175,8 @@ const declineParticipation = () => {
 .modal-container {
   background: white;
   border-radius: 16px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
   max-width: 400px;
   width: 100%;
   overflow: hidden;
