@@ -2,59 +2,61 @@
   <div class="m-project-content-container">
     <!-- 각 컴포넌트를 wrapper로 감싸서 전체 너비 보장 -->
     <div class="m-content-wrapper">
-      <!-- 1. selectedFile이 있는 경우 -->
-      <template v-if="selectedFile">
-        <AsIsReportContent
-          v-if="selectedFile.type === 'as-is'"
-          :docId="selectedFile.docId"
-          :file="selectedFile.file"
-        />
-        <UploadContent
-          v-else-if="selectedFile.type === 'uploaded'"
-          :docId="selectedFile.docId"
-          :file="selectedFile.file"
-        />
-        <RequirementsContent
-          v-else-if="selectedFile.type === 'generated'"
-          ref="requirementsContentRef"
-          :projectId="selectedFile.projectId"
-          :revision="
-            projectStore.projectRevision >= 1
-              ? projectStore.projectRevision
-              : selectedFile.revision
-          "
-          @mockupFileSelected="handleMockupFileSelected"
-        />
+      <!-- Mockup 파일이 활성화된 경우 -->
+      <template v-if="activeMockupFile">
+        <MockUpViewContent :activeFile="activeMockupFile" />
       </template>
-      <!-- 2. selectedFile이 없는 경우 -->
+      <!-- Mockup 파일이 활성화되지 않은 경우 -->
       <template v-else>
-        <!-- 2-1. PROCESSING 상태 -->
-        <template v-if="srsStatus === 'PROCESSING'">
-          <GeneratingContent />
-        </template>
-        <!-- 2-2. FAILED 상태 -->
-        <template v-else-if="srsStatus === 'FAILED'">
-          <SrsFailedContent :message="srsMessage" @retry="handleRetry" />
-        </template>
-        <!-- 2-3. revision >= 1: 요구사항 정의서 화면 -->
-        <template v-else-if="projectStore.projectRevision >= 1">
+        <!-- 1. selectedFile이 있는 경우 -->
+        <template v-if="selectedFile">
+          <AsIsReportContent
+            v-if="selectedFile.type === 'as-is'"
+            :docId="selectedFile.docId"
+            :file="selectedFile.file"
+          />
+          <UploadContent
+            v-else-if="selectedFile.type === 'uploaded'"
+            :docId="selectedFile.docId"
+            :file="selectedFile.file"
+          />
           <RequirementsContent
+            v-else-if="selectedFile.type === 'generated'"
             ref="requirementsContentRef"
-            :projectId="projectStore.projectId"
-            :revision="projectStore.projectRevision"
+            :projectId="selectedFile.projectId"
+            :revision="
+              projectStore.projectRevision >= 1
+                ? projectStore.projectRevision
+                : selectedFile.revision
+            "
             @mockupFileSelected="handleMockupFileSelected"
           />
         </template>
-        <!-- 2-4. revision === 0: RFP 업로드 화면 -->
+        <!-- 2. selectedFile이 없는 경우 -->
         <template v-else>
-          <BasicContent />
+          <!-- 2-1. PROCESSING 상태 -->
+          <template v-if="srsStatus === 'PROCESSING'">
+            <GeneratingContent />
+          </template>
+          <!-- 2-2. FAILED 상태 -->
+          <template v-else-if="srsStatus === 'FAILED'">
+            <SrsFailedContent :message="srsMessage" @retry="handleRetry" />
+          </template>
+          <!-- 2-3. revision >= 1: 요구사항 정의서 화면 -->
+          <template v-else-if="projectStore.projectRevision >= 1">
+            <RequirementsContent
+              ref="requirementsContentRef"
+              :projectId="projectStore.projectId"
+              :revision="projectStore.projectRevision"
+              @mockupFileSelected="handleMockupFileSelected"
+            />
+          </template>
+          <!-- 2-4. revision === 0: RFP 업로드 화면 -->
+          <template v-else>
+            <BasicContent />
+          </template>
         </template>
       </template>
-      <!-- 3. mockup 파일은 항상 별도 분기 -->
-      <MockUpViewContent
-        v-if="activeMockupFile"
-        :activeFile="activeMockupFile"
-      />
     </div>
   </div>
 </template>
@@ -118,13 +120,13 @@ const clearSelection = () => {
 const activeMockupFile = ref(null);
 
 const handleMockupFileSelected = (file) => {
-  console.log("ProjectContent received mockup file:", file); // 디버깅용 로그 추가
+  console.log("ProjectContent received mockup file:", file);
   selectedFile.value = null; // 기존 선택된 파일 초기화
   activeMockupFile.value = {
-    ...file,
-    code: "", // 코드는 MockUpViewContent에서 직접 불러올 것입니다
+    name: file.name,
+    revision: file.revision,
   };
-  console.log("Updated activeMockupFile:", activeMockupFile.value); // 디버깅용 로그 추가
+  console.log("Updated activeMockupFile:", activeMockupFile.value);
 };
 
 const srsStatus = ref(null); // "PROCESSING", "FAILED", "SUCCESS" 등
