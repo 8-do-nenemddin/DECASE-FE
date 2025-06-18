@@ -4,19 +4,17 @@
       <div class="header-section">
         <div class="content-info">
           <h2 class="content-title">
-            <span>
-
-            </span>
+            <span> </span>
             <svg
-                width="23"
-                height="23"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
+              width="23"
+              height="23"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
             >
               <path
-                  d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
               ></path>
               <polyline points="14 2 14 8 20 8"></polyline>
               <line x1="16" y1="13" x2="8" y2="13"></line>
@@ -143,6 +141,10 @@
       </div>
     </div>
 
+    <div v-if="rowDeleteError" class="modification-notice" style="background-color: #fef3c7; border: 1px solid #f59e0b; color: #92400e;">
+      ⚠️ {{ rowDeleteError }}
+    </div>
+
     <div v-if="modifiedRows.size > 0" class="modification-notice">
       ⚠️ {{ modifiedRows.size }}개의 행이 수정되었습니다. 저장하기 전에 모든
       수정 사유를 입력해주세요. 수정 사유는 변경 이력에 자동 반영됩니다.
@@ -153,6 +155,58 @@
     <div v-if="error" class="error-notice">
       ❌ {{ error }}
       <button @click="loadDataFromAPI" class="retry-button">다시 시도</button>
+    </div>
+
+    <!-- 행 높이 조절 버튼: 표 바로 위에 위치 -->
+    <div
+      class="row-height-buttons"
+      style="
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        justify-content: flex-end;
+        margin-bottom: 8px;
+        margin-top: 8px;
+        margin-right: 10px;
+      "
+    >
+      <button
+        :class="{ active: rowHeightLevel === 1 }"
+        @click="setRowHeightLevel(1)"
+        title="좁게"
+        style="background: none; border: none; cursor: pointer"
+      >
+        <svg width="24" height="24">
+          <rect x="4" y="6" width="16" height="2" rx="1" fill="#3b82f6" />
+          <rect x="4" y="10" width="16" height="2" rx="1" fill="#3b82f6" />
+          <rect x="4" y="14" width="16" height="2" rx="1" fill="#3b82f6" />
+          <rect x="4" y="18" width="16" height="2" rx="1" fill="#3b82f6" />
+        </svg>
+      </button>
+      <button
+        :class="{ active: rowHeightLevel === 2 }"
+        @click="setRowHeightLevel(2)"
+        title="중간"
+        style="background: none; border: none; cursor: pointer"
+      >
+        <svg width="24" height="24">
+          <rect x="4" y="5" width="16" height="4" rx="1.5" fill="#3b82f6" />
+          <rect x="4" y="11" width="16" height="4" rx="1.5" fill="#3b82f6" />
+          <rect x="4" y="17" width="16" height="4" rx="1.5" fill="#3b82f6" />
+        </svg>
+      </button>
+      <button
+        :class="{ active: rowHeightLevel === 3 }"
+        @click="setRowHeightLevel(3)"
+        title="넓게"
+        style="background: none; border: none; cursor: pointer"
+      >
+        <svg width="24" height="24">
+          <rect x="4" y="4" width="16" height="5" rx="2.5" fill="#3b82f6" />
+          <rect x="4" y="11" width="16" height="5" rx="2.5" fill="#3b82f6" />
+          <rect x="4" y="18" width="16" height="5" rx="2.5" fill="#3b82f6" />
+        </svg>
+      </button>
     </div>
 
     <div class="grid-wrapper" v-if="!error">
@@ -206,7 +260,22 @@ const modifiedRows = ref(new Set());
 const searchParams = ref(null);
 const mockupExists = ref(true); // 초기값은 false
 const gridApi = ref(null);
+const rowHeightLevel = ref(1); // 1: 작게, 2: 중간, 3: 크게
+
+const rowHeightOptions = {
+  1: 28, // 글자 1개 높이
+  2: 200, // 문장 3개 정도
+  3: 500, // 글자 10개 정도
+};
+
+function setRowHeightLevel(level) {
+  rowHeightLevel.value = level;
+  if (gridApi.value) {
+    gridApi.value.resetRowHeights();
+  }
+}
 const fullList = ref([]);
+const rowDeleteError = ref("");
 
 // 컬럼 정의
 const columnDefs = ref([
@@ -314,22 +383,6 @@ const columnDefs = ref([
     width: 50,
   },
   {
-    field: "managementStatus",
-    headerName: "관리\n구분",
-    editable: true,
-    cellEditor: "agSelectCellEditor",
-    cellEditorParams: {
-      values: ["등록", "삭제"],
-    },
-    width: 50,
-    cellStyle: (params) => {
-      if (params.value === "삭제") {
-        return { backgroundColor: "#ffebee", color: "#c62828" };
-      }
-      return { backgroundColor: "#e8f5e8", color: "#2e7d32" };
-    },
-  },
-  {
     field: "modificationHistory",
     headerName: "변경이력",
     editable: true,
@@ -360,6 +413,18 @@ const columnDefs = ref([
       return null;
     },
   },
+  {
+    field: "actions",
+    headerName: "행 삭제",
+    width: 120,
+    cellRenderer: (params) => {
+      return `
+      <button class="row-delete-button" data-reqpk="${params.data.reqPk}">
+        삭제
+      </button>
+    `;
+    },
+  },
 ]);
 
 // 기본 컬럼 설정
@@ -379,7 +444,7 @@ const gridOptions = {
   stopEditingWhenCellsLoseFocus: true,
   rowSelection: "multiple",
   animateRows: true,
-  getRowHeight: () => 60, //행높이
+  getRowHeight: () => rowHeightOptions[rowHeightLevel.value],
 };
 
 // 그리드 준비 완료 시
@@ -389,6 +454,14 @@ function onGridReady(params) {
   // 그리드가 준비된 후에 데이터 로드
   nextTick(() => {
     loadDataFromAPI();
+  });
+
+  // ✅ 행 삭제 버튼 클릭 이벤트 처리
+  params.api.addEventListener('cellClicked', (event) => {
+    if (event.colDef.field === 'actions' && event.event.target?.classList.contains('row-delete-button')) {
+      const reqPk = event.data.reqPk;
+      handleRowDelete(reqPk);
+    }
   });
 }
 
@@ -428,17 +501,26 @@ function transformApiDataToTableData(apiData) {
       reqPk: item.reqPk,
       reqIdCode: item.reqIdCode,
       revisionCount: item.revisionCount,
-      type: item.type, // "FR" or "NFR"
+      type: item.type === "FR" ? "기능" : "비기능",
       level1: item.level1 || "",
       level2: item.level2 || "",
       level3: item.level3 || "",
       name: item.name || "",
       description: item.description || "",
-      priority: item.priority, // "HIGH" | "MIDDLE" | "LOW"
-      difficulty: item.difficulty, // "HIGH" | "MIDDLE" | "LOW"
+      priority:
+        item.priority === "HIGH"
+          ? "상"
+          : item.priority === "MIDDLE"
+          ? "중"
+          : "하",
+      difficulty:
+        item.difficulty === "HIGH"
+          ? "상"
+          : item.difficulty === "MIDDLE"
+          ? "중"
+          : "하",
       sourcesDisplay: sourcesDisplay,
       sourceIds: sourceIds,
-      managementStatus: item.isDeleted ? "삭제" : "등록",
       modificationHistory: modificationHistory,
       lastModifiedDate: lastModifiedDate,
       modification_reason: "",
@@ -449,27 +531,132 @@ function transformApiDataToTableData(apiData) {
   });
 }
 
-// 검색 이벤트 핸들러 (로컬에서 필터링, API 호출하지 않음)
-const handleSearch = (params) => {
-  loading.value = true;
+// 검색 이벤트 핸들러
+const handleSearch = async (params) => {
   try {
-    rowData.value = fullList.value.filter(item => {
-      const nameMatch = !params.query || item.name.includes(params.query);
-      const level1Match = !params.level1 || item.level1 === params.level1;
-      const level2Match = !params.level2 || item.level2 === params.level2;
-      const level3Match = !params.level3 || item.level3 === params.level3;
-      // Use raw values for type/priority/difficulty
-      const typeMatch = !params.type || item.type === params.type;
-      const priorityMatch = !params.priority || item.priority === params.priority;
-      const difficultyMatch = !params.difficulty || item.difficulty === params.difficulty;
-      const docTypeMatch = !params.docType?.length || item._originalApiData.sources?.some(source =>
-        params.docType.some(prefix => source.docId?.startsWith(prefix))
-      );
-      return nameMatch && level1Match && level2Match && level3Match &&
-             typeMatch && priorityMatch && difficultyMatch && docTypeMatch;
+    loading.value = true;
+    error.value = null;
+    searchParams.value = params;
+
+    if (!props.projectId || !props.revision) {
+      error.value = "프로젝트 ID 또는 리비전 정보가 없습니다.";
+      return;
+    }
+
+    // 검색 파라미터 상세 로깅
+    console.log("=== 검색 파라미터 상세 정보 ===");
+    console.log("1. 기본 정보:");
+    console.log("- 프로젝트 ID:", props.projectId);
+    console.log("- 리비전:", props.revision);
+    console.log("2. 검색 조건:");
+    console.log("- 검색어:", params.query);
+    console.log("- 대분류:", params.level1);
+    console.log("- 중분류:", params.level2);
+    console.log("- 소분류:", params.level3);
+    console.log("- 유형:", params.type);
+    console.log("- 중요도:", params.priority);
+    console.log("- 난이도:", params.difficulty);
+    console.log("- 문서 유형:", params.docType);
+    console.log("3. 전체 파라미터 객체:", params);
+
+    const queryParams = new URLSearchParams();
+    if (params.query) queryParams.append("query", params.query);
+    if (params.level1) queryParams.append("level1", params.level1);
+    if (params.level2) queryParams.append("level2", params.level2);
+    if (params.level3) queryParams.append("level3", params.level3);
+
+    // type 파라미터 처리 (0: 기능, 1: 비기능)
+    if (params.type !== undefined && params.type !== null) {
+      queryParams.append("type", params.type);
+    }
+
+    // difficulty 파라미터 처리 (0: 상, 1: 중, 2: 하)
+    if (params.difficulty !== undefined && params.difficulty !== null) {
+      queryParams.append("difficulty", params.difficulty);
+    }
+
+    // priority 파라미터 처리 (0: 상, 1: 중, 2: 하)
+    if (params.priority !== undefined && params.priority !== null) {
+      queryParams.append("priority", params.priority);
+    }
+
+    if (params.docType && Array.isArray(params.docType)) {
+      params.docType.forEach((type) => queryParams.append("docType", type));
+    }
+
+    // 리비전 정보 추가
+    queryParams.append("revisionCount", props.revision);
+
+    const apiUrl = `/api/v1/projects/${
+      props.projectId
+    }/documents/search?${queryParams.toString()}`;
+
+    // API URL 로깅
+    console.log("=== API 요청 정보 ===");
+    console.log("1. 요청 URL:", apiUrl);
+    console.log("2. 쿼리 파라미터:");
+    for (const [key, value] of queryParams.entries()) {
+      console.log(`- ${key}: ${value}`);
+    }
+
+    const response = await fetch(apiUrl, {
+      method: "GET",
+      headers: {
+        Accept: "*/*",
+        "Content-Type": "application/json",
+      },
+      credentials: "include", // 쿠키 포함
     });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("API Error Response:", errorText);
+      throw new Error(`검색 요청이 실패했습니다. (${response.status})`);
+    }
+
+    const responseData = await response.json();
+    console.log("Search API Response:", responseData);
+
+    // 응답 데이터 구조 확인 및 처리
+    let apiData;
+    if (responseData && responseData.data) {
+      apiData = responseData.data;
+    } else if (Array.isArray(responseData)) {
+      apiData = responseData;
+    } else {
+      console.error("예상치 못한 응답 구조:", responseData);
+      throw new Error("응답 데이터 구조가 올바르지 않습니다.");
+    }
+
+    if (!Array.isArray(apiData) || apiData.length === 0) {
+      console.warn("검색 결과가 없습니다.");
+      rowData.value = [];
+      return;
+    }
+
+    // 데이터 변환 및 그리드 업데이트
+    const transformedData = transformApiDataToTableData(apiData);
+    console.log("변환된 데이터:", transformedData);
+
+    // rowData를 먼저 업데이트
+    rowData.value = transformedData;
+    modifiedRows.value.clear();
+
+    // gridApi가 준비되었는지 확인하고 데이터 설정
+    await nextTick();
+    if (gridApi.value && typeof gridApi.value.setRowData === "function") {
+      gridApi.value.setRowData(transformedData);
+      gridApi.value.refreshCells();
+      gridApi.value.sizeColumnsToFit();
+    } else {
+      console.warn("AG Grid가 아직 초기화되지 않았습니다.");
+    }
+
+    console.log("검색 결과 로드 완료. 결과 수:", transformedData.length);
   } catch (err) {
-    console.error("검색 오류", err);
+    console.error("❌ 검색 실패:", err);
+    error.value = err.message || "검색 중 오류가 발생했습니다.";
+    rowData.value = [];
   } finally {
     loading.value = false;
   }
@@ -486,7 +673,37 @@ async function loadDataFromAPI() {
   error.value = null;
 
   try {
-    let apiUrl = `/api/v1/projects/${props.projectId}/requirements/generated?revisionCount=${props.revision}`;
+    let apiUrl;
+    if (searchParams.value) {
+      // 검색 파라미터가 있는 경우 검색 API 사용
+      const queryParams = new URLSearchParams();
+      if (searchParams.value.query)
+        queryParams.append("query", searchParams.value.query);
+      if (searchParams.value.level1)
+        queryParams.append("level1", searchParams.value.level1);
+      if (searchParams.value.level2)
+        queryParams.append("level2", searchParams.value.level2);
+      if (searchParams.value.level3)
+        queryParams.append("level3", searchParams.value.level3);
+      if (searchParams.value.type)
+        queryParams.append("type", searchParams.value.type);
+      if (searchParams.value.difficulty)
+        queryParams.append("difficulty", searchParams.value.difficulty);
+      if (searchParams.value.priority)
+        queryParams.append("priority", searchParams.value.priority);
+      if (searchParams.value.docType) {
+        searchParams.value.docType.forEach((type) =>
+          queryParams.append("docType", type)
+        );
+      }
+
+      apiUrl = `/api/v1/projects/${
+        props.projectId
+      }/documents/search?${queryParams.toString()}`;
+    } else {
+      // 일반 요구사항 로드
+      apiUrl = `/api/v1/projects/${props.projectId}/requirements/generated?revisionCount=${props.revision}`;
+    }
 
     console.log("API URL:", apiUrl);
 
@@ -591,6 +808,12 @@ function saveChanges() {
   if (modifiedRowsData.length === 0) {
     return;
   }
+  // 수정 사유가 비어있는 행이 있는지 검사
+  const rowsWithoutReason = modifiedRowsData.filter((row) => !row.modification_reason || row.modification_reason.trim() === "");
+  if (rowsWithoutReason.length > 0) {
+    alert(`수정 사유가 입력되지 않은 행이 ${rowsWithoutReason.length}개 있습니다. 모든 수정 사유를 입력해주세요.`);
+    return;
+  }
   saveBulkChanges(modifiedRowsData);
 }
 
@@ -613,7 +836,6 @@ async function saveBulkChanges(modifiedData) {
         difficulty: priorityMap[row.difficulty] || row.difficulty,
         name: row.name,
         description: row.description,
-        deleted: row.managementStatus === "삭제",
         modReason: row.modification_reason,
       };
 
@@ -680,14 +902,6 @@ function cancelChanges() {
     console.log("모든 변경사항이 취소되었습니다.");
   }
 }
-
-// function createMockup() {
-//   console.log(mockupExists.value)
-//   if (mockupExists.value === false) {
-//     console.log("....")
-//     mockupExists.value = true;
-//   }
-// }
 
 async function createMockup() {
   loading.value = true;
@@ -833,23 +1047,23 @@ const updateColumnDefs = () => {
       width: 140,
       pinned: "left",
     },
-  {
-    field: "type",
-    headerName: "요구사항\n 유형",
-    editable: true,
-    width: 50,
-    cellEditor: "agSelectCellEditor",
-    cellEditorParams: {
-      values: ["기능", "비기능"],
+    {
+      field: "type",
+      headerName: "요구사항\n 유형",
+      editable: true,
+      width: 50,
+      cellEditor: "agSelectCellEditor",
+      cellEditorParams: {
+        values: ["기능", "비기능"],
+      },
+      valueFormatter: (params) => {
+        return params.value === "FR"
+          ? "기능"
+          : params.value === "NFR"
+          ? "비기능"
+          : params.value;
+      },
     },
-    valueFormatter: (params) => {
-      return params.value === "FR"
-        ? "기능"
-        : params.value === "NFR"
-        ? "비기능"
-        : params.value;
-    },
-  },
     {
       field: "level1",
       headerName: "대분류",
@@ -896,34 +1110,34 @@ const updateColumnDefs = () => {
       cellEditor: "agLargeTextCellEditor",
       cellEditorPopup: true,
     },
-  {
-    field: "priority",
-    headerName: "중요도",
-    editable: true,
-    width: 50,
-    cellEditor: "agSelectCellEditor",
-    cellEditorParams: {
-      values: ["상", "중", "하"],
+    {
+      field: "priority",
+      headerName: "중요도",
+      editable: true,
+      width: 50,
+      cellEditor: "agSelectCellEditor",
+      cellEditorParams: {
+        values: ["상", "중", "하"],
+      },
+      valueFormatter: (params) => {
+        const priorityMap = { HIGH: "상", MIDDLE: "중", LOW: "하" };
+        return priorityMap[params.value] || params.value;
+      },
     },
-    valueFormatter: (params) => {
-      const priorityMap = { HIGH: "상", MIDDLE: "중", LOW: "하" };
-      return priorityMap[params.value] || params.value;
+    {
+      field: "difficulty",
+      headerName: "난이도",
+      editable: true,
+      width: 50,
+      cellEditor: "agSelectCellEditor",
+      cellEditorParams: {
+        values: ["상", "중", "하"],
+      },
+      valueFormatter: (params) => {
+        const difficultyMap = { HIGH: "상", MIDDLE: "중", LOW: "하" };
+        return difficultyMap[params.value] || params.value;
+      },
     },
-  },
-  {
-    field: "difficulty",
-    headerName: "난이도",
-    editable: true,
-    width: 50,
-    cellEditor: "agSelectCellEditor",
-    cellEditorParams: {
-      values: ["상", "중", "하"],
-    },
-    valueFormatter: (params) => {
-      const difficultyMap = { HIGH: "상", MIDDLE: "중", LOW: "하" };
-      return difficultyMap[params.value] || params.value;
-    },
-  },
     {
       field: "sourcesDisplay",
       headerName: "출처",
@@ -940,22 +1154,6 @@ const updateColumnDefs = () => {
       headerName: "출처 ID",
       editable: true,
       width: 50,
-    },
-    {
-      field: "managementStatus",
-      headerName: "관리\n구분",
-      editable: true,
-      cellEditor: "agSelectCellEditor",
-      cellEditorParams: {
-        values: ["등록", "삭제"],
-      },
-      width: 50,
-      cellStyle: (params) => {
-        if (params.value === "삭제") {
-          return { backgroundColor: "#ffebee", color: "#c62828" };
-        }
-        return { backgroundColor: "#e8f5e8", color: "#2e7d32" };
-      },
     },
     {
       field: "modificationHistory",
@@ -1026,17 +1224,63 @@ defineExpose({
 
 // 목업 보기 함수 추가
 const viewMockup = () => {
-  // 부모 컴포넌트에 목업 파일 선택 이벤트 발생
-  emit("mockupFileSelected", {
+  console.log("목업 보기 버튼 클릭됨");
+  const mockupData = {
     name: "index.html",
     revision: props.revision,
-  });
+  };
+  console.log("발생할 이벤트 데이터:", mockupData);
+  emit("mockupFileSelected", mockupData);
 };
 
 // 컴포넌트 언마운트 시 gridApi 초기화
 onUnmounted(() => {
   gridApi.value = null;
 });
+
+async function handleRowDelete(reqPk) {
+  // Find the row in rowData by reqPk
+  const row = rowData.value.find(item => item.reqPk === reqPk);
+  if (!row) {
+    rowDeleteError.value = "행 데이터를 찾을 수 없습니다.";
+    return;
+  }
+
+  const reason = row.modification_reason;
+  if (!reason || reason.trim() === "") {
+    row.isModified = true; // isModified를 true로 설정하여 cellStyle 반영
+    rowDeleteError.value = "삭제하려면 수정 이유를 먼저 입력해주세요.";
+    if (gridApi.value && typeof row.rowIndex !== "undefined") {
+      gridApi.value.refreshCells({
+        rowNodes: [gridApi.value.getRowNode(row.rowIndex)],
+        columns: ["modification_reason"],
+      });
+    }
+    return;
+  }
+
+  rowDeleteError.value = ""; // 에러 초기화
+
+  try {
+    const response = await fetch(`/api/v1/projects/${props.projectId}/requirments/${reqPk}/delete`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ reason: reason, memberId: userId }),
+    });
+
+    if (!response.ok) {
+      throw new Error("삭제 요청 실패");
+    }
+
+    alert("요구사항이 삭제되었습니다.");
+    loadDataFromAPI();
+  } catch (err) {
+    console.error("행 삭제 실패:", err);
+    rowDeleteError.value = "요구사항 삭제 중 오류가 발생했습니다.";
+  }
+}
 </script>
 
 <style scoped>
@@ -1408,5 +1652,13 @@ onUnmounted(() => {
   justify-content: center;
   height: 100%;
   width: 100%;
+}
+
+.row-height-buttons button svg rect {
+  fill: #9ca3af !important; /* 기본 색상을 회색으로 설정 */
+}
+
+.row-height-buttons button.active svg rect {
+  fill: #3b82f6 !important; /* 활성화된 버튼만 파란색으로 설정 */
 }
 </style>
