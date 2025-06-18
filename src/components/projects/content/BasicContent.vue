@@ -2,63 +2,45 @@
   <main class="main-content">
     <!-- 추후 수정-->
     <!-- v-if : Project 상태에 따라서 (요구사항 입력 전 / 요구사항 생성중 / 요구사항 생성완료)-->
-    <div
-      class="dual-upload-section"
-      v-if="projectStore.projectRevision === 0 && !isGenerating"
-    >
-      <!-- 첫 번째 업로드 카드 (RFP) -->
-      <div class="upload-card">
-        <h2 class="upload-title">파일 업로드</h2>
-        <p class="upload-subtitle">
-          프로젝트 제안 요청서(RFP) 파일을 업로드해주세요.
-        </p>
-        <div
-          class="upload-zone"
-          :class="{ 'drag-over': isDragOver, uploading: isUploading }"
-          @click="triggerFileInput"
-          @dragover.prevent="handleDragOver"
-          @dragleave.prevent="handleDragLeave"
-          @drop.prevent="handleFileDrop"
-        >
-          <input
-            type="file"
-            ref="fileInput"
-            @change="handleFileChange"
-            accept=".pdf,.doc,.docx,.hwp,.zip"
-            style="display: none"
-          />
-          <div v-if="!selectedFile" class="upload-empty">
-            <div class="upload-icon">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="48"
-                height="48"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                <polyline points="17 8 12 3 7 8" />
-                <line x1="12" y1="3" x2="12" y2="15" />
-              </svg>
-            </div>
-            <p class="upload-placeholder">
-              파일을 드래그하거나 클릭해 선택하세요 <br />
-              <small>PDF 파일 지원 (최대 1GB)</small>
-            </p>
-          </div>
-          <div v-else class="file-preview">
-            <div class="file-icon">✓</div>
-            <div class="file-info">
-              <div class="file-name">{{ selectedFile.name }}</div>
-              <div class="file-size">
-                {{ formatFileSize(selectedFile.size) }}
-              </div>
-            </div>
-            <button @click.stop="clearFile" class="clear-button">삭제</button>
+    <div class="upload-card" v-if="projectStore.projectRevision === 0">
+      <h2 class="upload-title">RFP 파일 업로드</h2>
+      <p class="upload-subtitle">
+        프로젝트 제안 요청서(RFP) 파일을 업로드해주세요.
+      </p>
+
+      <div
+        class="upload-zone"
+        :class="{ 'drag-over': isDragOver, uploading: isUploading }"
+        @click="triggerFileInput"
+        @dragover.prevent="handleDragOver"
+        @dragleave.prevent="handleDragLeave"
+        @drop.prevent="handleFileDrop"
+      >
+        <input
+          type="file"
+          ref="fileInput"
+          @change="handleFileChange"
+          accept=".pdf,.doc,.docx,.hwp,.zip"
+          style="display: none"
+        />
+
+        <div v-if="!selectedFile" class="upload-empty">
+          <div class="upload-icon">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="48"
+              height="48"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="17 8 12 3 7 8" />
+              <line x1="12" y1="3" x2="12" y2="15" />
+            </svg>
           </div>
         </div>
         <button
@@ -160,32 +142,14 @@
     </div>
 
     <!-- 요구사항정의서 생성 중 화면 -->
-    <div class="generating-card" v-if="isGenerating">
-      <div class="generating-content">
-        <div class="generating-icon">
-          <div class="spinner"></div>
-        </div>
-        <h2 class="generating-title">요구사항정의서 생성중입니다</h2>
-        <p class="generating-subtitle">
-          업로드된 RFP 파일을 분석하여 요구사항정의서를 생성하고 있습니다.
-          <br />
-          <strong>약 30분 정도 소요될 예정입니다.</strong>
-        </p>
-        <div class="generating-progress">
-          <div class="pulse-dots">
-            <span></span>
-            <span></span>
-            <span></span>
-          </div>
-        </div>
-      </div>
-    </div>
+    <GeneratingContent v-if="projectStore.projectRevision === 1" />
   </main>
 </template>
 
 <script setup>
-import { ref, watch } from "vue";
+import { ref } from "vue";
 import { useProjectStore } from "/src/stores/projectStore";
+import GeneratingContent from "./GeneratingContent.vue";
 
 const projectStore = useProjectStore();
 
@@ -199,25 +163,6 @@ const isDragOver = ref(false);
 const isUploading = ref(false);
 // 업로드 진행률
 const uploadProgress = ref(0);
-// 요구사항정의서 생성 상태
-const isGenerating = ref(false);
-
-// 추가 파일 업로드용 ref
-const fileInputExtra = ref(null);
-const selectedFileExtra = ref(null);
-const isDragOverExtra = ref(false);
-const isUploadingExtra = ref(false);
-const uploadProgressExtra = ref(0);
-
-// projectRevision 변경 감지
-watch(
-  () => projectStore.projectRevision,
-  (newValue) => {
-    if (newValue === 1) {
-      isGenerating.value = false;
-    }
-  }
-);
 
 // 파일 업로드 영역을 클릭했을 때 숨겨진 input을 클릭시키는 함수
 const triggerFileInput = () => {
@@ -301,7 +246,7 @@ const handleSubmit = async () => {
     const data = await response.json();
 
     clearFile();
-    isGenerating.value = true;
+    // 업로드 성공 후 별도의 isGenerating 상태 관리 없이 projectRevision 값이 바뀌면 화면이 전환됨
   } catch (error) {
     console.error("업로드 실패:", error);
     alert("파일 업로드 중 오류가 발생했습니다.");
