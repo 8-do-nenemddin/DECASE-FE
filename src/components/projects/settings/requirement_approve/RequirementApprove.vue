@@ -13,9 +13,15 @@
       <button @click="loadModifiedRequirements" class="retry-button">다시 시도</button>
     </div>
 
-    <!-- 수정된 요구사항 목록 -->
+    <!-- 수정된 요구사항 목록 또는 비어있음 상태 -->
     <template v-else>
-      <div class="main-content" :class="{ 'with-sidebar': showSidebar }">
+      <!-- 요청사항이 없을 때 표시 -->
+      <div v-if="!loading && requirements.length === 0" class="empty-state">
+        <div class="empty-icon">✈️</div>
+        <h3 class="empty-title">요청이 없습니다</h3>
+        <p class="empty-description">아직 수정 또는 삭제 요청이 없습니다.</p>
+      </div>
+      <div v-else class="main-content" :class="{ 'with-sidebar': showSidebar }">
         <div class="table-controls">
           <button @click="bulkApprove" :disabled="selectedRequirements.length === 0" class="bulk-button approve">선택 승인</button>
           <button @click="bulkApprove" class="bulk-button approve">전체 승인</button>
@@ -84,7 +90,7 @@
                   <td colspan="16">
                     <div class="change-details-container">
                       <h4>수정된 항목 상세 비교</h4>
-
+                      <!-- ...상세 비교 동일... -->
                       <div class="change-item" v-if="isChanged(requirement, 'type')">
                         <strong class="change-label">요구사항 유형</strong>
                         <div class="change-content">
@@ -189,7 +195,6 @@
                           <span class="proposed-value">{{ requirement.proposed.reason }}</span>
                         </div>
                       </div>
-
                     </div>
                   </td>
                 </tr>
@@ -373,28 +378,19 @@ const bulkReject = () => {
 // 확인 액션 핸들러
 const confirmActionHandler = async () => {
   processing.value = true;
-
   try {
     if (targetRequirementId.value) {
       // 단일 요구사항 처리
       const action = confirmAction.value === "approve" ? "승인" : "반려";
-
       await fetch(`/api/v1/projects/${projectStore.projectId}/requirements/approve`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify([{ pendingPk: targetRequirementId.value, status: confirmAction.value === "approve" ? 2 : 1 }])
       });
-
-      // 목록에서 제거
-      requirements.value = requirements.value.filter(
-          req => req.id !== targetRequirementId.value
-      );
-
       successMessage.value = `요구사항이 ${action}되었습니다.`;
     } else {
       // 일괄 처리
       const action = confirmAction.value === "approve" ? "승인" : "반려";
-
       await fetch(`/api/v1/projects/${projectStore.projectId}/requirements/approve`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -403,16 +399,11 @@ const confirmActionHandler = async () => {
           status: confirmAction.value === "approve" ? 2 : 1
         })))
       });
-
-      // 목록에서 제거
-      requirements.value = requirements.value.filter(
-          req => !selectedRequirements.value.includes(req.id)
-      );
-
       successMessage.value = `${selectedRequirements.value.length}개의 요구사항이 ${action}되었습니다.`;
       selectedRequirements.value = [];
     }
-
+    // 승인/반려 후 목록 새로고침
+    await loadModifiedRequirements();
     showConfirmModal.value = false;
     showSuccessModal.value = true;
   } catch (err) {
@@ -662,5 +653,24 @@ const toggleRow = (id) => {
   width: 100px;
   white-space: nowrap;
   text-align: center;
+}
+</style>
+<style scoped>
+.empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #6b7280;
+}
+.empty-icon {
+  font-size: 40px;
+  margin-bottom: 1rem;
+}
+.empty-title {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+.empty-description {
+  font-size: 14px;
 }
 </style>
