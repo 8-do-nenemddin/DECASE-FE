@@ -29,9 +29,9 @@
         </div>
         <div class="action-buttons">
           <button
-            v-if="mockupExists"
-            @click="viewMockup"
-            class="mockup-button-view"
+            v-if="mockupStatus === 'PROCESSING'"
+            class="mockup-button"
+            disabled
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -48,10 +48,10 @@
               <line x1="8" y1="21" x2="16" y2="21" />
               <line x1="12" y1="17" x2="12" y2="21" />
             </svg>
-            <span>목업 보러가기</span>
+            <span>목업 생성중</span>
           </button>
           <button
-            v-if="!mockupExists"
+            v-else-if="!mockupExists"
             @click="createMockup"
             class="mockup-button"
             :disabled="loading"
@@ -72,6 +72,24 @@
               <line x1="12" y1="17" x2="12" y2="21" />
             </svg>
             <span>목업 생성</span>
+          </button>
+          <button v-else @click="viewMockup" class="mockup-button-view">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+              <line x1="8" y1="21" x2="16" y2="21" />
+              <line x1="12" y1="17" x2="12" y2="21" />
+            </svg>
+            <span>목업 보러가기</span>
           </button>
           <button
             @click="downloadRequirements"
@@ -269,6 +287,7 @@ const searchParams = ref(null);
 const mockupExists = ref(true); // 초기값은 false
 const gridApi = ref(null);
 const rowHeightLevel = ref(1); // 1: 작게, 2: 중간, 3: 크게
+const mockupStatus = ref(null); // 목업 생성 상태: PROCESSING, FAILED, SUCCESS 등
 
 const rowHeightOptions = {
   1: 28, // 글자 1개 높이
@@ -907,10 +926,54 @@ function cancelChanges() {
   }
 }
 
+// 목업 생성 상태 조회 함수
+async function fetchMockupJobStatus() {
+  try {
+    const response = await fetch(
+      `/ai/api/v1/mockup/job/status?project_id=${props.projectId}`
+    );
+    console.log("목업 상태 조회 응답:", response);
+    if (!response.ok) throw new Error("상태 조회 실패");
+    const data = await response.json();
+    return data.status;
+  } catch (e) {
+    console.error("목업 상태 조회 실패:", e);
+    return null;
+  }
+}
+
+// 목업 상태 체크 함수
+async function checkMockupStatus() {
+  const status = await fetchMockupJobStatus();
+  mockupStatus.value = status;
+  if (status === "PROCESSING") {
+    loading.value = true;
+  } else {
+    loading.value = false;
+  }
+  if (status === "FAILED") {
+    alert("목업 생성 실패. 다시 목업 생성 요청해주세요.");
+  }
+}
+
 async function createMockup() {
   loading.value = true;
-
   try {
+    // 목업 생성 요청 전 상태 확인
+    const status = await fetchMockupJobStatus();
+    if (status === "PROCESSING") {
+      alert("목업 생성이 진행중입니다. 잠시만 기다려주세요.");
+      loading.value = false;
+      mockupStatus.value = status;
+      return;
+    }
+    if (status === "FAILED") {
+      alert("목업 생성 실패. 다시 시도해주세요.");
+      loading.value = false;
+      mockupStatus.value = status;
+      return;
+    }
+    // 실제 목업 생성 요청
     const response = await fetch(
       `/api/v1/projects/${props.projectId}/mockups/${props.revision}`,
       {
@@ -921,16 +984,13 @@ async function createMockup() {
         },
       }
     );
-
     if (!response.ok) {
       throw new Error("목업 생성 요청이 실패했습니다.");
     }
-
     // 2초 대기
     await new Promise((resolve) => setTimeout(resolve, 2000));
-
     alert("목업 생성이 시작되었습니다. 약 30분 정도 소요될 예정입니다.");
-    mockupExists.value = true;
+    mockupStatus.value = "PROCESSING";
   } catch (error) {
     console.error("목업 생성 실패:", error);
     alert("목업 생성 중 오류가 발생했습니다.");
@@ -1212,6 +1272,7 @@ watch(
       if (gridApi.value) {
         fetchCategories(); // 카테고리 먼저 가져오기
         loadDataFromAPI();
+        checkMockupStatus(); // 프로젝트/리비전 변경 시 상태도 다시 체크
       }
     }
   },
@@ -1224,6 +1285,7 @@ onMounted(() => {
     revision: props.revision,
   });
   fetchCategories(); // 초기 카테고리 로드
+  checkMockupStatus(); // 목업 상태 체크
 });
 
 // 컴포넌트 정의
