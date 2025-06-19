@@ -226,7 +226,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch, reactive, onUnmounted, nextTick } from "vue";
+import { ref, onMounted, watch, computed, onUnmounted, nextTick, reactive } from "vue";
 import { AgGridVue } from "ag-grid-vue3";
 import { ModuleRegistry, AllCommunityModule } from "ag-grid-community";
 import "ag-grid-community/styles/ag-grid.css";
@@ -234,16 +234,13 @@ import "ag-grid-community/styles/ag-theme-alpine.css";
 import { useProjectStore } from "/src/stores/projectStore.js";
 
 const projectStore = useProjectStore();
-const userId = projectStore.userId;
+const userId = computed(() => projectStore.userId);
+const projectId = computed(() => projectStore.projectId);
 
 // AG Grid 모듈 등록
 ModuleRegistry.registerModules([AllCommunityModule]);
 
 const props = defineProps({
-  projectId: {
-    type: String,
-    required: true,
-  },
   revision: {
     type: Number,
     required: true,
@@ -261,6 +258,11 @@ const searchParams = ref(null);
 const mockupExists = ref(true); // 초기값은 false
 const gridApi = ref(null);
 const rowHeightLevel = ref(1); // 1: 작게, 2: 중간, 3: 크게
+const categories = reactive({
+  대분류: [],
+  중분류: [],
+  소분류: [],
+});
 
 const rowHeightOptions = {
   1: 28, // 글자 1개 높이
@@ -588,7 +590,7 @@ const handleSearch = async (params) => {
     error.value = null;
     searchParams.value = params;
 
-    if (!props.projectId || !props.revision) {
+    if (!projectId.value || !props.revision) {
       error.value = "프로젝트 ID 또는 리비전 정보가 없습니다.";
       return;
     }
@@ -596,7 +598,7 @@ const handleSearch = async (params) => {
     // 검색 파라미터 상세 로깅
     console.log("=== 검색 파라미터 상세 정보 ===");
     console.log("1. 기본 정보:");
-    console.log("- 프로젝트 ID:", props.projectId);
+    console.log("- 프로젝트 ID:", projectId.value);
     console.log("- 리비전:", props.revision);
     console.log("2. 검색 조건:");
     console.log("- 검색어:", params.query);
@@ -638,7 +640,7 @@ const handleSearch = async (params) => {
     queryParams.append("revisionCount", props.revision);
 
     const apiUrl = `/api/v1/projects/${
-      props.projectId
+      projectId.value
     }/documents/search?${queryParams.toString()}`;
 
     // API URL 로깅
@@ -714,7 +716,7 @@ const handleSearch = async (params) => {
 
 // API에서 데이터 로드
 async function loadDataFromAPI() {
-  if (!props.projectId || !props.revision) {
+  if (!projectId.value || !props.revision) {
     error.value = "프로젝트 ID 또는 리비전 정보가 없습니다.";
     return;
   }
@@ -748,16 +750,16 @@ async function loadDataFromAPI() {
       }
 
       apiUrl = `/api/v1/projects/${
-        props.projectId
+        projectId.value
       }/documents/search?${queryParams.toString()}`;
     } else {
       // 일반 요구사항 로드
-      apiUrl = `/api/v1/projects/${props.projectId}/requirements/generated?revisionCount=${props.revision}`;
+      apiUrl = `/api/v1/projects/${projectId.value}/requirements/generated?revisionCount=${props.revision}`;
     }
 
     console.log("API URL:", apiUrl);
 
-    const mockupCheckUrl = `/api/v1/projects/${props.projectId}/mockups/${props.revision}/exist`;
+    const mockupCheckUrl = `/api/v1/projects/${projectId.value}/mockups/${props.revision}/exist`;
 
     const [requirementsResponse, mockupResponse] = await Promise.all([
       fetch(apiUrl, {
@@ -876,7 +878,7 @@ async function saveBulkChanges(modifiedData) {
       const typeMap = { 기능: "FR", 비기능: "NFR" };
 
       const transformed = {
-        memberId: userId, //일단 1로 하고 추후 수정
+        memberId: userId.value,
         reqPk: row._originalApiData.reqPk,
         type: typeMap[row.type] || row.type,
         level1: row.level1,
@@ -896,7 +898,7 @@ async function saveBulkChanges(modifiedData) {
     console.log("백엔드로 전송할 데이터:", transformedData);
 
     const response = await fetch(
-      `/api/v1/projects/${props.projectId}/requirements/${props.revision}/edit`,
+      `/api/v1/projects/${projectId.value}/requirements/${props.revision}/edit`,
       {
         method: "POST",
         headers: {
@@ -906,6 +908,8 @@ async function saveBulkChanges(modifiedData) {
         body: JSON.stringify(transformedData),
       }
     );
+
+    console.log('왜 안됌?')
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -959,7 +963,7 @@ async function createMockup() {
 
   try {
     const response = await fetch(
-      `/api/v1/projects/${props.projectId}/mockups/${props.revision}?outputFolderName=index.html`,
+      `/api/v1/projects/${projectId.value}/mockups/${props.revision}?outputFolderName=index.html`,
       {
         method: "POST",
         headers: {
@@ -988,7 +992,7 @@ async function createMockup() {
 
 // API에서 데이터 로드
 async function downloadRequirements() {
-  if (!props.projectId || !props.revision) {
+  if (!projectId.value || !props.revision) {
     error.value = "프로젝트 ID 또는 리비전 정보가 없습니다.";
     return;
   }
@@ -1045,20 +1049,20 @@ async function downloadRequirements() {
 // 카테고리 가져오기 함수
 const fetchCategories = async () => {
   try {
-    if (!props.projectId || !props.revision) {
+    if (!projectId.value || !props.revision) {
       console.error("Project ID or revision is not available");
       return;
     }
 
     console.log(
       "Fetching categories for project:",
-      props.projectId,
+      projectId.value,
       "revision:",
       props.revision
     );
 
     const response = await fetch(
-      `/api/v1/projects/${props.projectId}/documents/${props.revision}/categories`,
+      `/api/v1/projects/${projectId.value}/documents/${props.revision}/categories`,
       {
         method: "GET",
         headers: {
@@ -1247,7 +1251,7 @@ const updateColumnDefs = () => {
 
 // props 변경 감지
 watch(
-  [() => props.projectId, () => props.revision],
+  [() => projectId.value, () => props.revision],
   ([newProjectId, newRevision], [oldProjectId, oldRevision]) => {
     if (
       (newProjectId && newProjectId !== oldProjectId) ||
@@ -1257,8 +1261,8 @@ watch(
         `요구사항 데이터 변경: projectId=${newProjectId}, revision=${newRevision}`
       );
       if (gridApi.value) {
-        fetchCategories(); // 카테고리 먼저 가져오기
         loadDataFromAPI();
+        fetchCategories(); // 카테고리 먼저 가져오기
       }
     }
   },
@@ -1267,11 +1271,11 @@ watch(
 
 onMounted(() => {
   console.log("RequirementsContent 마운트됨:", {
-    projectId: props.projectId,
+    projectId: projectId.value,
     revision: props.revision,
   });
-  fetchCategories(); // 초기 카테고리 로드
   loadDataFromAPI();
+  fetchCategories(); // 초기 카테고리 로드
 });
 
 // 컴포넌트 정의
@@ -1319,12 +1323,12 @@ async function handleRowDelete(reqPk) {
   rowDeleteError.value = ""; // 에러 초기화
 
   try {
-    const response = await fetch(`/api/v1/projects/${props.projectId}/requirements/${reqPk}/delete`, {
+    const response = await fetch(`/api/v1/projects/${projectId.value}/requirements/${reqPk}/delete`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ reason: reason, memberId: userId }),
+      body: JSON.stringify({ reason: reason, memberId: userId.value }),
     });
 
     if (!response.ok) {
