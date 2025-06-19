@@ -4,7 +4,10 @@
     <div class="m-content-wrapper">
       <!-- Mockup 파일이 활성화된 경우 -->
       <template v-if="activeMockupFile">
-        <MockUpViewContent :activeFile="activeMockupFile" />
+        <MockUpViewContent
+          :activeFile="activeMockupFile"
+          @openMockupSidebar="handleOpenMockupSidebar"
+        />
       </template>
       <!-- Mockup 파일이 활성화되지 않은 경우 -->
       <template v-else>
@@ -75,16 +78,17 @@ import GeneratingContent from "./GeneratingContent.vue";
 const projectStore = useProjectStore();
 const projectId = computed(() => projectStore.projectId);
 
-console.log("✅✅✅✅✅✅✅✅");
-console.log(
-  projectStore.projectId,
-  projectStore.projectName,
-  projectStore.projectRevision
-);
-
 // 선택된 파일 정보
 const selectedFile = ref(null);
 const requirementsContentRef = ref(null);
+
+const props = defineProps({
+  headerBar: Object, // 상위에서 ref로 내려줌
+});
+
+function handleOpenMockupSidebar() {
+  props.headerBar?.handleOpenMockupSidebar();
+}
 
 // 파일 선택 이벤트 처리 (부모에서 호출)
 const handleFileSelected = (fileData) => {
@@ -105,8 +109,8 @@ const handleFileSelected = (fileData) => {
 // 검색 이벤트 처리
 const handleSearch = (searchParams) => {
   if (
-    selectedFile.value?.type === "generated" &&
-    requirementsContentRef.value
+    requirementsContentRef.value &&
+    typeof requirementsContentRef.value.handleSearch === "function"
   ) {
     requirementsContentRef.value.handleSearch(searchParams);
   }

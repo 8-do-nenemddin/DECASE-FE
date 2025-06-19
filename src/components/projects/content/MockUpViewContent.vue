@@ -112,6 +112,7 @@ const code = ref("");
 const isLoading = ref(false);
 const totalLines = ref(1);
 const codeTextarea = ref(null);
+const emit = defineEmits(["openMockupSidebar"]);
 
 const updateLineNumbers = () => {
   if (!code.value) {
@@ -188,6 +189,7 @@ onMounted(() => {
   if (codeTextarea.value) {
     codeTextarea.value.focus();
   }
+  emit("openMockupSidebar");
 });
 </script>
 
