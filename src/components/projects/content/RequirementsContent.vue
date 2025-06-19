@@ -336,6 +336,11 @@ const columnDefs = ref([
     width: 300,
     cellEditor: "agLargeTextCellEditor",
     cellEditorPopup: true,
+    cellEditorParams: {
+      maxLength: 5000, // ✅ 원하는 최대 글자 수로 설정!
+      rows: 10,        // textarea 높이 (선택)
+      cols: 50         // textarea 너비 (선택)
+    }
   },
   {
     field: "priority",
@@ -1109,6 +1114,11 @@ const updateColumnDefs = () => {
       width: 250,
       cellEditor: "agLargeTextCellEditor",
       cellEditorPopup: true,
+      cellEditorParams: {
+        maxLength: 5000, // ✅ 원하는 최대 글자 수로 설정!
+        rows: 10,        // textarea 높이 (선택)
+        cols: 50         // textarea 너비 (선택)
+      }
     },
     {
       field: "priority",
