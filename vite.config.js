@@ -6,8 +6,13 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: "https://decase.skala25a.project.skala-ai.com",
-        // target: "http://localhost:8080",
+        // target: "https://decase.skala25a.project.skala-ai.com",
+        target: "http://localhost:8080",
+        changeOrigin: true,
+      },
+      "/ai": {
+        // target: "https://decase.skala25a.project.skala-ai.com",
+        target: "http://localhost:8001",
         changeOrigin: true,
       },
     },
