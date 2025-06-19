@@ -1262,7 +1262,7 @@ async function handleRowDelete(reqPk) {
   rowDeleteError.value = ""; // 에러 초기화
 
   try {
-    const response = await fetch(`/api/v1/projects/${props.projectId}/requirments/${reqPk}/delete`, {
+    const response = await fetch(`/api/v1/projects/${props.projectId}/requirements/${reqPk}/delete`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
