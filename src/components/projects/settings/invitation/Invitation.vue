@@ -180,7 +180,7 @@ import { useProjectStore } from "/src/stores/projectStore";
 const projectStore = useProjectStore();
 
 const route = useRoute();
-const projectId = route.params.projectId;
+const projectId = ref(projectStore.projectId);
 
 const invitations = ref([]);
 const showCancelConfirmModal = ref(false);
@@ -195,7 +195,7 @@ const failMessage = ref('');
 
 const fetchInvitations = async () => {
   try {
-    const response = await fetch(`/api/v1/projects/${projectId}/members/invitation`);
+    const response = await fetch(`/api/v1/projects/${projectId.value}/members/invitation`);
     const result = await response.json();
     if (result.status === 200) {
       invitations.value = result.data;
@@ -210,7 +210,7 @@ const sendInvitation = async (invitationData) => {
   showSendingModal.value = true;
   
   try {
-    const response = await fetch(`/api/v1/projects/${projectId}/members/invitation`, {
+    const response = await fetch(`/api/v1/projects/${projectId.value}/members/invitation`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(invitationData)
@@ -261,7 +261,7 @@ const showCancelModal = (invite, index) => {
 const confirmCancel = async () => {
   if (inviteToCancel.value) {
     try {
-      const response = await fetch(`/api/v1/projects/${projectId}/members/invitation/cancel`, {
+      const response = await fetch(`/api/v1/projects/${projectId.value}/members/invitation/cancel`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ adminId: projectStore.userId, email: inviteToCancel.value.email })

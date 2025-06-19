@@ -58,18 +58,10 @@ import ViewMatrix from "./view_matrix/ViewMatrix.vue";
 import ManageRight from "./manage_right/ManageRight.vue";
 import Invitation from "./invitation/Invitation.vue";
 import RequirementApprove from "./requirement_approve/RequirementApprove.vue";
-
-const props = defineProps({
-  projectId: {
-    type: String,
-    required: true,
-  },
-});
-
-console.log(props.projectId);
+import { useProjectStore } from "../../../stores/projectStore";
 
 const currentComponent = ref("ProjectInfo"); // 기본 컴포넌트
-
+const projectId = ref(useProjectStore().projectId);
 const handleChangeComponent = (componentName) => {
   currentComponent.value = componentName;
 };
