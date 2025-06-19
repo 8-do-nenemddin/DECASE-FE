@@ -1,84 +1,78 @@
 <template>
   <!-- 멤버 초대 모달 -->
-  <div v-if="isVisible" class="modal-overlay" @click="closeModal">
-    <div class="modal" @click.stop>
-      <div class="modal-header">
-        <h3 class="modal-title">초대</h3>
-        <button @click="closeModal" class="modal-close">✕</button>
+  <div v-if="isVisible" class="invite-modal-overlay" @click="closeModal">
+    <div class="invite-modal" @click.stop>
+      <div class="invite-modal-header">
+        <h3 class="invite-modal-title">초대</h3>
+        <button @click="closeModal" class="invite-modal-close">✕</button>
       </div>
 
-      <div class="modal-body">
+      <div class="invite-modal-body">
         <!-- 이메일 입력 섹션 -->
-        <div class="email-section">
+        <div class="invite-email-section">
           <!-- 검색/추가 입력창 -->
-          <div class="search-input-container">
+          <div class="invite-search-input-container">
             <input
               v-model="searchEmail"
               type="email"
-              class="search-input"
+              class="invite-search-input"
               placeholder="초대할 사람의 이메일 입력"
               @keyup.enter="addEmailToList"
               @input="handleEmailInput"
             />
-            <div class="permission-dropdown-container">
+            <div class="invite-permission-toggle-container">
+              <!-- 권한 토글 버튼들 -->
+              <div class="invite-permission-toggle">
+                <button
+                  @click="selectPermission('Read')"
+                  class="invite-permission-toggle-btn"
+                  :class="{ 
+                    'invite-active': selectedPermission === 'Read',
+                    'invite-active-read': selectedPermission === 'Read'
+                  }"
+                  :disabled="!isValidEmail(searchEmail)"
+                >
+                  Read
+                </button>
+                <button
+                  @click="selectPermission('Read/Write')"
+                  class="invite-permission-toggle-btn"
+                  :class="{ 
+                    'invite-active': selectedPermission === 'Read/Write',
+                    'invite-active-write': selectedPermission === 'Read/Write'
+                  }"
+                  :disabled="!isValidEmail(searchEmail)"
+                >
+                  Read/Write
+                </button>
+              </div>
               <button
-                @click="togglePermissionDropdown"
-                class="permission-button"
+                @click="addEmailToList"
+                class="invite-add-email-btn"
                 :disabled="!isValidEmail(searchEmail)"
               >
-                권한
-                <span
-                  class="dropdown-arrow"
-                  :class="{ open: showPermissionDropdown }"
-                  >▼</span
-                >
+                추가
               </button>
-
-              <!-- 권한 선택 드롭다운 -->
-              <div
-                v-if="showPermissionDropdown"
-                class="permission-dropdown"
-                @click.stop
-              >
-                <div class="permission-options">
-                  <button
-                    @click="selectPermissionAndAdd('Read')"
-                    class="permission-option"
-                    :class="{ selected: selectedPermission === 'Read' }"
-                  >
-                    <span class="permission-label">Read</span>
-                    <span class="permission-description">읽기 권한만</span>
-                  </button>
-                  <button
-                    @click="selectPermissionAndAdd('Read/Write')"
-                    class="permission-option"
-                    :class="{ selected: selectedPermission === 'Read/Write' }"
-                  >
-                    <span class="permission-label">Read/Write</span>
-                    <span class="permission-description">읽기/쓰기 권한</span>
-                  </button>
-                </div>
-              </div>
             </div>
           </div>
 
           <!-- 추가된 이메일 목록 -->
-          <div class="email-list">
+          <div class="invite-email-list">
             <div
               v-for="(emailItem, index) in emailList"
               :key="index"
-              class="email-item"
+              class="invite-email-item"
             >
-              <div class="email-info">
-                <span class="email-text">{{ emailItem.email }}</span>
+              <div class="invite-email-info">
+                <span class="invite-email-text">{{ emailItem.email }}</span>
                 <span
-                  class="email-permission"
-                  :class="emailItem.permission.toLowerCase().replace('_', '-')"
+                  class="invite-email-permission"
+                  :class="getPermissionClass(emailItem.permission)"
                 >
                   {{ emailItem.displayPermission }}
                 </span>
               </div>
-              <button @click="removeEmail(index)" class="remove-email-btn">
+              <button @click="removeEmail(index)" class="invite-remove-email-btn">
                 ✕
               </button>
             </div>
@@ -86,17 +80,17 @@
         </div>
 
         <!-- 에러 메시지 -->
-        <div v-if="errorMessage" class="error-message">
+        <div v-if="errorMessage" class="invite-error-message">
           {{ errorMessage }}
         </div>
       </div>
 
-      <div class="modal-footer">
+      <div class="invite-modal-footer">
         <button
           @click="sendInvitations"
           :disabled="emailList.length === 0"
-          class="btn-send"
-          :class="{ disabled: emailList.length === 0 }"
+          class="invite-btn-send"
+          :class="{ 'invite-disabled': emailList.length === 0 }"
         >
           전송
         </button>
@@ -123,8 +117,17 @@ const emit = defineEmits(["close", "send-invitations"]);
 const searchEmail = ref("");
 const emailList = ref([]);
 const selectedPermission = ref("Read");
-const showPermissionDropdown = ref(false);
 const errorMessage = ref("");
+
+// 권한에 따른 CSS 클래스 반환
+const getPermissionClass = (permission) => {
+  if (permission === 'READ') {
+    return 'invite-permission-read';
+  } else if (permission === 'READ_AND_WRITE') {
+    return 'invite-permission-read-write';
+  }
+  return '';
+};
 
 // 이메일 유효성 검증
 const isValidEmail = (email) => {
@@ -139,26 +142,17 @@ const handleEmailInput = () => {
   }
 };
 
-// 권한 드롭다운 토글
-const togglePermissionDropdown = () => {
+// 권한 선택
+const selectPermission = (permission) => {
   if (!isValidEmail(searchEmail.value)) {
     errorMessage.value = "올바른 이메일 형식을 입력해주세요.";
     return;
   }
-  showPermissionDropdown.value = !showPermissionDropdown.value;
-};
-
-// 권한 선택 및 이메일 추가
-const selectPermissionAndAdd = (label) => {
-  // Map display label to API enum value
-  const apiValue = label === "Read" ? "READ" : "READ_AND_WRITE";
-  selectedPermission.value = label;
-  addEmailToList(apiValue, label);
-  showPermissionDropdown.value = false;
+  selectedPermission.value = permission;
 };
 
 // 이메일을 목록에 추가
-const addEmailToList = (permission, displayLabel = selectedPermission.value) => {
+const addEmailToList = () => {
   const email = searchEmail.value.trim();
 
   if (!isValidEmail(email)) {
@@ -171,10 +165,13 @@ const addEmailToList = (permission, displayLabel = selectedPermission.value) => 
     return;
   }
 
+  // Map display label to API enum value
+  const apiValue = selectedPermission.value === "Read" ? "READ" : "READ_AND_WRITE";
+
   emailList.value.push({
     email: email,
-    permission: permission,
-    displayPermission: displayLabel,
+    permission: apiValue,
+    displayPermission: selectedPermission.value,
   });
 
   searchEmail.value = "";
@@ -215,13 +212,6 @@ const handleSuccessClose = () => {
   closeModal(); // 전체 모달 닫기
 };
 
-// 외부 클릭으로 드롭다운 닫기
-const handleClickOutside = (event) => {
-  if (showPermissionDropdown.value) {
-    showPermissionDropdown.value = false;
-  }
-};
-
 // 모달 닫기
 const closeModal = () => {
   resetForm();
@@ -233,7 +223,6 @@ const resetForm = () => {
   searchEmail.value = "";
   emailList.value = [];
   selectedPermission.value = "Read";
-  showPermissionDropdown.value = false;
   errorMessage.value = "";
 };
 
@@ -246,20 +235,11 @@ watch(
     }
   }
 );
-
-// 이벤트 리스너 추가/제거
-onMounted(() => {
-  document.addEventListener("click", handleClickOutside);
-});
-
-onUnmounted(() => {
-  document.removeEventListener("click", handleClickOutside);
-});
 </script>
 
 <style scoped>
 /* 모달 스타일 */
-.modal-overlay {
+.invite-modal-overlay {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.5);
@@ -268,10 +248,10 @@ onUnmounted(() => {
   justify-content: center;
   z-index: 50;
   backdrop-filter: blur(4px);
-  animation: fadeIn 0.3s ease-out;
+  animation: inviteFadeIn 0.3s ease-out;
 }
 
-@keyframes fadeIn {
+@keyframes inviteFadeIn {
   from {
     opacity: 0;
   }
@@ -280,16 +260,16 @@ onUnmounted(() => {
   }
 }
 
-.modal {
+.invite-modal {
   background: white;
   border-radius: 16px;
   width: 90%;
   max-width: 480px;
   box-shadow: 0 20px 25px rgba(0, 0, 0, 0.1);
-  animation: modalSlideIn 0.3s ease-out;
+  animation: inviteModalSlideIn 0.3s ease-out;
 }
 
-@keyframes modalSlideIn {
+@keyframes inviteModalSlideIn {
   from {
     opacity: 0;
     transform: translateY(-20px) scale(0.95);
@@ -300,7 +280,7 @@ onUnmounted(() => {
   }
 }
 
-.modal-header {
+.invite-modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -308,14 +288,14 @@ onUnmounted(() => {
   border-bottom: 1px solid #f3f4f6;
 }
 
-.modal-title {
+.invite-modal-title {
   font-size: 1.25rem;
   font-weight: 600;
   color: #111827;
   margin: 0;
 }
 
-.modal-close {
+.invite-modal-close {
   background: transparent;
   border: none;
   color: #6b7280;
@@ -331,33 +311,32 @@ onUnmounted(() => {
   justify-content: center;
 }
 
-.modal-close:hover {
+.invite-modal-close:hover {
   background: #f3f4f6;
   color: #374151;
 }
 
-.modal-body {
+.invite-modal-body {
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
 }
 
-.email-section {
+.invite-email-section {
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
 
-.search-input-container {
+.invite-search-input-container {
   display: flex;
+  flex-direction: column;
   gap: 0.75rem;
-  align-items: flex-start;
-  position: relative;
 }
 
-.search-input {
-  flex: 1;
+.invite-search-input {
+  width: 100%;
   padding: 0.875rem 1rem;
   border: 2px solid #e5e7eb;
   border-radius: 8px;
@@ -366,130 +345,99 @@ onUnmounted(() => {
   font-family: inherit;
 }
 
-.search-input:focus {
+.invite-search-input:focus {
   outline: none;
   border-color: #10b981;
   box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
 }
 
-.search-input:hover {
+.invite-search-input:hover {
   border-color: #d1d5db;
 }
 
-.permission-dropdown-container {
-  position: relative;
+.invite-permission-toggle-container {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
 }
 
-.permission-button {
+.invite-permission-toggle {
+  display: flex;
+  background: #f3f4f6;
+  border-radius: 10px;
+  padding: 4px;
+  flex: 1;
+}
+
+.invite-permission-toggle-btn {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
-  padding: 0.875rem 1.5rem;
+  padding: 0.75rem 1rem;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex: 1;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #6b7280;
+}
+
+.invite-permission-toggle-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.invite-permission-toggle-btn.invite-active {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+/* Read 버튼 활성화 스타일 */
+.invite-permission-toggle-btn.invite-active-read {
+  background: #dbeafe !important;
+  color: #1e40af !important;
+}
+
+/* Read/Write 버튼 활성화 스타일 */
+.invite-permission-toggle-btn.invite-active-write {
+  background: #dcfce7 !important;
+  color: #166534 !important;
+}
+
+.invite-permission-toggle-btn:hover:not(:disabled):not(.invite-active) {
+  color: #374151;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.invite-add-email-btn {
+  padding: 0.75rem 1.5rem;
   background: #1f2937;
   color: white;
   border: none;
   border-radius: 8px;
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
   white-space: nowrap;
-  min-width: 90px;
 }
 
-.permission-button:hover:not(:disabled) {
+.invite-add-email-btn:hover:not(:disabled) {
   background: #374151;
   transform: translateY(-1px);
 }
 
-.permission-button:disabled {
+.invite-add-email-btn:disabled {
   background: #9ca3af;
   cursor: not-allowed;
   opacity: 0.6;
 }
 
-.dropdown-arrow {
-  font-size: 0.75rem;
-  transition: transform 0.3s ease;
-}
-
-.dropdown-arrow.open {
-  transform: rotate(180deg);
-}
-
-.permission-dropdown {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  z-index: 60;
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-  margin-top: 0.5rem;
-  overflow: hidden;
-  animation: dropdownSlideIn 0.2s ease-out;
-}
-
-@keyframes dropdownSlideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.permission-options {
-  display: flex;
-  flex-direction: column;
-}
-
-.permission-option {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  padding: 0.875rem 1rem;
-  background: white;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  text-align: left;
-  border-bottom: 1px solid #f3f4f6;
-}
-
-.permission-option:last-child {
-  border-bottom: none;
-}
-
-.permission-option:hover {
-  background: #f8fafc;
-}
-
-.permission-option.selected {
-  background: #eff6ff;
-  color: #1d4ed8;
-}
-
-.permission-label {
-  font-weight: 600;
-  font-size: 0.875rem;
-  margin-bottom: 0.125rem;
-}
-
-.permission-description {
-  font-size: 0.75rem;
-  color: #6b7280;
-}
-
-.permission-option.selected .permission-description {
-  color: #3b82f6;
-}
-
-.email-list {
+.invite-email-list {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -497,7 +445,7 @@ onUnmounted(() => {
   overflow-y: auto;
 }
 
-.email-item {
+.invite-email-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -508,26 +456,26 @@ onUnmounted(() => {
   transition: all 0.3s ease;
 }
 
-.email-item:hover {
+.invite-email-item:hover {
   background: #f1f5f9;
   border-color: #cbd5e1;
 }
 
-.email-info {
+.invite-email-info {
   display: flex;
   align-items: center;
   gap: 0.75rem;
   flex: 1;
 }
 
-.email-text {
+.invite-email-text {
   flex: 1;
   font-size: 0.875rem;
   color: #374151;
   word-break: break-all;
 }
 
-.email-permission {
+.invite-email-permission {
   font-size: 0.75rem;
   font-weight: 600;
   padding: 0.25rem 0.75rem;
@@ -535,17 +483,17 @@ onUnmounted(() => {
   white-space: nowrap;
 }
 
-.email-permission.read {
-  background: #fef3c7;
-  color: #92400e;
+.invite-permission-read {
+  background: #dbeafe !important;
+  color: #1e40af !important;
 }
 
-.email-permission.read-write {
-  background: #d1fae5;
-  color: #065f46;
+.invite-permission-read-write {
+  background: #dcfce7 !important;
+  color: #166534 !important;
 }
 
-.remove-email-btn {
+.invite-remove-email-btn {
   background: transparent;
   border: none;
   color: #6b7280;
@@ -561,12 +509,12 @@ onUnmounted(() => {
   flex-shrink: 0;
 }
 
-.remove-email-btn:hover {
+.invite-remove-email-btn:hover {
   background: #fee2e2;
   color: #dc2626;
 }
 
-.error-message {
+.invite-error-message {
   background: #fef2f2;
   color: #dc2626;
   padding: 0.75rem;
@@ -575,14 +523,14 @@ onUnmounted(() => {
   border: 1px solid #fecaca;
 }
 
-.modal-footer {
+.invite-modal-footer {
   display: flex;
   justify-content: center;
   padding: 1.5rem;
   border-top: 1px solid #f3f4f6;
 }
 
-.btn-send {
+.invite-btn-send {
   padding: 0.875rem 3rem;
   border-radius: 8px;
   font-size: 0.875rem;
@@ -595,132 +543,123 @@ onUnmounted(() => {
   min-width: 120px;
 }
 
-.btn-send:hover:not(.disabled) {
+.invite-btn-send:hover:not(.invite-disabled) {
   background: #374151;
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(31, 41, 55, 0.15);
 }
 
-.btn-send.disabled {
+.invite-btn-send.invite-disabled {
   background: #9ca3af;
   cursor: not-allowed;
   opacity: 0.6;
 }
 
 /* 스크롤바 스타일링 */
-.email-list::-webkit-scrollbar {
+.invite-email-list::-webkit-scrollbar {
   width: 6px;
 }
 
-.email-list::-webkit-scrollbar-track {
+.invite-email-list::-webkit-scrollbar-track {
   background: #f8fafc;
   border-radius: 3px;
 }
 
-.email-list::-webkit-scrollbar-thumb {
+.invite-email-list::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 3px;
 }
 
-.email-list::-webkit-scrollbar-thumb:hover {
+.invite-email-list::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
 
 /* 반응형 디자인 */
 @media (max-width: 768px) {
-  .modal {
+  .invite-modal {
     margin: 1rem;
     width: calc(100% - 2rem);
   }
 
-  .modal-header {
+  .invite-modal-header {
     padding: 1.25rem;
   }
 
-  .modal-body {
+  .invite-modal-body {
     padding: 1.25rem;
   }
 
-  .modal-footer {
+  .invite-modal-footer {
     padding: 1.25rem;
   }
 
-  .search-input-container {
+  .invite-permission-toggle-container {
     flex-direction: column;
     align-items: stretch;
-    gap: 0.5rem;
   }
 
-  .permission-dropdown-container {
+  .invite-add-email-btn {
     width: 100%;
   }
 
-  .permission-button {
-    width: 100%;
-    justify-content: center;
-  }
-
-  .email-info {
+  .invite-email-info {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.5rem;
   }
 
-  .btn-send {
+  .invite-btn-send {
     width: 100%;
   }
 }
 
 @media (max-width: 480px) {
-  .modal {
+  .invite-modal {
     margin: 0.75rem;
     width: calc(100% - 1.5rem);
   }
 
-  .modal-header {
+  .invite-modal-header {
     padding: 1rem;
   }
 
-  .modal-body {
+  .invite-modal-body {
     padding: 1rem;
   }
 
-  .modal-footer {
+  .invite-modal-footer {
     padding: 1rem;
   }
 
-  .modal-title {
+  .invite-modal-title {
     font-size: 1.125rem;
   }
 
-  .email-item {
+  .invite-email-item {
     padding: 0.5rem 0.75rem;
   }
 
-  .email-text {
+  .invite-email-text {
     font-size: 0.8125rem;
   }
 
-  .permission-label {
+  .invite-permission-toggle-btn {
+    padding: 0.5rem 0.75rem;
     font-size: 0.8125rem;
-  }
-
-  .permission-description {
-    font-size: 0.6875rem;
   }
 }
 
 /* 접근성 개선 */
-.btn-send:focus-visible,
-.permission-button:focus-visible,
-.permission-option:focus-visible,
-.modal-close:focus-visible,
-.remove-email-btn:focus-visible {
+.invite-btn-send:focus-visible,
+.invite-add-email-btn:focus-visible,
+.invite-permission-toggle-btn:focus-visible,
+.invite-modal-close:focus-visible,
+.invite-remove-email-btn:focus-visible {
   outline: 2px solid #10b981;
   outline-offset: 2px;
 }
 
-.search-input:focus-visible {
+.invite-search-input:focus-visible {
   outline: 2px solid #10b981;
   outline-offset: 2px;
 }
