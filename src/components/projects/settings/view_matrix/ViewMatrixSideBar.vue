@@ -699,9 +699,9 @@ export default {
 
 /* 우선순위별 색상 구분 */
 .info-item:has([data-priority]) .info-value {
-  background: #e3f2fd;
+  background: #ffebee;
   color: #c62828;
-  border-color: #bbdefb;
+  border-color: #ffcdd2;
 }
 
 .info-item:has([data-priority="중"]) .info-value {
@@ -711,9 +711,9 @@ export default {
 }
 
 .info-item:has([data-priority="하"]) .info-value {
-  background: #f3e5f5;
+  background: #e8f5e8;
   color: #2e7d32;
-  border-color: #ce93d8;
+  border-color: #c8e6c9;
 }
 
 /* 난이도별 색상 구분 */
