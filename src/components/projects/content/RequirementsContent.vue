@@ -252,7 +252,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch, reactive, onUnmounted, nextTick } from "vue";
+import { ref, onMounted, watch, reactive, onUnmounted, nextTick, computed } from "vue";
 import { AgGridVue } from "ag-grid-vue3";
 import { ModuleRegistry, AllCommunityModule } from "ag-grid-community";
 import "ag-grid-community/styles/ag-grid.css";
@@ -260,16 +260,13 @@ import "ag-grid-community/styles/ag-theme-alpine.css";
 import { useProjectStore } from "/src/stores/projectStore.js";
 
 const projectStore = useProjectStore();
-const userId = projectStore.userId;
+const userId = computed(() => projectStore.userId);
+const projectId = computed(() => projectStore.projectId);
 
 // AG Grid 모듈 등록
 ModuleRegistry.registerModules([AllCommunityModule]);
 
 const props = defineProps({
-  projectId: {
-    type: String,
-    required: true,
-  },
   revision: {
     type: Number,
     required: true,
@@ -287,10 +284,17 @@ const searchParams = ref(null);
 const mockupExists = ref(true); // 초기값은 false
 const gridApi = ref(null);
 const rowHeightLevel = ref(1); // 1: 작게, 2: 중간, 3: 크게
+
+// const categories = ref({
+//   "대분류": null,
+//   "중분류": null,
+//   "소분류": null
+// }); -> 이거 하면 토글이됨 ... 신기하죠?
+
 const mockupStatus = ref(null); // 목업 생성 상태: PROCESSING, FAILED, SUCCESS 등
 
 const rowHeightOptions = {
-  1: 28, // 글자 1개 높이
+  1: 30, // 글자 1개 높이
   2: 200, // 문장 3개 정도
   3: 500, // 글자 10개 정도
 };
@@ -446,17 +450,28 @@ const columnDefs = ref([
     },
   },
   {
-    field: "actions",
-    headerName: "행 삭제",
-    width: 120,
-    cellRenderer: (params) => {
-      return `
-      <button class="row-delete-button" data-reqpk="${params.data.reqPk}">
-        삭제
-      </button>
+  field: "actions",
+  headerName: "행 삭제",
+  width: 120,
+  cellRenderer: (params) => {
+    return `
+      <button 
+        class="row-delete-button" 
+        data-reqpk="${params.data.reqPk}"
+        style="
+          background-color: #dc3545;
+          color: white;
+          border: none;
+          padding: 6px 12px;
+          border-radius: 10px;
+          cursor: pointer;
+          font-size: 12px;
+          font-weight: 500;
+        "
+      >삭제</button>
     `;
-    },
   },
+},
 ]);
 
 // 기본 컬럼 설정
@@ -574,7 +589,7 @@ const handleSearch = async (params) => {
     error.value = null;
     searchParams.value = params;
 
-    if (!props.projectId || !props.revision) {
+    if (!projectId.value || !props.revision) {
       error.value = "프로젝트 ID 또는 리비전 정보가 없습니다.";
       console.log("[진단] 필수 정보 없음, return");
       return;
@@ -583,7 +598,7 @@ const handleSearch = async (params) => {
     // 검색 파라미터 상세 로깅
     console.log("=== 검색 파라미터 상세 정보 ===");
     console.log("1. 기본 정보:");
-    console.log("- 프로젝트 ID:", props.projectId);
+    console.log("- 프로젝트 ID:", projectId.value);
     console.log("- 리비전:", props.revision);
     console.log("2. 검색 조건:");
     console.log("- 검색어:", params.query);
@@ -683,7 +698,7 @@ const handleSearch = async (params) => {
 
 // API에서 데이터 로드
 async function loadDataFromAPI() {
-  if (!props.projectId || !props.revision) {
+  if (!projectId.value || !props.revision) {
     error.value = "프로젝트 ID 또는 리비전 정보가 없습니다.";
     return;
   }
@@ -717,16 +732,16 @@ async function loadDataFromAPI() {
       }
 
       apiUrl = `/api/v1/projects/${
-        props.projectId
+        projectId.value
       }/documents/search?${queryParams.toString()}`;
     } else {
       // 일반 요구사항 로드
-      apiUrl = `/api/v1/projects/${props.projectId}/requirements/generated?revisionCount=${props.revision}`;
+      apiUrl = `/api/v1/projects/${projectId.value}/requirements/generated?revisionCount=${props.revision}`;
     }
 
     console.log("API URL:", apiUrl);
 
-    const mockupCheckUrl = `/api/v1/projects/${props.projectId}/mockups/${props.revision}/exist`;
+    const mockupCheckUrl = `/api/v1/projects/${projectId.value}/mockups/${props.revision}/exist`;
 
     const [requirementsResponse, mockupResponse] = await Promise.all([
       fetch(apiUrl, {
@@ -849,7 +864,7 @@ async function saveBulkChanges(modifiedData) {
       const typeMap = { 기능: "FR", 비기능: "NFR" };
 
       const transformed = {
-        memberId: userId, //일단 1로 하고 추후 수정
+        memberId: userId.value,
         reqPk: row._originalApiData.reqPk,
         type: typeMap[row.type] || row.type,
         level1: row.level1,
@@ -869,7 +884,7 @@ async function saveBulkChanges(modifiedData) {
     console.log("백엔드로 전송할 데이터:", transformedData);
 
     const response = await fetch(
-      `/api/v1/projects/${props.projectId}/requirements/${props.revision}/edit`,
+      `/api/v1/projects/${projectId.value}/requirements/${props.revision}/edit`,
       {
         method: "POST",
         headers: {
@@ -923,6 +938,7 @@ function cancelChanges() {
     modifiedRows.value.clear();
     gridApi.value.refreshCells();
     console.log("모든 변경사항이 취소되었습니다.");
+    loadDataFromAPI();
   }
 }
 
@@ -975,7 +991,7 @@ async function createMockup() {
     }
     // 실제 목업 생성 요청
     const response = await fetch(
-      `/api/v1/projects/${props.projectId}/mockups/${props.revision}`,
+      `/api/v1/projects/${projectId.value}/mockups/${props.revision}`,
       {
         method: "POST",
         headers: {
@@ -1001,7 +1017,7 @@ async function createMockup() {
 
 // API에서 데이터 로드
 async function downloadRequirements() {
-  if (!props.projectId || !props.revision) {
+  if (!projectId.value || !props.revision) {
     error.value = "프로젝트 ID 또는 리비전 정보가 없습니다.";
     return;
   }
@@ -1011,7 +1027,7 @@ async function downloadRequirements() {
 
   try {
     const response = await fetch(
-      `/api/v1/projects/${props.projectId}/requirements/downloads?revisionCount=${props.revision}`,
+      `/api/v1/projects/${projectId.value}/requirements/downloads?revisionCount=${props.revision}`,
       {
         method: "GET",
         headers: {
@@ -1058,20 +1074,20 @@ async function downloadRequirements() {
 // 카테고리 가져오기 함수
 const fetchCategories = async () => {
   try {
-    if (!props.projectId || !props.revision) {
+    if (!projectId.value || !props.revision) {
       console.error("Project ID or revision is not available");
       return;
     }
 
     console.log(
       "Fetching categories for project:",
-      props.projectId,
+      projectId.value,
       "revision:",
       props.revision
     );
 
     const response = await fetch(
-      `/api/v1/projects/${props.projectId}/documents/${props.revision}/categories`,
+      `/api/v1/projects/${projectId.value}/documents/${props.revision}/categories`,
       {
         method: "GET",
         headers: {
@@ -1260,7 +1276,7 @@ const updateColumnDefs = () => {
 
 // props 변경 감지
 watch(
-  [() => props.projectId, () => props.revision],
+  [() => projectId.value, () => props.revision],
   ([newProjectId, newRevision], [oldProjectId, oldRevision]) => {
     if (
       (newProjectId && newProjectId !== oldProjectId) ||
@@ -1281,7 +1297,7 @@ watch(
 
 onMounted(() => {
   console.log("RequirementsContent 마운트됨:", {
-    projectId: props.projectId,
+    projectId: projectId.value,
     revision: props.revision,
   });
   fetchCategories(); // 초기 카테고리 로드
@@ -1333,16 +1349,13 @@ async function handleRowDelete(reqPk) {
   rowDeleteError.value = ""; // 에러 초기화
 
   try {
-    const response = await fetch(
-      `/api/v1/projects/${props.projectId}/requirments/${reqPk}/delete`,
-      {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ reason: reason, memberId: userId }),
-      }
-    );
+    const response = await fetch(`/api/v1/projects/${projectId.value}/requirements/${reqPk}/delete`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ reason: reason, memberId: userId.value }),
+    });
 
     if (!response.ok) {
       throw new Error("삭제 요청 실패");
@@ -1362,7 +1375,7 @@ async function handleRowDelete(reqPk) {
   padding: 20px;
   height: calc(100vh - 64px);
   overflow-y: auto;
-  background-color: #f8f9fa;
+  background-color: white;
   font-family: "Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI",
     Roboto, sans-serif;
 }

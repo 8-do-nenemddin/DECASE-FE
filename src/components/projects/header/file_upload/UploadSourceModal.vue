@@ -97,24 +97,12 @@
           >
             <span v-if="isUploading" class="loading"></span>
             <span v-else class="upload-text">
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                <polyline points="17,8 12,3 7,8"></polyline>
-                <line x1="12" y1="3" x2="12" y2="15"></line>
-              </svg>
               {{
                 isUploading
                   ? "업로드 중..."
                   : selectedFiles.length
                   ? "업로드"
-                  : "확인"
+                  : "파일을 선택해주세요."
               }}
             </span>
           </button>
@@ -284,7 +272,7 @@ const handleUploadAreaClick = () => {
 <style scoped>
 .modal {
   padding: 32px;
-  max-width: 480px;
+  max-width: auto;
   margin: 0 auto;
 }
 
