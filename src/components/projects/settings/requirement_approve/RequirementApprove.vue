@@ -520,7 +520,12 @@ const toggleRow = (id) => {
   font-weight: 600;
 }
 
-.requirement-approval-container { max-width: 1400px; margin: 0 auto; padding: 2rem; font-family: Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif; }
+.requirement-approval-container { 
+  max-width: 1400px;
+  margin: 0 auto; 
+  padding: 2rem;
+  font-family: Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif; 
+}
 .main-content { transition: margin-left 0.3s; }
 .table-controls { display: flex; justify-content: flex-end; gap: 0.5rem; margin-bottom: 1rem; }
 .bulk-button { padding: 8px 14px; border: 1px solid #d1d5db; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.2s; background-color: #fff; }
@@ -655,22 +660,40 @@ const toggleRow = (id) => {
   text-align: center;
 }
 </style>
+
 <style scoped>
 .empty-state {
   text-align: center;
   padding: 3rem 1rem;
   color: #6b7280;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+  margin: 2rem auto;
+  max-width: 710px;
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
+
 .empty-icon {
   font-size: 40px;
   margin-bottom: 1rem;
+  margin-top: 2rem;
 }
+
 .empty-title {
   font-size: 20px;
   font-weight: 600;
   margin-bottom: 0.5rem;
+  color: #374151;
 }
+
 .empty-description {
   font-size: 14px;
+  color: #6b7280;
 }
 </style>
