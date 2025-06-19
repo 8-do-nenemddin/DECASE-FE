@@ -1,12 +1,13 @@
 <template>
   <div class="m-project-main-container">
     <HeaderBar
+      ref="headerBar"
       @fileSelected="handleFileSelected"
       @search="handleSearch"
       @mockupFileSelected="handleMockupFileSelected"
     />
     <div class="m-content-wrapper" :class="contentClasses">
-      <ProjectContent ref="projectContentRef" />
+      <ProjectContent ref="projectContentRef" :headerBar="headerBar" />
     </div>
   </div>
 </template>
@@ -22,6 +23,7 @@ const projectId = computed(() => projectStore.projectId);
 const memberId = computed(() => projectStore.memberId);
 
 const projectContentRef = ref(null);
+const headerBar = ref(null);
 
 const handleFileSelected = (file) => {
   projectContentRef.value?.handleFileSelected(file);
