@@ -950,6 +950,7 @@ function cancelChanges() {
     modifiedRows.value.clear();
     gridApi.value.refreshCells();
     console.log("모든 변경사항이 취소되었습니다.");
+    loadDataFromAPI();
   }
 }
 
@@ -1270,6 +1271,7 @@ onMounted(() => {
     revision: props.revision,
   });
   fetchCategories(); // 초기 카테고리 로드
+  loadDataFromAPI();
 });
 
 // 컴포넌트 정의
