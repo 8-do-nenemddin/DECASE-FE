@@ -17,6 +17,14 @@
       </div>
     </div>
 
+    <div
+        v-if="previewData && previewData.docDescription"
+        class="content-summary"
+    >
+      <h3 class="summary-title">📌 요약</h3>
+      <div class="summary-body" v-html="previewData.docDescription"></div>
+    </div>
+
     <div v-if="loading" class="loading-state">
       <div class="loading-spinner"></div>
       <p>파일을 불러오는 중...</p>
@@ -622,6 +630,123 @@ onMounted(() => {
     padding: 6px 8px;
     font-size: 12px;
     max-width: 120px;
+  }
+}
+
+
+.content-summary {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  padding: 24px;
+  margin: 16px 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.summary-title {
+  color: #1e293b;
+  font-size: 1.1em;
+  font-weight: 600;
+  margin: 0 0 16px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.summary-body {
+  color: #475569;
+  line-height: 1.6;
+  font-size: 0.95em;
+}
+
+/* 테이블 스타일링 */
+.summary-body >>> .summary-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #ffffff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.summary-body >>> .summary-table caption {
+  font-size: 1.1em;
+  font-weight: 600;
+  color: #1e293b;
+  padding: 12px;
+  background: linear-gradient(135deg, #ddd6fe 0%, #c7d2fe 100%);
+  text-align: center;
+}
+
+.summary-body >>> .summary-table th {
+  background: #f1f5f9;
+  color: #334155;
+  font-weight: 600;
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.summary-body >>> .summary-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: top;
+}
+
+.summary-body >>> .summary-table td.category {
+  background: #f8fafc;
+  font-weight: 600;
+  color: #475569;
+  min-width: 120px;
+  border-right: 1px solid #e2e8f0;
+}
+
+/* 카테고리별 색상 구분 */
+.summary-body >>> .summary-table tr:has(td:contains("회의 핵심")) td.category {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  color: #1e40af;
+}
+
+.summary-body >>> .summary-table tr:has(td:contains("추가된")) td.category {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+  color: #166534;
+}
+
+.summary-body >>> .summary-table tr:has(td:contains("수정된")) td.category {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #92400e;
+}
+
+.summary-body >>> .summary-table tr:has(td:contains("삭제된")) td.category {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  color: #991b1b;
+}
+
+/* 테이블 내 리스트 스타일링 */
+.summary-body >>> .summary-table ul {
+  margin: 0;
+  padding-left: 16px;
+}
+
+.summary-body >>> .summary-table li {
+  margin: 4px 0;
+  line-height: 1.5;
+}
+
+/* 테이블 행 호버 효과 */
+.summary-body >>> .summary-table tbody tr:hover {
+  background: rgba(59, 130, 246, 0.05);
+}
+
+/* 반응형 테이블 */
+@media (max-width: 768px) {
+  .summary-body >>> .summary-table {
+    font-size: 0.9em;
+  }
+
+  .summary-body >>> .summary-table th,
+  .summary-body >>> .summary-table td {
+    padding: 8px 12px;
   }
 }
 </style>
