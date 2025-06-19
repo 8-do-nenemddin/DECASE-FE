@@ -1288,7 +1288,7 @@ async function handleRowDelete(reqPk) {
   padding: 20px;
   height: calc(100vh - 64px);
   overflow-y: auto;
-  background-color: #f8f9fa;
+  background-color: white;
   font-family: "Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI",
     Roboto, sans-serif;
 }
