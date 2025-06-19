@@ -383,8 +383,9 @@ export default {
 }
 
 .change-badge.change-del {
-  background: linear-gradient(145deg, #1a1a1a, #000000);
-  color: rgb(255, 0, 0);
+  background: rgb(255, 0, 0);
+  color: black;
+  border: 1px solid #e0e0e0;
 }
 
 .revision-number {
