@@ -43,31 +43,50 @@
                 <line x1="12" y1="3" x2="12" y2="15" />
               </svg>
             </div>
+            <p class="upload-placeholder">
+              파일을 드래그하거나 클릭하여 업로드 <br />
+              <small>PDF, DOC, DOCX, HWP, ZIP 파일 지원 (최대 1GB)</small>
+            </p>
           </div>
-          <button
-            @click="handleSubmit"
-            :disabled="!selectedFile || isUploading"
-            class="submit-button"
-          >
-            <span v-if="isUploading">업로드 중...</span>
-            <span v-else>업로드 시작</span>
-          </button>
-          <div v-if="isUploading" class="progress-container">
-            <div class="progress-bar">
-              <div
-                class="progress-fill"
-                :style="{ width: uploadProgress + '%' }"
-              ></div>
+          <div v-else class="file-preview">
+            <div class="file-icon">✓</div>
+            <div class="file-info">
+              <div class="file-name">{{ selectedFile.name }}</div>
+              <div class="file-size">
+                {{ formatFileSize(selectedFile.size) }}
+              </div>
             </div>
-            <div class="progress-text">{{ Math.round(uploadProgress) }}%</div>
+            <button @click.stop="clearFile" class="clear-button">
+              삭제
+            </button>
           </div>
         </div>
+
+        <button
+          @click="handleSubmit"
+          :disabled="!selectedFile || isUploading"
+          class="submit-button"
+        >
+          <span v-if="isUploading">업로드 중...</span>
+          <span v-else>업로드 시작</span>
+        </button>
+        
+        <div v-if="isUploading" class="progress-container">
+          <div class="progress-bar">
+            <div
+              class="progress-fill"
+              :style="{ width: uploadProgress + '%' }"
+            ></div>
+          </div>
+          <div class="progress-text">{{ Math.round(uploadProgress) }}%</div>
+        </div>
       </div>
+
       <!-- 두 번째 업로드 카드 (추가 파일) -->
       <div class="upload-card">
         <h2 class="upload-title">추가 파일 업로드</h2>
         <p class="upload-subtitle">
-          요구사항 정의에 필요한 참고 파일을 업로드해주세요.
+          추가 참고 파일을 업로드해주세요.
         </p>
         <div
           class="upload-zone"
@@ -121,6 +140,7 @@
             </button>
           </div>
         </div>
+        
         <button
           @click="handleSubmitExtra"
           :disabled="!selectedFileExtra || isUploadingExtra"
@@ -129,6 +149,7 @@
           <span v-if="isUploadingExtra">업로드 중...</span>
           <span v-else>업로드 시작</span>
         </button>
+        
         <div v-if="isUploadingExtra" class="progress-container">
           <div class="progress-bar">
             <div
@@ -144,7 +165,6 @@
     </div>
 
     <!-- 요구사항정의서 생성 중 화면 -->
-
     <div class="generating-card" v-if="isGenerating">
       <div class="generating-content">
         <div class="generating-icon">
@@ -165,12 +185,13 @@
         </div>
       </div>
     </div>
+    
     <GeneratingContent v-if="projectStore.projectRevision === 1" />
   </main>
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { useProjectStore } from "/src/stores/projectStore";
 import GeneratingContent from "./GeneratingContent.vue";
 
@@ -178,54 +199,113 @@ const projectStore = useProjectStore();
 
 // DOM 요소를 참조하기 위한 ref
 const fileInput = ref(null);
+const fileInputExtra = ref(null);
+
 // 선택된 파일을 저장하기 위한 ref
 const selectedFile = ref(null);
+const selectedFileExtra = ref(null);
+
 // 드래그 상태
 const isDragOver = ref(false);
+const isDragOverExtra = ref(false);
+
 // 업로드 상태
 const isUploading = ref(false);
+const isUploadingExtra = ref(false);
+
 // 업로드 진행률
 const uploadProgress = ref(0);
+const uploadProgressExtra = ref(0);
+
+// 생성 중 상태 계산
+const isGenerating = computed(() => {
+  return projectStore.projectRevision === 1;
+});
 
 // 파일 업로드 영역을 클릭했을 때 숨겨진 input을 클릭시키는 함수
 const triggerFileInput = () => {
-  if (!isUploading.value) {
+  if (!isUploading.value && fileInput.value) {
     fileInput.value.click();
+  }
+};
+
+const triggerFileInputExtra = () => {
+  if (!isUploadingExtra.value && fileInputExtra.value) {
+    fileInputExtra.value.click();
   }
 };
 
 // 파일이 선택되었을 때 실행되는 함수
 const handleFileChange = (event) => {
   const files = event.target.files;
-  if (files.length > 0) {
+  if (files && files.length > 0) {
     selectedFile.value = files[0];
+  }
+};
+
+const handleFileChangeExtra = (event) => {
+  const files = event.target.files;
+  if (files && files.length > 0) {
+    selectedFileExtra.value = files[0];
   }
 };
 
 // 드래그 오버 이벤트 처리
 const handleDragOver = (event) => {
+  event.preventDefault();
   isDragOver.value = true;
+};
+
+const handleDragOverExtra = (event) => {
+  event.preventDefault();
+  isDragOverExtra.value = true;
 };
 
 // 드래그 리브 이벤트 처리
 const handleDragLeave = (event) => {
+  event.preventDefault();
   isDragOver.value = false;
+};
+
+const handleDragLeaveExtra = (event) => {
+  event.preventDefault();
+  isDragOverExtra.value = false;
 };
 
 // 파일을 드래그 앤 드롭했을 때 실행되는 함수
 const handleFileDrop = (event) => {
+  event.preventDefault();
   isDragOver.value = false;
   const files = event.dataTransfer.files;
-  if (files.length > 0) {
+  if (files && files.length > 0) {
     selectedFile.value = files[0];
+  }
+};
+
+const handleFileDropExtra = (event) => {
+  event.preventDefault();
+  isDragOverExtra.value = false;
+  const files = event.dataTransfer.files;
+  if (files && files.length > 0) {
+    selectedFileExtra.value = files[0];
   }
 };
 
 // 선택된 파일을 삭제하는 함수
 const clearFile = () => {
   selectedFile.value = null;
-  fileInput.value.value = "";
+  if (fileInput.value) {
+    fileInput.value.value = "";
+  }
   uploadProgress.value = 0;
+};
+
+const clearFileExtra = () => {
+  selectedFileExtra.value = null;
+  if (fileInputExtra.value) {
+    fileInputExtra.value.value = "";
+  }
+  uploadProgressExtra.value = 0;
 };
 
 // 파일 크기 포맷팅 함수
@@ -254,6 +334,13 @@ const handleSubmit = async () => {
 
     console.log("다음 파일을 서버로 업로드합니다:", selectedFile.value.name);
 
+    // 진행률 시뮬레이션 (실제로는 XMLHttpRequest를 사용하여 진행률 추적)
+    const progressInterval = setInterval(() => {
+      if (uploadProgress.value < 90) {
+        uploadProgress.value += Math.random() * 20;
+      }
+    }, 200);
+
     const response = await fetch(
       `/api/v1/projects/${projectStore.projectId}/requirement-documents`,
       {
@@ -262,14 +349,17 @@ const handleSubmit = async () => {
       }
     );
 
+    clearInterval(progressInterval);
+    uploadProgress.value = 100;
+
     if (!response.ok) {
       throw new Error("업로드 실패");
     }
 
     const data = await response.json();
+    console.log("업로드 성공:", data);
 
     clearFile();
-    // 업로드 성공 후 별도의 isGenerating 상태 관리 없이 projectRevision 값이 바뀌면 화면이 전환됨
   } catch (error) {
     console.error("업로드 실패:", error);
     alert("파일 업로드 중 오류가 발생했습니다.");
@@ -278,57 +368,28 @@ const handleSubmit = async () => {
   }
 };
 
-// ------ 추가 파일 업로드용 함수들 ------
-const triggerFileInputExtra = () => {
-  if (!isUploadingExtra.value) {
-    fileInputExtra.value.click();
-  }
-};
-
-const handleFileChangeExtra = (event) => {
-  const files = event.target.files;
-  if (files.length > 0) {
-    selectedFileExtra.value = files[0];
-  }
-};
-
-const handleDragOverExtra = (event) => {
-  isDragOverExtra.value = true;
-};
-
-const handleDragLeaveExtra = (event) => {
-  isDragOverExtra.value = false;
-};
-
-const handleFileDropExtra = (event) => {
-  isDragOverExtra.value = false;
-  const files = event.dataTransfer.files;
-  if (files.length > 0) {
-    selectedFileExtra.value = files[0];
-  }
-};
-
-const clearFileExtra = () => {
-  selectedFileExtra.value = null;
-  fileInputExtra.value.value = "";
-  uploadProgressExtra.value = 0;
-};
-
 const handleSubmitExtra = async () => {
   if (!selectedFileExtra.value || isUploadingExtra.value) {
     return;
   }
+  
   isUploadingExtra.value = true;
   uploadProgressExtra.value = 0;
+  
   try {
     const formData = new FormData();
     formData.append("file", selectedFileExtra.value);
     formData.append("memberId", projectStore.userId);
-    // 실제 업로드 엔드포인트는 상황에 따라 다를 수 있음
-    console.log(
-      "추가 파일을 서버로 업로드합니다:",
-      selectedFileExtra.value.name
-    );
+    
+    console.log("추가 파일을 서버로 업로드합니다:", selectedFileExtra.value.name);
+    
+    // 진행률 시뮬레이션
+    const progressInterval = setInterval(() => {
+      if (uploadProgressExtra.value < 90) {
+        uploadProgressExtra.value += Math.random() * 20;
+      }
+    }, 200);
+    
     const response = await fetch(
       `/api/v1/projects/${projectStore.projectId}/reference-files`,
       {
@@ -336,12 +397,18 @@ const handleSubmitExtra = async () => {
         body: formData,
       }
     );
+    
+    clearInterval(progressInterval);
+    uploadProgressExtra.value = 100;
+    
     if (!response.ok) {
       throw new Error("업로드 실패");
     }
+    
     const data = await response.json();
+    console.log("추가 파일 업로드 성공:", data);
+    
     clearFileExtra();
-    // 추가 파일 업로드 후 별도 처리 필요시 여기에 작성
   } catch (error) {
     console.error("업로드 실패:", error);
     alert("파일 업로드 중 오류가 발생했습니다.");
@@ -354,8 +421,8 @@ const handleSubmitExtra = async () => {
 <style scoped>
 .main-content {
   width: 100%;
-  min-height: calc(80vh);
   padding: 40px;
+  padding-top: 100px;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     "Helvetica Neue", Arial, sans-serif;
   background: #ffffff;
@@ -374,19 +441,17 @@ const handleSubmitExtra = async () => {
 .upload-card {
   flex: 1;
   min-width: 320px;
-  max-width: 500px;
+  max-width: 500px; /* 두 요소의 크기를 동일하게 설정 */
+  height: 100%; /* 높이도 동일하게 설정 */
   background: #ffffff;
   border: 1px solid #e1e5e9;
   border-radius: 12px;
   padding: 40px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
   text-align: center;
-}
-
-.welcome-section {
-  max-width: 800px; /* 필요시 최대 너비 설정 */
-  margin: 0 auto; /* 중앙 정렬 */
-  padding-top: 20vh; /* 수직 중앙 정렬을 위한 상단 패딩 */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; /* 내용 간 간격 균등 분배 */
 }
 
 .upload-title {
@@ -449,19 +514,6 @@ const handleSubmitExtra = async () => {
   line-height: 1.6;
   font-weight: 500;
   margin: 0;
-}
-
-/* 반응형 디자인 */
-@media (max-width: 1024px) {
-  .upload-container {
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .upload-card {
-    width: 100%;
-    max-width: 600px;
-  }
 }
 
 .file-preview {
@@ -667,6 +719,19 @@ const handleSubmitExtra = async () => {
   40% {
     transform: scale(1.2);
     opacity: 1;
+  }
+}
+
+/* 반응형 디자인 */
+@media (max-width: 1024px) {
+  .upload-container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .upload-card {
+    width: 100%;
+    max-width: 600px;
   }
 }
 </style>

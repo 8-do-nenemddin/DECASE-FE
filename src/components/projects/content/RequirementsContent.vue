@@ -226,7 +226,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch, computed, onUnmounted, nextTick, reactive } from "vue";
+import { ref, onMounted, watch, reactive, onUnmounted, nextTick, computed } from "vue";
 import { AgGridVue } from "ag-grid-vue3";
 import { ModuleRegistry, AllCommunityModule } from "ag-grid-community";
 import "ag-grid-community/styles/ag-grid.css";
@@ -258,14 +258,14 @@ const searchParams = ref(null);
 const mockupExists = ref(true); // 초기값은 false
 const gridApi = ref(null);
 const rowHeightLevel = ref(1); // 1: 작게, 2: 중간, 3: 크게
-const categories = reactive({
-  대분류: [],
-  중분류: [],
-  소분류: [],
-});
+// const categories = ref({
+//   "대분류": null,
+//   "중분류": null,
+//   "소분류": null
+// }); -> 이거 하면 토글이됨 ... 신기하죠?
 
 const rowHeightOptions = {
-  1: 28, // 글자 1개 높이
+  1: 30, // 글자 1개 높이
   2: 200, // 문장 3개 정도
   3: 500, // 글자 10개 정도
 };
@@ -421,62 +421,28 @@ const columnDefs = ref([
     },
   },
   {
-    field: "actions",
-    headerName: "행 삭제",
-    width: 120,
-    cellRenderer: (params) => {
-  return `
-    <div style="
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100%;
-      width: 100%;
-      padding: 0;
-      margin: 0;
-    ">
+  field: "actions",
+  headerName: "행 삭제",
+  width: 120,
+  cellRenderer: (params) => {
+    return `
       <button 
-        class="row-delete-button"
+        class="row-delete-button" 
         data-reqpk="${params.data.reqPk}"
         style="
-          background-color: #ff4757;
+          background-color: #dc3545;
           color: white;
           border: none;
-          border-radius: 6px;
           padding: 6px 12px;
+          border-radius: 10px;
+          cursor: pointer;
           font-size: 12px;
           font-weight: 500;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          box-shadow: 0 2px 4px rgba(255, 71, 87, 0.2);
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          text-align: center;
-          line-height: 1;
-        "
-        onmouseover="
-          this.style.backgroundColor = '#ff3742';
-          this.style.transform = 'translateY(-1px)';
-          this.style.boxShadow = '0 4px 8px rgba(255, 71, 87, 0.3)';
-        "
-        onmouseout="
-          this.style.backgroundColor = '#ff4757';
-          this.style.transform = 'translateY(0)';
-          this.style.boxShadow = '0 2px 4px rgba(255, 71, 87, 0.2)';
         "
       >삭제</button>
-    </div>
-  `;
+    `;
+  },
 },
-cellStyle: {
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: '0'
-  },
-  width: 80
-  },
 ]);
 
 // 기본 컬럼 설정
@@ -909,8 +875,6 @@ async function saveBulkChanges(modifiedData) {
       }
     );
 
-    console.log('왜 안됌?')
-
     if (!response.ok) {
       const errorText = await response.text();
       console.error("서버 응답:", errorText);
@@ -1002,7 +966,7 @@ async function downloadRequirements() {
 
   try {
     const response = await fetch(
-      `/api/v1/projects/${props.projectId}/requirements/downloads?revisionCount=${props.revision}`,
+      `/api/v1/projects/${projectId.value}/requirements/downloads?revisionCount=${props.revision}`,
       {
         method: "GET",
         headers: {
@@ -1261,8 +1225,8 @@ watch(
         `요구사항 데이터 변경: projectId=${newProjectId}, revision=${newRevision}`
       );
       if (gridApi.value) {
-        loadDataFromAPI();
         fetchCategories(); // 카테고리 먼저 가져오기
+        loadDataFromAPI();
       }
     }
   },
@@ -1274,7 +1238,6 @@ onMounted(() => {
     projectId: projectId.value,
     revision: props.revision,
   });
-  loadDataFromAPI();
   fetchCategories(); // 초기 카테고리 로드
 });
 
