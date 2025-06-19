@@ -141,7 +141,15 @@
       </div>
     </div>
 
-    <div v-if="rowDeleteError" class="modification-notice" style="background-color: #fef3c7; border: 1px solid #f59e0b; color: #92400e;">
+    <div
+      v-if="rowDeleteError"
+      class="modification-notice"
+      style="
+        background-color: #fef3c7;
+        border: 1px solid #f59e0b;
+        color: #92400e;
+      "
+    >
       ⚠️ {{ rowDeleteError }}
     </div>
 
@@ -338,9 +346,9 @@ const columnDefs = ref([
     cellEditorPopup: true,
     cellEditorParams: {
       maxLength: 5000, // ✅ 원하는 최대 글자 수로 설정!
-      rows: 10,        // textarea 높이 (선택)
-      cols: 50         // textarea 너비 (선택)
-    }
+      rows: 10, // textarea 높이 (선택)
+      cols: 50, // textarea 너비 (선택)
+    },
   },
   {
     field: "priority",
@@ -462,8 +470,11 @@ function onGridReady(params) {
   });
 
   // ✅ 행 삭제 버튼 클릭 이벤트 처리
-  params.api.addEventListener('cellClicked', (event) => {
-    if (event.colDef.field === 'actions' && event.event.target?.classList.contains('row-delete-button')) {
+  params.api.addEventListener("cellClicked", (event) => {
+    if (
+      event.colDef.field === "actions" &&
+      event.event.target?.classList.contains("row-delete-button")
+    ) {
       const reqPk = event.data.reqPk;
       handleRowDelete(reqPk);
     }
@@ -798,9 +809,13 @@ function saveChanges() {
     return;
   }
   // 수정 사유가 비어있는 행이 있는지 검사
-  const rowsWithoutReason = modifiedRowsData.filter((row) => !row.modification_reason || row.modification_reason.trim() === "");
+  const rowsWithoutReason = modifiedRowsData.filter(
+    (row) => !row.modification_reason || row.modification_reason.trim() === ""
+  );
   if (rowsWithoutReason.length > 0) {
-    alert(`수정 사유가 입력되지 않은 행이 ${rowsWithoutReason.length}개 있습니다. 모든 수정 사유를 입력해주세요.`);
+    alert(
+      `수정 사유가 입력되지 않은 행이 ${rowsWithoutReason.length}개 있습니다. 모든 수정 사유를 입력해주세요.`
+    );
     return;
   }
   saveBulkChanges(modifiedRowsData);
@@ -897,7 +912,7 @@ async function createMockup() {
 
   try {
     const response = await fetch(
-      `/api/v1/projects/${props.projectId}/mockups/${props.revision}?outputFolderName=index.html`,
+      `/api/v1/projects/${props.projectId}/mockups/${props.revision}`,
       {
         method: "POST",
         headers: {
@@ -914,7 +929,7 @@ async function createMockup() {
     // 2초 대기
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
-    alert("목업 생성이 시작되었습니다. 약 10분 정도 소요될 예정입니다.");
+    alert("목업 생성이 시작되었습니다. 약 30분 정도 소요될 예정입니다.");
     mockupExists.value = true;
   } catch (error) {
     console.error("목업 생성 실패:", error);
@@ -1100,9 +1115,9 @@ const updateColumnDefs = () => {
       cellEditorPopup: true,
       cellEditorParams: {
         maxLength: 5000, // ✅ 원하는 최대 글자 수로 설정!
-        rows: 10,        // textarea 높이 (선택)
-        cols: 50         // textarea 너비 (선택)
-      }
+        rows: 10, // textarea 높이 (선택)
+        cols: 50, // textarea 너비 (선택)
+      },
     },
     {
       field: "priority",
@@ -1234,7 +1249,7 @@ onUnmounted(() => {
 
 async function handleRowDelete(reqPk) {
   // Find the row in rowData by reqPk
-  const row = rowData.value.find(item => item.reqPk === reqPk);
+  const row = rowData.value.find((item) => item.reqPk === reqPk);
   if (!row) {
     rowDeleteError.value = "행 데이터를 찾을 수 없습니다.";
     return;
@@ -1256,13 +1271,16 @@ async function handleRowDelete(reqPk) {
   rowDeleteError.value = ""; // 에러 초기화
 
   try {
-    const response = await fetch(`/api/v1/projects/${props.projectId}/requirments/${reqPk}/delete`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ reason: reason, memberId: userId }),
-    });
+    const response = await fetch(
+      `/api/v1/projects/${props.projectId}/requirments/${reqPk}/delete`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ reason: reason, memberId: userId }),
+      }
+    );
 
     if (!response.ok) {
       throw new Error("삭제 요청 실패");
