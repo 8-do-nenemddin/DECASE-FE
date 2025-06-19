@@ -44,23 +44,33 @@
               </svg>
             </div>
           </div>
-          <button
-            @click="handleSubmit"
-            :disabled="!selectedFile || isUploading"
-            class="submit-button"
-          >
-            <span v-if="isUploading">업로드 중...</span>
-            <span v-else>업로드 시작</span>
-          </button>
-          <div v-if="isUploading" class="progress-container">
-            <div class="progress-bar">
-              <div
-                class="progress-fill"
-                :style="{ width: uploadProgress + '%' }"
-              ></div>
+          <div v-else class="file-preview">
+            <div class="file-icon">✓</div>
+            <div class="file-info">
+              <div class="file-name">{{ selectedFile.name }}</div>
+              <div class="file-size">
+                {{ formatFileSize(selectedFile.size) }}
+              </div>
             </div>
-            <div class="progress-text">{{ Math.round(uploadProgress) }}%</div>
+            <button @click.stop="clearFile" class="clear-button">삭제</button>
           </div>
+        </div>
+        <button
+          @click="handleSubmit"
+          :disabled="!selectedFile || isUploading"
+          class="submit-button"
+        >
+          <span v-if="isUploading">업로드 중...</span>
+          <span v-else>업로드 시작</span>
+        </button>
+        <div v-if="isUploading" class="progress-container">
+          <div class="progress-bar">
+            <div
+              class="progress-fill"
+              :style="{ width: uploadProgress + '%' }"
+            ></div>
+          </div>
+          <div class="progress-text">{{ Math.round(uploadProgress) }}%</div>
         </div>
       </div>
       <!-- 두 번째 업로드 카드 (추가 파일) -->
