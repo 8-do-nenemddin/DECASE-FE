@@ -418,12 +418,57 @@ const columnDefs = ref([
     headerName: "행 삭제",
     width: 120,
     cellRenderer: (params) => {
-      return `
-      <button class="row-delete-button" data-reqpk="${params.data.reqPk}">
-        삭제
-      </button>
-    `;
-    },
+  return `
+    <div style="
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100%;
+      width: 100%;
+      padding: 0;
+      margin: 0;
+    ">
+      <button 
+        class="row-delete-button"
+        data-reqpk="${params.data.reqPk}"
+        style="
+          background-color: #ff4757;
+          color: white;
+          border: none;
+          border-radius: 6px;
+          padding: 6px 12px;
+          font-size: 12px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          box-shadow: 0 2px 4px rgba(255, 71, 87, 0.2);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          text-align: center;
+          line-height: 1;
+        "
+        onmouseover="
+          this.style.backgroundColor = '#ff3742';
+          this.style.transform = 'translateY(-1px)';
+          this.style.boxShadow = '0 4px 8px rgba(255, 71, 87, 0.3)';
+        "
+        onmouseout="
+          this.style.backgroundColor = '#ff4757';
+          this.style.transform = 'translateY(0)';
+          this.style.boxShadow = '0 2px 4px rgba(255, 71, 87, 0.2)';
+        "
+      >삭제</button>
+    </div>
+  `;
+},
+cellStyle: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: '0'
+  },
+  width: 80
   },
 ]);
 
