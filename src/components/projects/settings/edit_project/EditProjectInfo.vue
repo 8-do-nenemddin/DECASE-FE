@@ -502,6 +502,7 @@ const confirmDelete = async () => {
 }
 
 .form-card {
+  margin-top: 2rem;
   background: #ffffff;
   border-radius: 16px;
   padding: 2rem;
