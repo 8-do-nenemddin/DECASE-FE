@@ -105,8 +105,8 @@ const handleFileSelected = (fileData) => {
 // 검색 이벤트 처리
 const handleSearch = (searchParams) => {
   if (
-    selectedFile.value?.type === "generated" &&
-    requirementsContentRef.value
+    requirementsContentRef.value &&
+    typeof requirementsContentRef.value.handleSearch === "function"
   ) {
     requirementsContentRef.value.handleSearch(searchParams);
   }

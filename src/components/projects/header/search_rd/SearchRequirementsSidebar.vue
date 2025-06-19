@@ -170,12 +170,12 @@ const options = reactive({
 
 // 검색 파라미터 생성 함수
 const createSearchParams = () => {
-  // Convert checkbox options to docType numbers
+  // docType 체크박스 값을 문자열로 변환
   const docTypes = [];
-  if (options.rfp) docTypes.push("1"); // RFP
-  if (options.functional) docTypes.push("2"); // MOMV (회의록 음성)
-  if (options.proposal) docTypes.push("3"); // MOMD (회의록)
-  if (options.additional) docTypes.push("4"); // EXTRA (추가파일)
+  if (options.rfp) docTypes.push("RFP");
+  if (options.proposal) docTypes.push("MOMD");
+  if (options.additional) docTypes.push("EXTRA");
+  if (options.functional) docTypes.push("MOMV");
 
   // Map type values
   const typeMap = {

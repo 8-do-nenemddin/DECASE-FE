@@ -525,6 +525,7 @@ function transformApiDataToTableData(apiData) {
 
 // 검색 이벤트 핸들러
 const handleSearch = async (params) => {
+  console.log("[진단] handleSearch 실행됨", params); // 함수 진입 확인
   try {
     loading.value = true;
     error.value = null;
@@ -532,6 +533,7 @@ const handleSearch = async (params) => {
 
     if (!props.projectId || !props.revision) {
       error.value = "프로젝트 ID 또는 리비전 정보가 없습니다.";
+      console.log("[진단] 필수 정보 없음, return");
       return;
     }
 
@@ -556,22 +558,15 @@ const handleSearch = async (params) => {
     if (params.level1) queryParams.append("level1", params.level1);
     if (params.level2) queryParams.append("level2", params.level2);
     if (params.level3) queryParams.append("level3", params.level3);
-
-    // type 파라미터 처리 (0: 기능, 1: 비기능)
     if (params.type !== undefined && params.type !== null) {
       queryParams.append("type", params.type);
     }
-
-    // difficulty 파라미터 처리 (0: 상, 1: 중, 2: 하)
     if (params.difficulty !== undefined && params.difficulty !== null) {
       queryParams.append("difficulty", params.difficulty);
     }
-
-    // priority 파라미터 처리 (0: 상, 1: 중, 2: 하)
     if (params.priority !== undefined && params.priority !== null) {
       queryParams.append("priority", params.priority);
     }
-
     if (params.docType && Array.isArray(params.docType)) {
       params.docType.forEach((type) => queryParams.append("docType", type));
     }
@@ -582,14 +577,7 @@ const handleSearch = async (params) => {
     const apiUrl = `/api/v1/projects/${
       props.projectId
     }/documents/search?${queryParams.toString()}`;
-
-    // API URL 로깅
-    console.log("=== API 요청 정보 ===");
-    console.log("1. 요청 URL:", apiUrl);
-    console.log("2. 쿼리 파라미터:");
-    for (const [key, value] of queryParams.entries()) {
-      console.log(`- ${key}: ${value}`);
-    }
+    console.log("[진단] fetch 호출 직전, API 요청 URL:", apiUrl); // fetch 직전 로그
 
     const response = await fetch(apiUrl, {
       method: "GET",
@@ -623,25 +611,20 @@ const handleSearch = async (params) => {
     if (!Array.isArray(apiData) || apiData.length === 0) {
       console.warn("검색 결과가 없습니다.");
       rowData.value = [];
+      fullList.value = [];
       return;
     }
 
     // 데이터 변환 및 그리드 업데이트
     const transformedData = transformApiDataToTableData(apiData);
-    console.log("변환된 데이터:", transformedData);
-
-    // rowData를 먼저 업데이트
     rowData.value = transformedData;
+    fullList.value = transformedData;
     modifiedRows.value.clear();
 
-    // gridApi가 준비되었는지 확인하고 데이터 설정
+    // 필요시 컬럼 크기 자동 맞춤
     await nextTick();
-    if (gridApi.value && typeof gridApi.value.setRowData === "function") {
-      gridApi.value.setRowData(transformedData);
-      gridApi.value.refreshCells();
+    if (gridApi.value) {
       gridApi.value.sizeColumnsToFit();
-    } else {
-      console.warn("AG Grid가 아직 초기화되지 않았습니다.");
     }
 
     console.log("검색 결과 로드 완료. 결과 수:", transformedData.length);
@@ -649,6 +632,7 @@ const handleSearch = async (params) => {
     console.error("❌ 검색 실패:", err);
     error.value = err.message || "검색 중 오류가 발생했습니다.";
     rowData.value = [];
+    fullList.value = [];
   } finally {
     loading.value = false;
   }
