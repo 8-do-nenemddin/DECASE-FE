@@ -61,7 +61,6 @@
             </button>
           </div>
         </div>
-
         <button
           @click="handleSubmit"
           :disabled="!selectedFile || isUploading"
@@ -70,7 +69,6 @@
           <span v-if="isUploading">업로드 중...</span>
           <span v-else>업로드 시작</span>
         </button>
-        
         <div v-if="isUploading" class="progress-container">
           <div class="progress-bar">
             <div
