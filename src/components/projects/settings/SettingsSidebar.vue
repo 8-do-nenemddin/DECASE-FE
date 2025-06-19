@@ -85,7 +85,7 @@
                 <rect x="3" y="14" width="7" height="7"></rect>
               </svg>
             </span>
-            <span class="nav-text">요구사항 추적 매트릭스</span>
+            <span class="nav-text">변경 이력 관리</span>
           </button>
         </li>
 
@@ -110,7 +110,7 @@
                 <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
               </svg>
             </span>
-            <span class="nav-text">권한 관리</span>
+            <span class="nav-text">멤버 관리</span>
           </button>
         </li>
 
