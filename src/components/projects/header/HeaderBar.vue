@@ -206,7 +206,12 @@ import ProfileBar from "../../main/ProfileBar.vue";
 import MockupSidebar from "./mockup/MockupSidebar.vue";
 import { useProjectStore } from "/src/stores/projectStore";
 
-const emit = defineEmits(["fileSelected", "search", "mockupFileSelected"]);
+const emit = defineEmits([
+  "fileSelected",
+  "search",
+  "mockupFileSelected",
+  "openMockupSidebar",
+]);
 
 const projectStore = useProjectStore();
 const router = useRouter();
@@ -351,6 +356,13 @@ const handleGoSettings = () => {
 const handleSearch = (searchParams) => {
   emit("search", searchParams);
 };
+
+function handleOpenMockupSidebar() {
+  showMockupSidebar.value = true;
+  emit("openMockupSidebar");
+}
+
+defineExpose({ handleOpenMockupSidebar });
 </script>
 
 <style scoped>
