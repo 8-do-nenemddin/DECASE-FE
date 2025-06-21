@@ -5,16 +5,16 @@ import Signup from "../components/home/SignUp.vue";
 import MainView from "../components/main/Main.vue";
 import ProjectMain from "../components/projects/ProjectMain.vue";
 import inviteMember from "../components/projects/invitations/InviteMember.vue";
+import MockupViewContent from "../components/projects/content/MockUpViewContent.vue";
 
 import ProjectSetting from "../components/projects/settings/SettingMain.vue";
 import ProjectInfo from "../components/projects/settings/edit_project/EditProjectInfo.vue";
 import ProjectRight from "../components/projects/settings/manage_right/ManageRight.vue";
 import ProjectMatrix from "../components/projects/settings/view_matrix/ViewMatrix.vue";
 
-import DetailsMain from "../components/projects/details/DetailsMain.vue"
-import ProjectDetailInfo from "../components/projects/details/project_detail/ProjectInfo.vue"
-import ProjectDetailMatrix from "../components/projects/details/view_matrix/ViewMatrix.vue"
-
+import DetailsMain from "../components/projects/details/DetailsMain.vue";
+import ProjectDetailInfo from "../components/projects/details/project_detail/ProjectInfo.vue";
+import ProjectDetailMatrix from "../components/projects/details/view_matrix/ViewMatrix.vue";
 
 const routes = [
   {
@@ -89,8 +89,14 @@ const routes = [
     path: "/invite/:token",
     name: "InviteMember",
     component: inviteMember,
-    props: true
-  }
+    props: true,
+  },
+  {
+    path: "/projects/:projectId/mockup/:revision/:fileName",
+    name: "mockup-view",
+    component: MockupViewContent,
+    props: true,
+  },
 ];
 
 const router = createRouter({

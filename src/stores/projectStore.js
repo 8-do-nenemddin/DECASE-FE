@@ -21,6 +21,9 @@ export const useProjectStore = defineStore("projectStore", {
       this.status = status;
       this.isAdmin = isAdmin;
     },
+    setProjectRevision(count) {
+      this.projectRevision = count;
+    },
     setRevisionCount(count) {
       // 리비전 카운트 설정을 위한 새로운 액션
       this.revisionCount = count;
