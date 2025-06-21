@@ -27,62 +27,66 @@ const handleClose = () => {
 @import url("https://fonts.googleapis.com/icon?family=Material+Icons");
 
 .content-container {
-  padding: 1rem;
-  padding-top: 4rem;
-  /* padding-bottom: 0rem; */
+  padding: 3rem;
   font-family: "Noto Sans KR", sans-serif;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 2rem;
   min-height: 200px;
-  justify-content: space-between;
 }
 
 .icon-container {
   display: flex;
   justify-content: center;
-  margin-bottom: 1rem;
+  align-items: center;
+  width: 80px;
+  height: 80px;
+  background-color: #f3f4f6;
+  border-radius: 50%;
 }
 
 .download-icon {
-  font-size: 4rem;
-  color: #1f2937;
+  font-size: 2.5rem;
+  color: black;
 }
 
 .completion-text {
-  font-size: 1.5rem;
-  font-weight: 700;
+  font-size: 1.25rem;
+  font-weight: 600;
   color: #1f2937;
-  text-align: center;
   margin: 0;
-  margin-bottom: 3rem;
   line-height: 1.4;
 }
 
 .button-group {
   display: flex;
-  justify-content: flex-end;
+  justify-content: center;
   width: 100%;
-  margin-top: auto;
 }
 
 .button {
-  padding: 0.5rem 1rem;
+  padding: 0.75rem 2rem;
   border: none;
-  border-radius: 0.25rem;
-  font-weight: 700;
+  border-radius: 0.5rem;
+  font-weight: 600;
   font-size: 0.875rem;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
   font-family: "Noto Sans KR", sans-serif;
+  min-width: 100px;
 }
 
 .confirm-button {
-  background-color: #1f2937;
+  background-color: black;
   color: white;
 }
 
 .confirm-button:hover {
-  background-color: #374151;
+  background-color: rgb(105, 102, 102);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(188, 192, 191, 0.3);
 }
 </style>
