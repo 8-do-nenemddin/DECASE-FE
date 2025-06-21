@@ -288,6 +288,7 @@ const mockupExists = ref(true); // 초기값은 false
 const gridApi = ref(null);
 const rowHeightLevel = ref(1); // 1: 작게, 2: 중간, 3: 크게
 const mockupStatus = ref(null); // 목업 생성 상태: PROCESSING, FAILED, SUCCESS 등
+const pollingInterval = ref(null); // 목업 상태 폴링을 위한 인터벌 ID
 
 const rowHeightOptions = {
   1: 28, // 글자 1개 높이
@@ -301,6 +302,25 @@ function setRowHeightLevel(level) {
     gridApi.value.resetRowHeights();
   }
 }
+
+// 목업 상태 폴링 시작
+function startPolling() {
+  if (pollingInterval.value) return; // 이미 폴링 중이면 중복 실행 방지
+  console.log("목업 상태 폴링을 시작합니다.");
+  pollingInterval.value = setInterval(() => {
+    checkMockupStatus();
+  }, 10000); // 10초마다 확인
+}
+
+// 목업 상태 폴링 중지
+function stopPolling() {
+  if (pollingInterval.value) {
+    console.log("목업 상태 폴링을 중지합니다.");
+    clearInterval(pollingInterval.value);
+    pollingInterval.value = null;
+  }
+}
+
 const fullList = ref([]);
 const rowDeleteError = ref("");
 
@@ -750,7 +770,7 @@ async function loadDataFromAPI() {
     ]);
 
     if (!requirementsResponse.ok || !mockupResponse.ok) {
-      throw new Error("하나 이상의 API 요청이 실패했습니다.");
+      throw new Error("데이터 로드 실패");
     }
 
     const responseData = await requirementsResponse.json();
@@ -946,30 +966,29 @@ async function fetchMockupJobStatus() {
 async function checkMockupStatus() {
   const status = await fetchMockupJobStatus();
   mockupStatus.value = status;
+
   if (status === "PROCESSING") {
-    loading.value = true;
   } else {
-    loading.value = false;
-  }
-  if (status === "FAILED") {
-    alert("목업 생성 실패. 다시 목업 생성 요청해주세요.");
+    stopPolling(); // 'PROCESSING'이 아니면 폴링 중지
+
+    if (status === "SUCCESS") {
+      mockupExists.value = true;
+    } else if (status === "FAILED") {
+      mockupExists.value = false; // 다시 생성할 수 있도록
+    }
   }
 }
 
 async function createMockup() {
-  loading.value = true;
   try {
     // 목업 생성 요청 전 상태 확인
     const status = await fetchMockupJobStatus();
     if (status === "PROCESSING") {
-      alert("목업 생성이 진행중입니다. 잠시만 기다려주세요.");
-      loading.value = false;
       mockupStatus.value = status;
+      startPolling(); // 페이지 새로고침 등으로 폴링이 멈췄을 수 있으므로 다시 시작
       return;
     }
     if (status === "FAILED") {
-      alert("목업 생성 실패. 다시 시도해주세요.");
-      loading.value = false;
       mockupStatus.value = status;
       return;
     }
@@ -987,15 +1006,16 @@ async function createMockup() {
     if (!response.ok) {
       throw new Error("목업 생성 요청이 실패했습니다.");
     }
-    // 2초 대기
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    alert("목업 생성이 시작되었습니다. 약 30분 정도 소요될 예정입니다.");
+
+    alert(
+      "목업 생성이 시작되었습니다. 약 30분 정도 소요됩니다. 잠시만 기다려주세요."
+    );
     mockupStatus.value = "PROCESSING";
+    startPolling();
   } catch (error) {
     console.error("목업 생성 실패:", error);
-    alert("목업 생성 중 오류가 발생했습니다.");
+    alert(error.message || "목업 생성 중 오류가 발생했습니다.");
   } finally {
-    loading.value = false;
   }
 }
 
@@ -1272,7 +1292,11 @@ watch(
       if (gridApi.value) {
         fetchCategories(); // 카테고리 먼저 가져오기
         loadDataFromAPI();
-        checkMockupStatus(); // 프로젝트/리비전 변경 시 상태도 다시 체크
+        checkMockupStatus().then(() => {
+          if (mockupStatus.value === "PROCESSING") {
+            startPolling();
+          }
+        }); // 프로젝트/리비전 변경 시 상태도 다시 체크
       }
     }
   },
@@ -1285,7 +1309,11 @@ onMounted(() => {
     revision: props.revision,
   });
   fetchCategories(); // 초기 카테고리 로드
-  checkMockupStatus(); // 목업 상태 체크
+  checkMockupStatus().then(() => {
+    if (mockupStatus.value === "PROCESSING") {
+      startPolling();
+    }
+  });
 });
 
 // 컴포넌트 정의
@@ -1307,6 +1335,7 @@ const viewMockup = () => {
 // 컴포넌트 언마운트 시 gridApi 초기화
 onUnmounted(() => {
   gridApi.value = null;
+  stopPolling();
 });
 
 async function handleRowDelete(reqPk) {
