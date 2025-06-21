@@ -660,17 +660,33 @@ const toggleRow = (id) => {
   text-align: center;
   padding: 3rem 1rem;
   color: #6b7280;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+  margin: 2rem auto;
+  max-width: 500px;
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
+
 .empty-icon {
   font-size: 40px;
   margin-bottom: 1rem;
 }
+
 .empty-title {
   font-size: 20px;
   font-weight: 600;
   margin-bottom: 0.5rem;
+  color: #374151;
 }
+
 .empty-description {
   font-size: 14px;
+  color: #6b7280;
 }
 </style>
