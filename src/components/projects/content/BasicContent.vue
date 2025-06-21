@@ -61,7 +61,7 @@
           class="submit-button"
         >
           <span v-if="isUploading">업로드 중...</span>
-          <span v-else>업로드 시작</span>
+          <span v-else>요구사항 정의서 생성</span>
         </button>
         <div v-if="isUploading" class="progress-container">
           <div class="progress-bar">
@@ -152,30 +152,6 @@
         </div>
       </div>
     </div>
-
-    <!-- 요구사항정의서 생성 중 화면 -->
-
-    <div class="generating-card" v-if="isGenerating">
-      <div class="generating-content">
-        <div class="generating-icon">
-          <div class="spinner"></div>
-        </div>
-        <h2 class="generating-title">요구사항정의서 생성중입니다</h2>
-        <p class="generating-subtitle">
-          업로드된 RFP 파일을 분석하여 요구사항정의서를 생성하고 있습니다.
-          <br />
-          <strong>약 30분 정도 소요될 예정입니다.</strong>
-        </p>
-        <div class="generating-progress">
-          <div class="pulse-dots">
-            <span></span>
-            <span></span>
-            <span></span>
-          </div>
-        </div>
-      </div>
-    </div>
-    <GeneratingContent v-if="projectStore.projectRevision === 1" />
   </main>
 </template>
 
@@ -183,6 +159,8 @@
 import { ref } from "vue";
 import { useProjectStore } from "/src/stores/projectStore";
 import GeneratingContent from "./GeneratingContent.vue";
+
+const emit = defineEmits(["generation-started"]);
 
 const projectStore = useProjectStore();
 
@@ -234,7 +212,9 @@ const handleFileDrop = (event) => {
 // 선택된 파일을 삭제하는 함수
 const clearFile = () => {
   selectedFile.value = null;
-  fileInput.value.value = "";
+  if (fileInput.value) {
+    fileInput.value.value = "";
+  }
   uploadProgress.value = 0;
 };
 
@@ -253,6 +233,7 @@ const handleSubmit = async () => {
     return;
   }
 
+  emit("generation-started");
   isUploading.value = true;
   uploadProgress.value = 0;
 
@@ -273,16 +254,14 @@ const handleSubmit = async () => {
     );
 
     if (!response.ok) {
-      throw new Error("업로드 실패");
+      alert("요구사항 정의서 생성 요청 실패");
+      throw new Error(`서버 오류: ${response.status} ${response.statusText}`);
     }
 
-    const data = await response.json();
-
     clearFile();
-    // 업로드 성공 후 별도의 isGenerating 상태 관리 없이 projectRevision 값이 바뀌면 화면이 전환됨
   } catch (error) {
     console.error("업로드 실패:", error);
-    alert("파일 업로드 중 오류가 발생했습니다.");
+    alert(error.message || "RFP 업로드 중 오류가 발생했습니다.");
   } finally {
     isUploading.value = false;
   }
