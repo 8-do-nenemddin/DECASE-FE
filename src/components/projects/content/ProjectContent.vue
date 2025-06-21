@@ -45,8 +45,12 @@
           <template v-else-if="srsStatus === 'FAILED'">
             <SrsFailedContent :message="srsMessage" @retry="handleRetry" />
           </template>
-          <!-- 2-3. revision >= 1: 요구사항 정의서 화면 -->
-          <template v-else-if="projectStore.projectRevision >= 1">
+          <!-- 2-3. COMPLETED 상태 or revision >= 1: 요구사항 정의서 화면 -->
+          <template
+            v-else-if="
+              projectStore.projectRevision >= 1 || srsStatus === 'COMPLETED'
+            "
+          >
             <RequirementsContent
               ref="requirementsContentRef"
               :projectId="projectStore.projectId"
@@ -56,7 +60,7 @@
           </template>
           <!-- 2-4. revision === 0: RFP 업로드 화면 -->
           <template v-else>
-            <BasicContent />
+            <BasicContent @generation-started="handleGenerationStarted" />
           </template>
         </template>
       </template>
@@ -65,7 +69,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import BasicContent from "./BasicContent.vue";
 import UploadContent from "./UploadContent.vue";
 import RequirementsContent from "./RequirementsContent.vue";
@@ -77,6 +81,7 @@ import GeneratingContent from "./GeneratingContent.vue";
 
 const projectStore = useProjectStore();
 const projectId = computed(() => projectStore.projectId);
+let pollingInterval = null;
 
 // 선택된 파일 정보
 const selectedFile = ref(null);
@@ -133,7 +138,11 @@ const handleMockupFileSelected = (file) => {
   console.log("Updated activeMockupFile:", activeMockupFile.value);
 };
 
-const srsStatus = ref(null); // "PROCESSING", "FAILED", "SUCCESS" 등
+const handleGenerationStarted = () => {
+  srsStatus.value = "PROCESSING";
+};
+
+const srsStatus = ref(null); // "PROCESSING", "FAILED", "COMPLETED" 등
 const srsMessage = ref("");
 
 const fetchSrsStatus = async () => {
@@ -146,15 +155,49 @@ const fetchSrsStatus = async () => {
     const data = await res.json();
     srsStatus.value = data.status;
     srsMessage.value = data.message;
+
+    if (data.status === "COMPLETED") {
+      // 상태가 완료되면, projectStore의 revision을 1로 갱신
+      await projectStore.setProjectRevision(1);
+    }
   } catch (e) {
-    srsStatus.value = null;
+    console.error("SRS 상태 확인 실패:", e);
+    srsStatus.value = null; // 에러 발생 시 상태 초기화
     srsMessage.value = "";
+    if (pollingInterval) {
+      clearInterval(pollingInterval);
+      pollingInterval = null;
+    }
   }
 };
+
+const startPolling = () => {
+  if (pollingInterval) return; // 이미 폴링 중이면 시작하지 않음
+  pollingInterval = setInterval(fetchSrsStatus, 60000); // 10분마다 상태 확인
+};
+
+const stopPolling = () => {
+  if (pollingInterval) {
+    clearInterval(pollingInterval);
+    pollingInterval = null;
+  }
+};
+
+watch(srsStatus, (newStatus) => {
+  if (newStatus === "PROCESSING") {
+    startPolling();
+  } else {
+    stopPolling();
+  }
+});
 
 onMounted(() => {
   console.log("ProjectContent 마운트됨, projectId:", projectId.value);
   fetchSrsStatus();
+});
+
+onUnmounted(() => {
+  stopPolling(); // 컴포넌트가 사라질 때 폴링 중지
 });
 
 const handleRetry = () => {
