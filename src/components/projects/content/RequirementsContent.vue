@@ -433,12 +433,6 @@ const columnDefs = ref([
     },
   },
   {
-    field: "sourceIds",
-    headerName: "출처 ID",
-    editable: true,
-    width: 50,
-  },
-  {
     field: "modificationHistory",
     headerName: "변경이력",
     editable: true,
@@ -1253,12 +1247,6 @@ const updateColumnDefs = () => {
         if (!params.value) return "";
         return `<div style="white-space: pre-line; line-height: 1.4;">${params.value}</div>`;
       },
-    },
-    {
-      field: "sourceIds",
-      headerName: "출처 ID",
-      editable: true,
-      width: 50,
     },
     {
       field: "modificationHistory",
