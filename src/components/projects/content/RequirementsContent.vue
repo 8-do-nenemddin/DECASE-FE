@@ -966,7 +966,7 @@ function cancelChanges() {
 async function fetchMockupJobStatus() {
   try {
     const response = await fetch(
-      `/ai/api/v1/mockup/job/status?project_id=${props.projectId}`
+      `/ai/api/v1/mockup/job/status?project_id=${projectId.value}`
     );
     console.log("목업 상태 조회 응답:", response);
     if (!response.ok) throw new Error("상태 조회 실패");
