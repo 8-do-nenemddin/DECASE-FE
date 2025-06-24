@@ -95,7 +95,7 @@
 <script setup>
 import { ref, computed, watch, onMounted } from "vue";
 import axios from "axios";
-import { useProjectStore } from "../../../stores/projectStore";
+import { useProjectStore } from "@/stores/projectStore";
 
 const props = defineProps({
   activeFile: {
