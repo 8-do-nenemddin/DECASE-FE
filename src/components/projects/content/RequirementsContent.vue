@@ -652,7 +652,7 @@ const handleSearch = async (params) => {
     // 리비전 정보 추가
     queryParams.append("revisionCount", props.revision);
 
-    const apiUrl = `/api/v1/projects/${props.projectId}/documents/${
+    const apiUrl = `/api/v1/projects/${projectId.value}/documents/${
       props.revision
     }/search?${queryParams.toString()}`;
     console.log("[진단] fetch 호출 직전, API 요청 URL:", apiUrl); // fetch 직전 로그
