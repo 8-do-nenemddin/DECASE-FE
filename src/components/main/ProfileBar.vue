@@ -84,7 +84,6 @@
       class="modal-overlay"
       @click="closeWithdrawModal"
     >
-
       <Transition name="modal-content">
         <div v-if="isWithdrawModalVisible" class="modal-content" @click.stop>
           <div class="modal-header">
@@ -92,11 +91,11 @@
           </div>
           <div class="modal-body">
             <input
-                type="password"
-                v-model="withdrawPassword"
-                placeholder="비밀번호를 입력하세요"
-                class="withdraw-password-input"
-                required
+              type="password"
+              v-model="withdrawPassword"
+              placeholder="비밀번호를 입력하세요"
+              class="withdraw-password-input"
+              required
             />
             <p class="confirm-text">정말 탈퇴하시겠습니까?</p>
             <p class="warning-text">
@@ -119,18 +118,18 @@
 
 <script setup>
 import { useProjectStore } from "/src/stores/projectStore";
-import { defineProps, defineEmits, ref, onMounted } from "vue";
+import { ref, onMounted } from "vue";
 
-  // Props 정의
-  const props = defineProps({
+// Props 정의
+const props = defineProps({
   isVisible: {
     type: Boolean,
-    default: false
+    default: false,
   },
   profileData: {
     type: Object,
-    default: () => ({})  // 기본값으로 빈 객체
-  }
+    default: () => ({}), // 기본값으로 빈 객체
+  },
 });
 
 // Emits 정의
@@ -199,14 +198,14 @@ const closeWithdrawModal = () => {
   isWithdrawModalVisible.value = false;
 };
 
-const withdrawPassword = ref('');
+const withdrawPassword = ref("");
 
 const confirmWithdraw = async () => {
   try {
     const response = await fetch(`/api/v1/auth/${memberId}`, {
-      method: 'DELETE',
+      method: "DELETE",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({ password: withdrawPassword.value }),
     });
@@ -218,11 +217,11 @@ const confirmWithdraw = async () => {
       closeWithdrawModal();
     } else {
       const result = await response.json();
-      throw new Error(result.message || '탈퇴 실패');
+      throw new Error(result.message || "탈퇴 실패");
     }
   } catch (error) {
-    console.error('탈퇴 오류:', error);
-    alert(error.message || '탈퇴 중 오류가 발생했습니다.');
+    console.error("탈퇴 오류:", error);
+    alert(error.message || "탈퇴 중 오류가 발생했습니다.");
   }
 };
 </script>
@@ -569,7 +568,6 @@ const confirmWithdraw = async () => {
   }
 }
 
-
 .withdraw-password-input {
   width: 100%;
   padding: 10px;
@@ -583,5 +581,4 @@ const confirmWithdraw = async () => {
   outline: none;
   border-color: #3182ce;
 }
-
 </style>
