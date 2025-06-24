@@ -652,7 +652,7 @@ const handleSearch = async (params) => {
     // 리비전 정보 추가
     queryParams.append("revisionCount", props.revision);
 
-    const apiUrl = `/api/v1/projects/${props.projectId}/documents/${
+    const apiUrl = `/api/v1/projects/${projectId.value}/documents/${
       props.revision
     }/search?${queryParams.toString()}`;
     console.log("[진단] fetch 호출 직전, API 요청 URL:", apiUrl); // fetch 직전 로그
@@ -966,7 +966,7 @@ function cancelChanges() {
 async function fetchMockupJobStatus() {
   try {
     const response = await fetch(
-      `/ai/api/v1/mockup/job/status?project_id=${props.projectId}`
+      `/ai/api/v1/mockup/job/status?project_id=${projectId.value}`
     );
     console.log("목업 상태 조회 응답:", response);
     if (!response.ok) throw new Error("상태 조회 실패");
