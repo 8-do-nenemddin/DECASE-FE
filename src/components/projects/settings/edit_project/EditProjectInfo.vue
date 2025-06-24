@@ -271,6 +271,7 @@ const loadProjectData = async () => {
     projectData.endDate = formatDateForInput(data.endDate);
     projectData.description = data.description || "";
     projectData.pm = data.proposalPM || "";
+    projectData.creatorMemberId = data.proposalPM || null;
 
     console.log("설정 후 projectData:", JSON.stringify(projectData, null, 2));
   } catch (err) {
