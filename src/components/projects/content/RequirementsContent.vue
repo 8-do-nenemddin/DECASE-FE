@@ -1324,12 +1324,17 @@ onMounted(() => {
     projectId: projectId.value,
     revision: props.revision,
   });
-  fetchCategories(); // 초기 카테고리 로드
-  checkMockupStatus().then(() => {
-    if (mockupStatus.value === "PROCESSING") {
-      startPolling();
-    }
-  });
+  // ✅ projectId가 정의돼 있어야만 API 호출
+  if (projectId.value && props.revision) {
+    fetchCategories();
+    checkMockupStatus().then(() => {
+      if (mockupStatus.value === "PROCESSING") {
+        startPolling();
+      }
+    });
+  } else {
+    console.warn("⚠️ projectId 또는 revision이 정의되지 않음. onMounted 작업 지연");
+  }
 });
 
 // 컴포넌트 정의
