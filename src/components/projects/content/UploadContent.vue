@@ -660,7 +660,7 @@ onMounted(() => {
 }
 
 /* 테이블 스타일링 */
-.summary-body >>> .summary-table {
+.summary-body :deep(.summary-table) {
   width: 100%;
   border-collapse: collapse;
   background: #ffffff;
@@ -669,7 +669,7 @@ onMounted(() => {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.summary-body >>> .summary-table caption {
+.summary-body :deep(.summary-table caption) {
   font-size: 1.1em;
   font-weight: 600;
   color: #1e293b;
@@ -678,7 +678,7 @@ onMounted(() => {
   text-align: center;
 }
 
-.summary-body >>> .summary-table th {
+.summary-body :deep(.summary-table th) {
   background: #f1f5f9;
   color: #334155;
   font-weight: 600;
@@ -687,13 +687,13 @@ onMounted(() => {
   border-bottom: 2px solid #e2e8f0;
 }
 
-.summary-body >>> .summary-table td {
+.summary-body :deep(.summary-table td) {
   padding: 12px 16px;
   border-bottom: 1px solid #f1f5f9;
   vertical-align: top;
 }
 
-.summary-body >>> .summary-table td.category {
+.summary-body :deep(.summary-table td.category) {
   background: #f8fafc;
   font-weight: 600;
   color: #475569;
@@ -702,50 +702,50 @@ onMounted(() => {
 }
 
 /* 카테고리별 색상 구분 */
-.summary-body >>> .summary-table tr:has(td:contains("회의 핵심")) td.category {
+.summary-body :deep(.summary-table tr:has(td:contains("회의 핵심")) td.category) {
   background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
   color: #1e40af;
 }
 
-.summary-body >>> .summary-table tr:has(td:contains("추가된")) td.category {
+.summary-body :deep(.summary-table tr:has(td:contains("추가된")) td.category) {
   background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
   color: #166534;
 }
 
-.summary-body >>> .summary-table tr:has(td:contains("수정된")) td.category {
+.summary-body :deep(.summary-table tr:has(td:contains("수정된")) td.category) {
   background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
   color: #92400e;
 }
 
-.summary-body >>> .summary-table tr:has(td:contains("삭제된")) td.category {
+.summary-body :deep(.summary-table tr:has(td:contains("삭제된")) td.category) {
   background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
   color: #991b1b;
 }
 
 /* 테이블 내 리스트 스타일링 */
-.summary-body >>> .summary-table ul {
+.summary-body :deep(.summary-table ul) {
   margin: 0;
   padding-left: 16px;
 }
 
-.summary-body >>> .summary-table li {
+.summary-body :deep(.summary-table li) {
   margin: 4px 0;
   line-height: 1.5;
 }
 
 /* 테이블 행 호버 효과 */
-.summary-body >>> .summary-table tbody tr:hover {
+.summary-body :deep(.summary-table tbody tr:hover) {
   background: rgba(59, 130, 246, 0.05);
 }
 
 /* 반응형 테이블 */
 @media (max-width: 768px) {
-  .summary-body >>> .summary-table {
+  .summary-body :deep(.summary-table) {
     font-size: 0.9em;
   }
 
-  .summary-body >>> .summary-table th,
-  .summary-body >>> .summary-table td {
+  .summary-body :deep(.summary-table th),
+  .summary-body :deep(.summary-table td) {
     padding: 8px 12px;
   }
 }
