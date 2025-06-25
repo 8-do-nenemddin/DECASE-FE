@@ -2,23 +2,21 @@
   <div class="failed-card">
     <h2>요구사항 정의서 생성 실패</h2>
     <p>요구사항 정의서 생성에 실패했습니다.<br />다시 시도해 주세요.</p>
-    <button @click="goToBasicContent">돌아가기</button>
+    <button @click="retry">돌아가기</button>
     <div v-if="message" class="error-message">{{ message }}</div>
   </div>
 </template>
 
 <script setup>
-import { useRouter } from 'vue-router';
-const router = useRouter();
-
-const goToBasicContent= () => {
-  window.location.reload();
-};
-
+const emit = defineEmits(["retry"]);
 
 const props = defineProps({
   message: { type: String, default: "" },
 });
+
+const retry = () => {
+  emit("retry");
+};
 </script>
 
 <style scoped>
