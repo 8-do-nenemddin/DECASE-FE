@@ -2,12 +2,20 @@
   <div class="failed-card">
     <h2>요구사항 정의서 생성 실패</h2>
     <p>요구사항 정의서 생성에 실패했습니다.<br />다시 시도해 주세요.</p>
-    <button @click="$emit('retry')">재시도</button>
+    <button @click="goToBasicContent">재시도</button>
     <div v-if="message" class="error-message">{{ message }}</div>
   </div>
 </template>
 
 <script setup>
+import { useRouter } from 'vue-router';
+const router = useRouter();
+
+const goToBasicContent= () => {
+  router.push('/basic');
+};
+
+
 const props = defineProps({
   message: { type: String, default: "" },
 });
