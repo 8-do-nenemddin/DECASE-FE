@@ -229,6 +229,13 @@ const handleCreateProject = async () => {
     } else {
       newProject.status = "ACTIVE";
     }
+
+    if (newProject.creatorMemberId === userId.value) {
+      newProject.isAdmin = true;
+    } else {
+      newProject.isAdmin = false;
+    }
+
     projectStore.setProject(
       newProject.projectId,
       newProject.name,

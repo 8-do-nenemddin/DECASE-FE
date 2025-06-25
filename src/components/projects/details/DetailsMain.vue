@@ -26,12 +26,26 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted, computed, reactive } from "vue";
 import DetailsSidebar from "./DetailsSidebar.vue";
 import ProjectInfo from "./project_detail/ProjectInfo.vue";
 import ViewMatrix from "../settings/view_matrix/ViewMatrix.vue";
 import SettingsHeader from "../settings/SettingsHeader.vue";
 import MemberInfo from "./member_info/MemberInfo.vue";
+import { useProjectStore } from "../../../stores/projectStore";
+
+const projectId = computed(() => useProjectStore().projectId);
+const error = ref("");
+const loading = ref(false);
+const projectData = reactive({
+  startDate: "",
+  endDate: "",
+  name: "",
+  pm: "",
+  description: "",
+  scale: "",
+  creatorMemberId: null,
+});
 
 const props = defineProps({
   projectId: {
@@ -71,6 +85,74 @@ const handleSendInvitations = async (invitationList) => {
     // handle error
   }
 };
+
+// 날짜 포맷 함수 (ISO 문자열을 YYYY-MM-DD로 변환)
+const formatDateForInput = (dateString) => {
+  if (!dateString) return "";
+  try {
+    const date = new Date(dateString);
+    return date.toISOString().split("T")[0];
+  } catch (e) {
+    console.error("날짜 변환 오류:", e);
+    return "";
+  }
+};
+
+// 프로젝트 데이터 로드 함수
+const loadProjectData = async () => {
+  if (!projectId.value) {
+    error.value = "프로젝트 ID를 찾을 수 없습니다.";
+    return;
+  }
+
+  loading.value = true;
+  error.value = "";
+
+  try {
+    console.log("프로젝트 ID:", projectId.value);
+
+    const res = await fetch(`/api/v1/projects/${projectId.value}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        // 필요한 경우 인증 헤더 추가
+        // 'Authorization': `Bearer ${token}`
+      },
+    });
+
+    console.log("응답 상태:", res.status);
+
+    if (!res.ok) {
+      throw new Error(
+        `프로젝트 정보 로드 실패: ${res.status} ${res.statusText}`
+      );
+    }
+
+    const json = await res.json();
+    const data = json.data;
+    console.log("받은 데이터:", data);
+
+    // 데이터 설정
+    projectData.name = data.name || "";
+    projectData.scale = data.scale ? String(data.scale) : "";
+    projectData.startDate = formatDateForInput(data.startDate);
+    projectData.endDate = formatDateForInput(data.endDate);
+    projectData.description = data.description || "";
+    projectData.pm = data.proposalPM || "";
+    projectData.creatorMemberId = data.creatorMemberId || null;
+
+    console.log("설정 후 projectData:", JSON.stringify(projectData, null, 2));
+  } catch (err) {
+    console.error("프로젝트 로드 오류:", err);
+    error.value = err.message || "프로젝트 정보를 불러오는데 실패했습니다.";
+  } finally {
+    loading.value = false;
+  }
+};
+
+onMounted(() => {
+  loadProjectData();
+});
 </script>
 
 <style>
