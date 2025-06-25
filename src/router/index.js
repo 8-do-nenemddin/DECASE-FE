@@ -16,6 +16,8 @@ import DetailsMain from "../components/projects/details/DetailsMain.vue";
 import ProjectDetailInfo from "../components/projects/details/project_detail/ProjectInfo.vue";
 import ProjectDetailMatrix from "../components/projects/details/view_matrix/ViewMatrix.vue";
 
+import BasicContent from "../components/projects/content/BasicContent.vue";
+
 const routes = [
   {
     path: "/main",
@@ -96,6 +98,11 @@ const routes = [
     name: "mockup-view",
     component: MockupViewContent,
     props: true,
+  },
+  {
+    path: "/basic",
+    name: "Basic",
+    component: BasicContent,
   },
 ];
 
