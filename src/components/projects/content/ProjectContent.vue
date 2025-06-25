@@ -162,7 +162,7 @@ const fetchSrsStatus = async () => {
     }
   } catch (e) {
     console.error("SRS 상태 확인 실패:", e);
-    srsStatus.value = null; // 에러 발생 시 상태 초기화
+    srsStatus.value = "FAILED"; // 에러 발생 시 상태 초기화
     srsMessage.value = "";
     if (pollingInterval) {
       clearInterval(pollingInterval);
@@ -201,7 +201,7 @@ onUnmounted(() => {
 });
 
 const handleRetry = () => {
-  fetchSrsStatus();
+  srsStatus.value = null; // 상태 초기화
 };
 
 // 외부에서 접근할 수 있도록 expose
