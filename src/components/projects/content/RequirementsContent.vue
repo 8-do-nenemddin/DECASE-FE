@@ -252,7 +252,15 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch, reactive, onUnmounted, nextTick, computed } from "vue";
+import {
+  ref,
+  onMounted,
+  watch,
+  reactive,
+  onUnmounted,
+  nextTick,
+  computed,
+} from "vue";
 import { AgGridVue } from "ag-grid-vue3";
 import { ModuleRegistry, AllCommunityModule } from "ag-grid-community";
 import "ag-grid-community/styles/ag-grid.css";
@@ -464,11 +472,11 @@ const columnDefs = ref([
     },
   },
   {
-  field: "actions",
-  headerName: "행 삭제",
-  width: 120,
-  cellRenderer: (params) => {
-    return `
+    field: "actions",
+    headerName: "행 삭제",
+    width: 120,
+    cellRenderer: (params) => {
+      return `
       <button 
         class="row-delete-button" 
         data-reqpk="${params.data.reqPk}"
@@ -484,8 +492,8 @@ const columnDefs = ref([
         "
       >삭제</button>
     `;
+    },
   },
-},
 ]);
 
 // 기본 컬럼 설정
@@ -1014,7 +1022,13 @@ async function createMockup() {
       }
     );
     if (!response.ok) {
-      throw new Error("목업 생성 요청이 실패했습니다.");
+      if (response.status === 404) {
+        throw new Error("기능적 요구사항이 없어서 목업 생성을 할 수 없습니다.");
+      } else if (response.status === 500) {
+        throw new Error("목업 생성 요청이 실패했습니다.");
+      } else {
+        throw new Error(`목업 생성 요청이 실패했습니다. (${response.status})`);
+      }
     }
 
     alert(
@@ -1321,7 +1335,9 @@ onMounted(() => {
       }
     });
   } else {
-    console.warn("⚠️ projectId 또는 revision이 정의되지 않음. onMounted 작업 지연");
+    console.warn(
+      "⚠️ projectId 또는 revision이 정의되지 않음. onMounted 작업 지연"
+    );
   }
 });
 
@@ -1371,13 +1387,16 @@ async function handleRowDelete(reqPk) {
   rowDeleteError.value = ""; // 에러 초기화
 
   try {
-    const response = await fetch(`/api/v1/projects/${projectId.value}/requirements/${reqPk}/delete`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ reason: reason, memberId: userId.value }),
-    });
+    const response = await fetch(
+      `/api/v1/projects/${projectId.value}/requirements/${reqPk}/delete`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ reason: reason, memberId: userId.value }),
+      }
+    );
 
     if (!response.ok) {
       throw new Error("삭제 요청 실패");
