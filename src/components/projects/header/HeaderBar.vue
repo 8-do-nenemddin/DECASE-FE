@@ -342,7 +342,7 @@ const handleGoMain = () => {
 
 const handleGoSettings = () => {
   const projectId = projectStore.projectId;
-  console.log(`'${projectId}' 세팅`);
+  console.log(`'${projectId}' 세팅, 관리자인지 확인 중... ${projectStore.isAdmin}`);
   if (projectStore.isAdmin) {
     // 관리자인 경우: 기존 설정 페이지로 이동
     router.push({ name: "ProjectSetting", params: { projectId } });
