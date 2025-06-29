@@ -20,8 +20,8 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "^4.44.1",
     "@vitejs/plugin-vue": "^5.2.3",
-    "@rollup/rollup-linux-x64-gnu": "^4.28.1",
     "vite": "^6.3.5"
   }
 }
