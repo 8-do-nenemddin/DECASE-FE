@@ -1,25 +1,22 @@
 <template>
   <div id="app-container">
-    <header class="header">
-      <div class="header-left">
-        <div class="logo-container">
-          <div class="logo-icon">
-            <img src="/DECASE-light.png" alt="DECASE Logo" class="logo" />
-          </div>
-          <span class="logo-text">DECASE</span>
+    <header class="main-header">
+      <div class="left-section">
+        <div class="brand-logo">
+          <img src="/DECASE-logo-no-background.png" alt="DECASE Logo" class="logo-image" />
         </div>
       </div>
 
-      <div class="header-center">
-        <div class="welcome-message">
-          <h1>프로젝트 관리</h1>
+      <div class="center-section">
+        <div class="page-title">
+          <h1>Project Main</h1>
         </div>
       </div>
 
-      <div class="header-right">
-        <div class="action-buttons">
+      <div class="right-section">
+        <div class="user-actions">
           <button
-            class="icon-button profile-btn"
+            class="user-btn"
             @click="toggleProfileSidebar"
             title="사용자"
           >
@@ -39,10 +36,10 @@
       </div>
     </header>
 
-    <main class="main-content">
-      <div class="toolbar">
-        <div class="toolbar-left">
-          <button class="new-project-button" @click="openModal">
+    <main class="content-area">
+      <div class="control-bar">
+        <div class="left-controls">
+          <button class="create-btn" @click="openModal">
             <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="18"
@@ -60,8 +57,9 @@
             <span>새로 만들기</span>
           </button>
         </div>
-        <div class="toolbar-right">
-          <div class="search-container">
+        
+        <div class="right-controls">
+          <div class="search-box">
             <svg
               width="18"
               height="18"
@@ -77,14 +75,14 @@
               type="text"
               v-model="searchQuery"
               placeholder="프로젝트 검색"
-              class="search-input"
+              class="search-field"
             />
           </div>
 
-          <div class="view-options">
-            <div class="view-toggle">
+          <div class="view-controls">
+            <div class="view-switcher">
               <button
-                class="view-toggle-button"
+                class="view-btn"
                 :class="{ active: selectedView === 'gallery' }"
                 @click="setView('gallery')"
                 title="갤러리 보기"
@@ -104,7 +102,7 @@
                 </svg>
               </button>
               <button
-                class="view-toggle-button"
+                class="view-btn"
                 :class="{ active: selectedView === 'list' }"
                 @click="setView('list')"
                 title="리스트 보기"
@@ -127,7 +125,7 @@
               </button>
             </div>
 
-            <select class="dropdown sort-dropdown" v-model="sortOption">
+            <select class="sort-select" v-model="sortOption">
               <option value="startDate,desc">날짜 (최신 순)</option>
               <option value="startDate,asc">날짜 (오래된 순)</option>
               <option value="name,asc">이름 (오름차순)</option>
@@ -137,25 +135,25 @@
         </div>
       </div>
 
-      <div class="projects-container">
+      <div class="projects-area">
         <component :is="selectedViewComponent" :projects="displayedProjects" />
       </div>
-      <footer>
-        <!-- 수정된 페이지네이션 -->
-        <div class="pagination-container" v-if="totalPages > 1">
+      
+      <footer class="page-footer">
+        <div class="pagination" v-if="totalPages > 1">
           <button
-            class="pagination-button"
+            class="page-nav-btn"
             :disabled="currentPage === 1"
             @click="goToPage(currentPage - 1)"
           >
             이전
           </button>
 
-          <div class="pagination-pages">
+          <div class="page-numbers">
             <button
               v-for="page in paginationPages"
               :key="page"
-              :class="['page-button', { active: currentPage === page }]"
+              :class="['page-num', { active: currentPage === page }]"
               @click="goToPage(page)"
             >
               {{ page }}
@@ -163,7 +161,7 @@
           </div>
 
           <button
-            class="pagination-button"
+            class="page-nav-btn"
             :disabled="currentPage === totalPages"
             @click="goToPage(currentPage + 1)"
           >
@@ -179,7 +177,6 @@
       @createProject="handleCreateProject"
     />
 
-    <!-- 프로필 사이드바 -->
     <ProfileBar
       :isVisible="showProfileSidebar"
       @close="closeProfileSidebar"
@@ -256,12 +253,10 @@ const paginationPages = computed(() => {
   const current = currentPage.value;
 
   if (total <= 7) {
-    // 총 페이지가 7개 이하면 모두 표시
     for (let i = 1; i <= total; i++) {
       pages.push(i);
     }
   } else {
-    // 총 페이지가 많으면 현재 페이지 기준으로 표시
     if (current <= 4) {
       for (let i = 1; i <= 5; i++) pages.push(i);
       pages.push("...");
@@ -296,14 +291,6 @@ const fetchProjects = async () => {
     projects.value = json.data || [];
   } catch (error) {
     console.error("프로젝트 데이터를 불러오는 데 실패했습니다:", error);
-    // 테스트용 더미 데이터
-    // projects.value = Array.from({ length: 25 }, (_, i) => ({
-    //   id: i + 1,
-    //   name: `프로젝트 ${i + 1}`,
-    //   startDate: new Date(2024, 0, i + 1).toISOString().split('T')[0],
-    //   versionInfo: `버전 이력 ${i % 5}개`,
-    //   status: ["NOT_STARTED", "IN_PROGRESS", "DONE"][i % 3]
-    // }));
   }
 };
 
@@ -377,42 +364,21 @@ onMounted(() => {
 <style scoped>
 * {
   box-sizing: border-box;
-  animation: none !important;
-  transition: none !important;
-  transform: none !important;
-}
-
-.modal-overlay,
-.modal-content {
-  animation: initial !important;
-  transition: initial !important;
-  transform: initial !important;
-  opacity: 1 !important;
-  display: flex !important;
-}
-
-.profile-icon:hover,
-.new-project-button:hover,
-.search-container:focus-within,
-.view-toggle-button:hover,
-.dropdown:hover,
-.logout-button:hover,
-.withdraw-button:hover {
-  transition: all 0.2s ease !important;
+  margin: 0;
+  padding: 0;
 }
 
 #app-container {
-  width: 100vw;
+  width: 100%;
   min-height: 100vh;
-  margin: 0;
-  padding: 0;
   background-color: #fafbfc;
   font-family: "Apple SD Gothic Neo", "Malgun Gothic", "맑은 고딕", sans-serif;
   display: flex;
   flex-direction: column;
 }
 
-.header {
+/* 헤더 스타일 */
+.main-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -420,133 +386,61 @@ onMounted(() => {
   height: 72px;
   background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
   border-bottom: 1px solid rgba(148, 163, 184, 0.1);
-  position: relative;
-  z-index: 50;
-  backdrop-filter: blur(12px);
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
 }
 
-.header-left {
+.left-section {
   display: flex;
   align-items: center;
-  gap: 24px;
-  min-width: 0;
+  min-width: 200px;
 }
 
-.header-center {
+.brand-logo {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+.logo-image {
+  padding-left: 20px;
+  height: 40px;
+  width: auto;
+  max-width: 150px;
+  object-fit: contain;
+  display: block;
+}
+
+.center-section {
   flex: 1;
   display: flex;
   justify-content: center;
-  min-width: 0;
 }
 
-.header-right {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  min-width: 0;
-}
-
-.logo-container {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  cursor: pointer;
-  padding: 8px 12px;
-  border-radius: 16px;
-  margin-bottom: 5px;
-}
-
-.logo-container:hover {
-  background: rgba(0, 0, 0, 0.03);
-  transform: translateY(-1px);
-}
-
-.logo-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 36px;
-  width: 36px;
-}
-
-.logo {
-  height: 100%;
-  width: auto;
-  max-height: 36px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  object-fit: contain;
-  margin-top: 30px !important;
-  animation: none !important;
-  transform: none !important;
-  transition: none !important;
-}
-
-.logo-text {
-  font-size: 20px;
-  font-weight: 800;
-  color: #000000;
-  letter-spacing: 0.02em;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui,
-    sans-serif;
-  margin-top: 5px !important;
-}
-
-.welcome-message h1 {
+.page-title h1 {
   font-size: 28px;
   font-weight: 800;
   background: linear-gradient(135deg, #1e293b 0%, #3b82f6 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  margin: 0;
   letter-spacing: -0.02em;
-  line-height: 1.2;
 }
 
-.new-project-button {
-  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-  color: white;
-  border: none;
-  padding: 12px 24px;
-  border-radius: 16px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+.right-section {
   display: flex;
   align-items: center;
-  gap: 8px;
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 4px 12px rgba(30, 41, 59, 0.3);
+  min-width: 200px;
+  justify-content: flex-end;
 }
 
-.new-project-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(30, 41, 59, 0.4);
-  background: linear-gradient(135deg, #334155 0%, #475569 100%);
-}
-
-.new-project-button:active {
-  transform: translateY(0);
-}
-
-.action-buttons {
-  display: flex;
-  align-items: center;
-  gap: 4px;
+.user-actions {
   background: rgba(248, 250, 252, 0.8);
   border: 1px solid rgba(148, 163, 184, 0.15);
   border-radius: 16px;
   padding: 4px;
-  backdrop-filter: blur(8px);
 }
 
-.icon-button {
+.user-btn {
   width: 40px;
   height: 40px;
   border: none;
@@ -556,78 +450,79 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   color: #64748b;
-  position: relative;
-  overflow: hidden;
 }
 
-.icon-button:hover {
-  color: #3b82f6;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
-}
-
-.icon-button:active {
-  transform: translateY(0);
-}
-
-.profile-btn:hover {
+.user-btn:hover {
   color: #f59e0b;
+  background: rgba(245, 158, 11, 0.1);
 }
 
-.main-content {
+/* 메인 콘텐츠 */
+.content-area {
   flex: 1;
   padding: 30px 50px;
-  width: 100%;
   display: flex;
   flex-direction: column;
 }
 
-.toolbar {
+.control-bar {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   align-items: center;
   margin-bottom: 35px;
   padding: 25px;
   background: white;
   border-radius: 12px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  width: 100%;
 }
 
-.toolbar-left {
+.left-controls {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
-  flex: 1;
-  gap: 16px;
 }
 
-.toolbar-right {
+.create-btn {
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(30, 41, 59, 0.3);
+}
+
+.create-btn:hover {
+  background: linear-gradient(135deg, #334155 0%, #475569 100%);
+}
+
+.right-controls {
   display: flex;
   align-items: center;
   gap: 18px;
-  flex-wrap: wrap;
 }
 
-.search-container {
+.search-box {
   display: flex;
   align-items: center;
   background: #f7fafc;
   border: 1px solid #e2e8f0;
   border-radius: 10px;
   padding: 0 15px;
-  transition: all 0.2s ease;
 }
 
-.search-container:focus-within {
+.search-box:focus-within {
   border-color: #4a5568;
   background: white;
   box-shadow: 0 0 0 3px rgba(74, 85, 104, 0.1);
 }
 
-.search-input {
+.search-field {
   padding: 12px 6px;
   border: none;
   font-size: 14px;
@@ -637,18 +532,17 @@ onMounted(() => {
   background: transparent;
 }
 
-.search-input::placeholder {
+.search-field::placeholder {
   color: #a0aec0;
 }
 
-.view-options {
+.view-controls {
   display: flex;
   align-items: center;
   gap: 15px;
-  flex-wrap: wrap;
 }
 
-.view-toggle {
+.view-switcher {
   display: flex;
   background: #f7fafc;
   border-radius: 8px;
@@ -656,29 +550,26 @@ onMounted(() => {
   border: 1px solid #e2e8f0;
 }
 
-.view-toggle-button {
+.view-btn {
   padding: 10px 14px;
   border: none;
   background: transparent;
   border-radius: 6px;
   cursor: pointer;
   color: #718096;
-  font-size: 15px;
-  transition: all 0.2s ease;
 }
 
-.view-toggle-button:hover {
+.view-btn:hover {
   color: #4a5568;
   background: #edf2f7;
 }
 
-.view-toggle-button.active {
+.view-btn.active {
   background: #4a5568;
   color: white;
-  box-shadow: 0 1px 3px rgba(74, 85, 104, 0.2);
 }
 
-.dropdown {
+.sort-select {
   padding: 12px 15px;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
@@ -687,36 +578,33 @@ onMounted(() => {
   cursor: pointer;
   color: #2d3748;
   outline: none;
-  font-weight: 500;
-  transition: all 0.2s ease;
+  min-width: 170px;
 }
 
-.dropdown:hover,
-.dropdown:focus {
+.sort-select:hover,
+.sort-select:focus {
   border-color: #4a5568;
   background: white;
 }
 
-.sort-dropdown {
-  min-width: 170px;
-}
-
-.projects-container {
+.projects-area {
   flex: 1;
-  width: 100%;
   min-height: 400px;
 }
 
-.pagination-container {
+/* 페이지네이션 */
+.page-footer {
+  margin-top: 30px;
+}
+
+.pagination {
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 12px;
-  margin-top: 30px;
-  flex-wrap: wrap;
 }
 
-.pagination-button {
+.page-nav-btn {
   padding: 10px 16px;
   background: #f7fafc;
   border: 1px solid #e2e8f0;
@@ -725,27 +613,24 @@ onMounted(() => {
   font-weight: 500;
   color: #2d3748;
   font-size: 14px;
-  transition: all 0.2s ease;
 }
 
-.pagination-button:hover:not(:disabled) {
+.page-nav-btn:hover:not(:disabled) {
   background: #edf2f7;
   border-color: #cbd5e0;
 }
 
-.pagination-button:disabled {
+.page-nav-btn:disabled {
   cursor: not-allowed;
   opacity: 0.5;
-  background: #f7fafc;
 }
 
-.pagination-pages {
+.page-numbers {
   display: flex;
   gap: 6px;
-  align-items: center;
 }
 
-.page-button {
+.page-num {
   padding: 8px 12px;
   background: #f7fafc;
   border: 1px solid #e2e8f0;
@@ -755,155 +640,87 @@ onMounted(() => {
   color: #2d3748;
   min-width: 40px;
   text-align: center;
-  transition: all 0.2s ease;
 }
 
-.page-button:hover {
+.page-num:hover {
   background: #edf2f7;
   border-color: #cbd5e0;
 }
 
-.page-button.active {
+.page-num.active {
   background: #4a5568;
   color: white;
   border-color: #4a5568;
   font-weight: 600;
-  box-shadow: 0 1px 3px rgba(74, 85, 104, 0.3);
 }
 
-@media (max-width: 1200px) {
-  .header {
-    padding: 15px 40px;
-  }
-
-  .main-content {
-    padding: 25px 40px;
-  }
-
-  .logo-container,
-  .profile-section {
-    width: 150px;
-  }
-
-  .logo {
-    height: 45px;
-  }
-}
-
+/* 반응형 */
 @media (max-width: 1024px) {
-  .header {
+  .main-header {
     padding: 15px 30px;
   }
-
-  .main-content {
+  
+  .content-area {
     padding: 25px 30px;
   }
-
-  .search-input {
+  
+  .search-field {
     width: 200px;
   }
 }
 
 @media (max-width: 768px) {
-  .header {
+  .main-header {
     flex-direction: column;
     gap: 20px;
-    text-align: center;
     padding: 20px;
-    min-height: auto;
+    height: auto;
   }
-
-  .logo-container,
-  .profile-section {
-    width: auto;
+  
+  .left-section,
+  .right-section {
+    min-width: auto;
   }
-
-  .logo {
-    height: 40px;
-  }
-
-  .welcome-message h1 {
-    font-size: 1.6em;
-  }
-
-  .main-content {
+  
+  .content-area {
     padding: 20px;
   }
-
-  .toolbar {
+  
+  .control-bar {
     flex-direction: column;
-    align-items: stretch;
     gap: 18px;
     padding: 20px;
   }
-
-  .toolbar-right {
-    justify-content: space-between;
+  
+  .right-controls {
+    flex-direction: column;
+    width: 100%;
+    gap: 12px;
   }
-
-  .search-input {
-    width: 180px;
-  }
-
-  .pagination-container {
-    gap: 8px;
-  }
-
-  .pagination-pages {
-    gap: 4px;
-  }
-
-  .page-button {
-    padding: 6px 10px;
-    min-width: 35px;
-    font-size: 12px;
+  
+  .search-field {
+    width: 100%;
   }
 }
 
 @media (max-width: 480px) {
-  .header {
+  .main-header,
+  .content-area {
     padding: 15px;
   }
-
-  .main-content {
-    padding: 15px;
+  
+  .page-title h1 {
+    font-size: 24px;
   }
-
-  .welcome-message h1 {
-    font-size: 1.4em;
-  }
-
-  .toolbar-right {
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .view-options {
-    justify-content: center;
-  }
-
-  .search-input {
+  
+  .view-controls {
     width: 100%;
-    min-width: 160px;
+    justify-content: space-between;
   }
-
-  .dropdown {
+  
+  .sort-select {
     min-width: auto;
     flex: 1;
-  }
-
-  .pagination-container {
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .pagination-pages {
-    order: 2;
-  }
-
-  .pagination-button {
-    padding: 8px 12px;
-    font-size: 12px;
   }
 }
 </style>

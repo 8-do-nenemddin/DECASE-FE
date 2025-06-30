@@ -127,7 +127,7 @@
         :style="{ top: contextMenu.y + 'px', left: contextMenu.x + 'px' }"
         @click.stop
       >
-        <div class="context-menu-item" @click="showFileInfo">
+        <div class="context-menu-item" v-if="contextMenu.sectionType !== 'generated'" @click="showFileInfo">
           <svg
             width="16"
             height="16"

@@ -4,22 +4,34 @@
     <SettingsHeader :project-id="projectId" />
 
     <div class="main-layout">
-      <!-- 사이드바 컴포넌트 -->
-      <DetailsSidebar
-        :current-component="currentComponent"
-        @change-component="handleChangeComponent"
-      />
+      <!-- 사이드바 컴포넌트 - 직접 클래스 추가 -->
+      <div class="sidebar-container">
+        <DetailsSidebar
+          :current-component="currentComponent"
+          @change-component="handleChangeComponent"
+        />
+      </div>
 
       <!-- 메인 콘텐츠 -->
       <main class="detail-content-area">
-        <!-- 프로젝트 정보 수정 -->
-        <ProjectInfo v-if="currentComponent === 'ProjectInfo'" />
+        <div
+          class="content-wrapper"
+          :class="{ 'matrix-layout': currentComponent === 'ProjectMatrix' }"
+        >
+          <!-- 컴포넌트 전환 애니메이션 적용 -->
+          <Transition name="slide-up" mode="out-in">
+            <div :key="currentComponent">
+              <!-- 프로젝트 정보 수정 -->
+              <ProjectInfo v-if="currentComponent === 'ProjectInfo'" />
 
-        <!-- 멤버 정보 수정 -->
-        <MemberInfo v-if="currentComponent === 'MemberInfo'" />
+              <!-- 멤버 정보 수정 -->
+              <MemberInfo v-if="currentComponent === 'MemberInfo'" />
 
-        <!-- 요구사항 추적 매트릭스 -->
-        <ViewMatrix v-if="currentComponent === 'ProjectMatrix'" />
+              <!-- 요구사항 추적 매트릭스 -->
+              <ViewMatrix v-if="currentComponent === 'ProjectMatrix'" />
+            </div>
+          </Transition>
+        </div>
       </main>
     </div>
   </div>
@@ -161,9 +173,12 @@ onMounted(() => {
   box-sizing: border-box;
 }
 
+html,
 body {
   margin: 0;
   padding: 0;
+  width: 100%;
+  height: 100%;
   font-family: "Inter", "Pretendard", -apple-system, BlinkMacSystemFont,
     "Segoe UI", Roboto, sans-serif;
   background-color: #f8fafc;
@@ -174,29 +189,105 @@ body {
 }
 
 .app-container {
+  width: 100%;
+  min-width: 100vw;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  padding: 0;
+  position: relative;
 }
 
 .main-layout {
-  display: flex;
+  display: flex !important;
   flex: 1;
+  width: 100%; /* 너비 조정 */
   height: calc(100vh - 4rem);
+  gap: 0 !important;
+  margin: 0 auto; /* 가운데 정렬을 위해 추가 */
 }
 
+/* 🔥 핵심 수정: 사이드바 강제 고정 - 두 번째 코드의 방식 적용 */
+.main-layout > *:first-child {
+  flex: 0 0 280px !important;
+  width: 280px !important;
+  min-width: 280px !important;
+  max-width: 280px !important;
+  flex-shrink: 0 !important;
+  flex-grow: 0 !important;
+  margin-right: 0 !important;
+}
+
+/* 기존 사이드바 컨테이너 스타일은 제거하고 위의 스타일로 대체 */
+
+/* 메인 콘텐츠 영역 */
 .detail-content-area {
   flex: 1;
-  padding: 2rem;
+  display: flex;
+  justify-content: center; /* 왼쪽 정렬로 변경 */
   overflow-y: auto;
   background: transparent;
+  padding: 0; /* 패딩 제거 */
+}
+
+.content-wrapper {
+  width: 100%;
+  max-width: none;
+  display: flex;
+  justify-content: flex-start;
+  position: relative;
+  margin: 0;
+  padding: 2rem;
+}
+
+.content-wrapper > * {
+  width: 100%;
+  max-width: none;
+}
+
+/* ViewMatrix 컴포넌트만 왼쪽 정렬 */
+.content-wrapper.matrix-layout {
+  justify-content: flex-start !important;
+  align-items: flex-start;
+  padding: 1rem 2rem;
+}
+
+.content-wrapper.matrix-layout > * {
+  width: 100% !important;
+  max-width: calc(100vw - 320px) !important;
+  margin-left: 0 !important;
+  align-self: flex-start;
+  overflow-x: auto;
+}
+
+/* Vue Transition 애니메이션 정의 */
+.slide-up-enter-active,
+.slide-up-leave-active {
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.slide-up-enter-from {
+  opacity: 0;
+  transform: translateY(30px);
+}
+
+.slide-up-leave-to {
+  opacity: 0;
+  transform: translateY(-15px);
+}
+
+.slide-up-enter-to,
+.slide-up-leave-from {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 /* 요구사항 매트릭스 스타일 */
 .requirement-matrix {
-  max-width: 800px;
-  margin: 0 auto;
+  margin: 0;
+  width: 100%;
+  max-width: 1400px;
 }
 
 .matrix-card {
@@ -206,6 +297,74 @@ body {
   border: 1px solid #f3f4f6;
   overflow: hidden;
   transition: all 0.3s ease;
+}
+
+/* 매트릭스 테이블 컨테이너 스타일 */
+.matrix-table-container {
+  width: 100%;
+  min-width: 800px; /* 최소 너비 설정으로 요소 겹침 방지 */
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: fixed; /* 고정 테이블 레이아웃으로 셀 너비 균등 분배 */
+}
+
+/* 매트릭스 테이블 스타일 */
+.matrix-table {
+  width: 100%;
+  min-width: 800px;
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: fixed;
+}
+
+.matrix-table th,
+.matrix-table td {
+  padding: 0.75rem 0.5rem;
+  text-align: center;
+  border: 1px solid #e5e7eb;
+  vertical-align: middle;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  min-width: 120px;
+  max-width: 200px;
+}
+
+.matrix-table th {
+  background-color: #f9fafb;
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.875rem;
+}
+
+.matrix-table td {
+  background-color: #ffffff;
+  font-size: 0.8125rem;
+}
+
+/* 첫 번째 열 (요구사항명) 스타일 */
+.matrix-table th:first-child,
+.matrix-table td:first-child {
+  text-align: left;
+  min-width: 200px;
+  max-width: 300px;
+  font-weight: 500;
+}
+
+/* 체크박스나 상태 표시 셀 */
+.matrix-table .status-cell {
+  width: 80px;
+  min-width: 80px;
+  max-width: 80px;
+  text-align: center;
+}
+
+/* 매트릭스 테이블 호버 효과 */
+.matrix-table tbody tr:hover {
+  background-color: #f8fafc;
+}
+
+.matrix-table tbody tr:hover td {
+  background-color: #f8fafc;
 }
 
 .matrix-card:hover {
@@ -312,10 +471,60 @@ body {
   .main-layout {
     flex-direction: column;
     height: auto;
+    overflow: visible;
   }
 
-  .content-area {
+  /* 🔥 모바일에서도 사이드바 안정적으로 처리 */
+  .main-layout > *:first-child {
+    flex: none !important;
+    width: 100% !important;
+    min-width: 100% !important;
+    max-width: 100% !important;
+    border-right: none;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .detail-content-area {
+    width: 100%;
     padding: 1rem;
+    min-height: auto;
+  }
+
+  .content-wrapper {
+    max-width: none;
+    padding: 1rem;
+  }
+
+  .content-wrapper > * {
+    max-width: none;
+  }
+
+  .content-wrapper.matrix-layout {
+    padding: 0.5rem 1rem;
+  }
+
+  .content-wrapper.matrix-layout > * {
+    width: 100% !important;
+    max-width: calc(100vw - 2rem) !important;
+  }
+
+  /* 매트릭스 테이블 모바일 최적화 */
+  .matrix-table {
+    min-width: 600px;
+    font-size: 0.75rem;
+  }
+
+  .matrix-table th,
+  .matrix-table td {
+    padding: 0.5rem 0.25rem;
+    min-width: 80px;
+    max-width: 150px;
+  }
+
+  .matrix-table th:first-child,
+  .matrix-table td:first-child {
+    min-width: 150px;
+    max-width: 200px;
   }
 
   .card-header {
@@ -347,11 +556,21 @@ body {
     width: 100%;
     justify-content: center;
   }
+
+  /* 모바일에서 애니메이션 속도 조정 */
+  .slide-up-enter-active,
+  .slide-up-leave-active {
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
 }
 
 @media (max-width: 480px) {
-  .content-area {
+  .detail-content-area {
     padding: 0.75rem;
+  }
+
+  .content-wrapper {
+    padding: 0.5rem;
   }
 
   .card-header {
@@ -384,23 +603,44 @@ body {
   }
 }
 
+/* 대형 화면에서도 콘텐츠 너비 제한 */
+@media (min-width: 1441px) {
+  .content-wrapper {
+    max-width: 1200px;
+  }
+
+  .content-wrapper.matrix-layout {
+    max-width: 1500px !important;
+  }
+
+  .requirement-matrix {
+    max-width: 1400px;
+  }
+}
+
 /* 스크롤바 스타일링 */
-.content-area::-webkit-scrollbar {
+.detail-content-area::-webkit-scrollbar {
   width: 8px;
 }
 
-.content-area::-webkit-scrollbar-track {
+.detail-content-area::-webkit-scrollbar-track {
   background: #f8fafc;
   border-radius: 4px;
 }
 
-.content-area::-webkit-scrollbar-thumb {
+.detail-content-area::-webkit-scrollbar-thumb {
   background: linear-gradient(135deg, #cbd5e1, #94a3b8);
   border-radius: 4px;
 }
 
-.content-area::-webkit-scrollbar-thumb:hover {
+.detail-content-area::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(135deg, #94a3b8, #64748b);
+}
+
+/* 포커스 접근성 개선 */
+.add-requirement-button:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
 }
 
 /* 로딩 애니메이션 */
