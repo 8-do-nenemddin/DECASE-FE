@@ -28,7 +28,7 @@ const retry = () => {
   border-radius: 12px;
   padding: 60px;
   box-shadow: 0 2px 8px rgba(229, 115, 115, 0.08),
-    0 1px 2px rgba(229, 115, 115, 0.12);
+  0 1px 2px rgba(229, 115, 115, 0.12);
   text-align: center;
   margin: 0 auto;
 }
