@@ -4,225 +4,331 @@
       <button class="nav-button" @click="goToSignup">회원가입</button>
       <button class="nav-button" @click="goToLogin">로그인</button>
     </div>
+
     <div class="content">
-      <img src="/DECASE-dark.png" alt="Logo" class="logo" />
-      <p class="subtitle">정의서를 쉽게, 프로젝트를 빠르게.</p>
+      <h1 class="main-title">
+        INNOVATE<br />
+        WITH<br />
+        DECASE
+      </h1>
     </div>
+
+    <div ref="canvasContainer" class="canvas-container"></div>
   </div>
 </template>
 
 <script setup>
+import { ref, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
+
 const router = useRouter();
+const canvasContainer = ref(null);
+let renderer;
 
-const goToSignup= () => {
-  router.push('/signup');
+// 창 크기 조절 시 3D 캔버스 크기도 조절하는 함수
+const onResize = (camera) => {
+  if (camera && renderer && canvasContainer.value) {
+    camera.aspect = canvasContainer.value.clientWidth / canvasContainer.value.clientHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(canvasContainer.value.clientWidth, canvasContainer.value.clientHeight);
+  }
 };
 
-const goToLogin = () => {
-  router.push('/login');
+const goToSignup = () => router.push('/signup');
+const goToLogin = () => router.push('/login');
+
+const initThree = () => {
+  if (!canvasContainer.value) return;
+
+  // 1. SCENE SETUP
+  // Scene for text/background
+  const sceneBackground = new THREE.Scene();
+  // Scene for 3D model
+  const sceneModel = new THREE.Scene();
+
+  // Camera shared for both scenes
+  const camera = new THREE.PerspectiveCamera(
+    75,
+    canvasContainer.value.clientWidth / canvasContainer.value.clientHeight,
+    0.1,
+    1000
+  );
+  camera.position.z = 3;
+
+  // Renderer
+  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setSize(canvasContainer.value.clientWidth, canvasContainer.value.clientHeight);
+  renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.0;
+  canvasContainer.value.appendChild(renderer.domElement);
+
+  // 2. RENDER TARGET for background (text)
+  const renderTarget = new THREE.WebGLRenderTarget(
+    canvasContainer.value.clientWidth,
+    canvasContainer.value.clientHeight
+  );
+
+  // 3. TEXT CANVAS TEXTURE
+  function makeTextTexture(width, height) {
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, width, height);
+    // background
+    ctx.fillStyle = '#000';
+    ctx.globalAlpha = 0.7;
+    ctx.fillRect(0, 0, width, height);
+    ctx.globalAlpha = 1.0;
+    // text
+    ctx.font = `bold ${Math.floor(height * 0.11)}px 'Segoe UI', sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#fff';
+    ctx.shadowColor = '#fff';
+    ctx.shadowBlur = 16;
+    const lines = ['INNOVATE', 'WITH', 'DECASE'];
+    const lineHeight = height * 0.13;
+    const centerY = height / 2 - lineHeight;
+    lines.forEach((txt, i) => {
+      ctx.fillText(txt, width / 2, centerY + i * lineHeight);
+    });
+    return new THREE.CanvasTexture(canvas);
+  }
+
+  // 4. TEXT PLANE in sceneBackground
+  const bgW = canvasContainer.value.clientWidth;
+  const bgH = canvasContainer.value.clientHeight;
+  const aspect = bgW / bgH;
+  const textTexture = makeTextTexture(bgW, bgH);
+  const textPlaneGeo = new THREE.PlaneGeometry(2 * aspect, 2);
+  const textPlaneMat = new THREE.MeshBasicMaterial({ map: textTexture, transparent: true });
+  const textPlane = new THREE.Mesh(textPlaneGeo, textPlaneMat);
+  sceneBackground.add(textPlane);
+
+  // 5. BACKGROUND PLANE for sceneModel (will get updated with renderTarget.texture)
+  const bgPlaneGeo = new THREE.PlaneGeometry(2 * aspect, 2);
+  const bgPlaneMat = new THREE.MeshPhysicalMaterial({
+    map: renderTarget.texture,
+    transmission: 1.0,
+    opacity: 1.0,
+    transparent: true,
+    roughness: 0.1,
+    metalness: 0,
+    ior: 1.2,
+    thickness: 0.5
+  });
+  const bgPlane = new THREE.Mesh(bgPlaneGeo, bgPlaneMat);
+  // Place behind model
+  bgPlane.position.z = -0.1;
+  sceneModel.add(bgPlane);
+
+  // 6. GLASS MATERIAL
+  const glassMaterial = new THREE.MeshPhysicalMaterial({
+    metalness: 0,
+    roughness: 0.05,
+    transmission: 1.0,
+    ior: 1.5,
+    thickness: 1.5,
+    side: THREE.DoubleSide,
+    envMapIntensity: 1.0,
+  });
+
+  // 7. HDRI ENVIRONMENT MAP
+  const rgbeLoader = new RGBELoader();
+  rgbeLoader.load('https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/aerodynamics_workshop_1k.hdr', (texture) => {
+    texture.mapping = THREE.EquirectangularReflectionMapping;
+    sceneModel.environment = texture;
+    glassMaterial.envMap = texture;
+    glassMaterial.needsUpdate = true;
+  });
+
+  // 8. LOAD GLB MODEL into sceneModel
+  const loader = new GLTFLoader();
+  loader.load('/Untitled.glb', (gltf) => {
+    const model = gltf.scene;
+    model.traverse((child) => {
+      if (child.isMesh) child.material = glassMaterial;
+    });
+    model.scale.set(1.8, 1.8, 1.8);
+    const box = new THREE.Box3().setFromObject(model);
+    const center = new THREE.Vector3();
+    box.getCenter(center);
+    model.position.sub(center);
+    sceneModel.add(model);
+  }, undefined, console.error);
+
+  // 9. LIGHTS (only in sceneModel)
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+  sceneModel.add(ambientLight);
+  const pointLight1 = new THREE.PointLight(0xffffff, 1.5);
+  pointLight1.position.set(5, 5, 5);
+  sceneModel.add(pointLight1);
+  const pointLight2 = new THREE.PointLight(0xffddaa, 1);
+  pointLight2.position.set(-5, -5, -5);
+  sceneModel.add(pointLight2);
+
+  // 10. ORBIT CONTROLS (for model scene only)
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.enableZoom = false;
+  controls.enablePan = false;
+  controls.autoRotate = true;
+  controls.autoRotateSpeed = 0.5;
+
+  // 11. ANIMATION LOOP: render background to texture, then model scene to screen
+  const animate = () => {
+    requestAnimationFrame(animate);
+    controls.update();
+    // update background render (text) to texture
+    renderer.setRenderTarget(renderTarget);
+    renderer.clear();
+    renderer.render(sceneBackground, camera);
+    renderer.setRenderTarget(null);
+    // update background plane material map to renderTarget.texture (already set, but ensure updated)
+    bgPlane.material.map = renderTarget.texture;
+    bgPlane.material.needsUpdate = true;
+    // render model scene (with bgPlane using renderTarget.texture)
+    renderer.render(sceneModel, camera);
+  };
+  animate();
+
+  // 12. RESIZE HANDLING
+  const resizeHandler = () => {
+    if (!canvasContainer.value) return;
+    const width = canvasContainer.value.clientWidth;
+    const height = canvasContainer.value.clientHeight;
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+    renderer.setSize(width, height);
+    // update render target
+    renderTarget.setSize(width, height);
+    // update background and bg planes
+    const aspect = width / height;
+    textPlane.geometry.dispose();
+    textPlane.geometry = new THREE.PlaneGeometry(2 * aspect, 2);
+    textTexture.dispose();
+    textPlane.material.map = makeTextTexture(width, height);
+    textPlane.material.needsUpdate = true;
+    bgPlane.geometry.dispose();
+    bgPlane.geometry = new THREE.PlaneGeometry(2 * aspect, 2);
+    bgPlane.material.needsUpdate = true;
+  };
+  window.addEventListener('resize', resizeHandler);
+  return resizeHandler;
 };
+
+let resizeHandlerInstance;
+
+onMounted(() => {
+  resizeHandlerInstance = initThree();
+});
+
+onUnmounted(() => {
+  if (resizeHandlerInstance) {
+    window.removeEventListener('resize', resizeHandlerInstance);
+  }
+  if (renderer) {
+    renderer.dispose();
+  }
+});
 </script>
 
 <style>
-/* 글로벌 리셋 */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
-
-html, body, #app, .vue-component-root {
+html, body, #app {
   height: 100%;
   width: 100%;
-  overflow-x: hidden;
+  overflow: hidden;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
-
-/* 배경 - 애니메이션 없이 배경색 고정 */
 .background {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
-  display: flex;
-  flex-direction: column;
   background-color: #000;
   color: #fff;
-  height: 100vh;
-  width: 100vw;
-  overflow: hidden;
+  z-index: 10;
 }
-
-/* 헤더 - 애니메이션 적용 */
+.background::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 500 500' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  background-size: cover;
+  opacity: 0.08;
+  pointer-events: none;
+  z-index: 1;
+}
 .header {
   position: absolute;
   top: 0;
   right: 0;
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
   padding: 1.5rem;
+  z-index: 30; /* UI는 항상 최상단 */
+  display: flex;
   gap: 1.25rem;
-  z-index: 10;
-  animation: slideInFromTop 1.8s ease-out 1.2s both;
 }
-
-/* 메인 콘텐츠 - 중앙 정렬 */
 .content {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   text-align: center;
-  flex: 1;
+  /* [핵심] 텍스트를 3D 캔버스 뒤로 보냄 */
+  z-index: 10;
+}
+.canvas-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
   height: 100%;
-  padding: 2rem;
+  /* [핵심] 3D 캔버스를 텍스트 앞으로 가져옴 */
+  z-index: 20;
 }
-
-/* 로고 - 애니메이션 적용 */
-.logo {
-  width: min(300px, 80vw);
-  height: auto;
-  margin-bottom: 1.5rem;
-  animation: slideInFromTop 1.8s ease-out both;
+.main-title {
+  font-size: clamp(2rem, 8vw, 5rem);
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  line-height: 1.3;
+  pointer-events: none;
+  text-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+  color: #fff;
+  /* [핵심] 텍스트가 겹칠 때 색상이 반전되어 상호작용하는 느낌과 가독성을 모두 확보 */
+  mix-blend-mode: difference;
 }
-
-/* 부제목 - 애니메이션 적용 */
-.subtitle {
-  font-size: clamp(1rem, 3vw, 1.6rem);
-  font-weight: 300;
-  margin: 0;
-  line-height: 1.2;
-  opacity: 0;
-  animation: slideInFromTop 1.8s ease-out 0.5s both;
-}
-
-/* 버튼 스타일 */
 .nav-button {
-  background-color: #fff;
-  color: #000;
-  border: none;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
   padding: 0.75rem 1.5rem;
   border-radius: 2rem;
   cursor: pointer;
   font-weight: 600;
   font-size: 0.875rem;
   transition: all 0.3s ease;
-  white-space: nowrap;
-  box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(5px);
 }
-
 .nav-button:hover {
-  background-color: #f0f0f0;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(255, 255, 255, 0.2);
-}
-
-.nav-button:active {
-  transform: translateY(0);
-  box-shadow: 0 2px 10px rgba(255, 255, 255, 0.1);
-}
-
-/* 애니메이션 키프레임 */
-@keyframes slideInFromTop {
-  0% {
-    transform: translateY(-100px);
-    opacity: 0;
-  }
-  60% {
-    transform: translateY(10px);
-    opacity: 0.8;
-  }
-  100% {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-/* 반응형 */
-
-/* 태블릿 크기 */
-@media (max-width: 768px) {
-  .header {
-    padding: 1rem;
-    gap: 1rem;
-  }
-  
-  .nav-button {
-    padding: 0.625rem 1.25rem;
-    font-size: 0.8rem;
-  }
-  
-  .content {
-    padding: 1.5rem;
-  }
-  
-  .logo {
-    width: min(250px, 75vw);
-    margin-bottom: 1rem;
-  }
-  
-  .subtitle {
-    font-size: clamp(0.9rem, 3.5vw, 1.2rem);
-  }
-}
-
-/* 모바일 크기 */
-@media (max-width: 480px) {
-  .header {
-    padding: 0.75rem;
-    gap: 0.75rem;
-  }
-  
-  .nav-button {
-    padding: 0.5rem 1rem;
-    font-size: 0.75rem;
-    border-radius: 1.5rem;
-  }
-  
-  .content {
-    padding: 1rem;
-  }
-  
-  .logo {
-    width: min(200px, 70vw);
-    margin-bottom: 0.75rem;
-  }
-  
-  .subtitle {
-    font-size: clamp(0.8rem, 4vw, 1.1rem);
-  }
-}
-
-/* 초소형 화면 */
-@media (max-width: 320px) {
-  .header {
-    padding: 0.5rem;
-  }
-  
-  .nav-button {
-    padding: 0.375rem 0.75rem;
-    font-size: 0.7rem;
-  }
-  
-  .logo {
-    width: min(180px, 65vw);
-  }
-}
-
-/* 세로 화면이 매우 짧은 경우 */
-@media (max-height: 500px) {
-  .content {
-    flex: 1;
-    justify-content: center;
-  }
-  
-  .logo {
-    width: min(200px, 60vw);
-    margin-bottom: 0.5rem;
-  }
-  
-  .subtitle {
-    font-size: clamp(1rem, 3vw, 1.5rem);
-  }
 }
 </style>
