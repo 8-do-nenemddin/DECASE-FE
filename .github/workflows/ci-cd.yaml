@@ -1,0 +1,125 @@
+# .github/workflows/ci-cd.yml
+name: Frontend CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  IMAGE_REGISTRY: amdp-registry.skala-ai.com/skala25a
+  IMAGE_NAME: sk-team-08-decase-fe
+  IMAGE_TAG: 1.0.0
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Clone Repository
+        uses: actions/checkout@v4
+
+      - name: 🏷️ Generate Hash Code and Image Tag
+        id: tag
+        run: |
+          HASHCODE=$(date +%s%N | sha256sum | cut -c1-12)
+          FINAL_IMAGE_TAG="${{ env.IMAGE_TAG }}-${{ github.run_number }}-${HASHCODE}"
+
+          echo "Generated Hash Code: ${HASHCODE}"
+          echo "Final Image Tag: ${FINAL_IMAGE_TAG}"
+
+          echo "FINAL_IMAGE_TAG=${FINAL_IMAGE_TAG}" >> $GITHUB_OUTPUT
+          echo "HASHCODE=${HASHCODE}" >> $GITHUB_OUTPUT
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "npm"
+
+      - name: 📦 Install Dependencies
+        run: |
+          npm ci
+
+      - name: 🧪 Run Tests (Optional)
+        run: |
+          # npm run test 또는 yarn test
+          echo "Tests would run here"
+
+      - name: 🏗️ Build Application
+        run: |
+          npm run build
+          echo "✅ Build completed successfully"
+
+      - name: 🔧 Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: 🔐 Login to Docker Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ secrets.IMAGE_REGISTRY }}
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: 🏗️ Docker Build & Push
+        run: |
+          FINAL_TAG="${{ steps.tag.outputs.FINAL_IMAGE_TAG }}"
+          FULL_IMAGE_NAME="${{ secrets.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:${FINAL_TAG}"
+
+          echo "🐳 Building Docker image: ${FULL_IMAGE_NAME}"
+
+          # Jenkins와 동일한 방식으로 Docker 빌드
+          docker build --platform linux/amd64 -t "${FULL_IMAGE_NAME}" .
+
+          echo "📤 Pushing Docker image to registry..."
+          docker push "${FULL_IMAGE_NAME}"
+
+          echo "✅ Docker image built and pushed successfully"
+          echo "📦 Image: ${FULL_IMAGE_NAME}"
+
+      - name: 📝 Update Deploy.yaml and Git push
+        run: |
+          echo "📝 Updating deploy.yaml with new image..."
+
+          NEW_IMAGE_LINE="          image: ${{ secrets.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.tag.outputs.FINAL_IMAGE_TAG }}"
+
+          echo "🔄 New image line: ${NEW_IMAGE_LINE}"
+
+          sed -i 's|^[[:space:]]*image:.*$|'"${NEW_IMAGE_LINE}"'|g' ./k8s/deploy.yaml
+
+          echo "📋 Updated deploy.yaml content:"
+          cat ./k8s/deploy.yaml
+
+      - name: 📤 Commit and Push Changes
+        run: |
+          echo "📤 Committing and pushing changes..."
+
+          # Secrets에서 Git 사용자 정보 가져오기
+          git config user.name "${{ secrets.GIT_USER_NAME }}"
+          git config user.email "${{ secrets.GIT_USER_EMAIL }}"
+
+          # deploy.yaml 파일을 스테이징 영역에 추가
+          git add ./k8s/deploy.yaml || true
+
+          if ! git diff --cached --quiet; then
+            echo "✅ Changes detected, committing..."
+            
+            git commit -m "[AUTO] Update deploy.yaml with image ${{ steps.tag.outputs.FINAL_IMAGE_TAG }} [skip ci]"
+            
+            echo "📤 Pushing to repository..."
+            git push origin ${{ env.GIT_BRANCH }}
+            
+            echo "✅ Successfully pushed manifest update to repository"
+          else
+            echo "ℹ️ No changes to commit."
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 📊 Deployment Summary
+        run: |
+          echo "🎉 Frontend CI/CD Pipeline Completed!"
+          echo "📦 Docker Image: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.tag.outputs.IMAGE_TAG }}"
+          echo "🔄 ArgoCD will automatically sync and deploy this change"
+          echo "🌐 Access URL: https://decase.skala25a.project.skala-ai.com"
