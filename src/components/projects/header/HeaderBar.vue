@@ -1,12 +1,10 @@
 <template>
   <header class="header">
     <div class="header-left">
-      <div class="logo-container" @click="handleGoMain">
-        <div class="logo-icon">
-          <img src="/DECASE-light.png" alt="DECASE Logo" class="logo" />
-        </div>
-        <span class="logo-text">DECASE</span>
+      <div class="brand-logo" @click="handleGoMain">
+        <img src="/DECASE-logo-no-background.png" alt="DECASE Logo" class="logo-image" />
       </div>
+
       <div class="header-actions">
         <button
           class="icon-button search-btn"
@@ -43,8 +41,6 @@
             <line x1="3" y1="18" x2="21" y2="18"></line>
           </svg>
         </button>
-        <!-- 추후 수정 -->
-        <!-- disabled 조건 바꾸기 -->
         <button
           class="icon-button upload-btn"
           @click="openSourceUploadModal"
@@ -231,20 +227,16 @@ const goToMain = () => {
   }
 };
 
-// 모든 사이드바 닫기 헬퍼 함수
 const closeAllSidebars = () => {
   showSidebar.value = false;
   showFileListSidebar.value = false;
   showProfileSidebar.value = false;
-  // 추가
   showMockupSidebar.value = false;
 };
 
-// 프로필 사이드바 관련 메서드
 const toggleProfileSidebar = () => {
   if (showSidebar.value) showSidebar.value = false;
   if (showFileListSidebar.value) showFileListSidebar.value = false;
-  // 변경
   if (showMockupSidebar.value) showMockupSidebar.value = false;
   showProfileSidebar.value = !showProfileSidebar.value;
 };
@@ -253,7 +245,6 @@ const closeProfileSidebar = () => {
   showProfileSidebar.value = false;
 };
 
-// 목업 사이드바 관련 메서드 (변경/추가)
 const toggleMockupSidebar = () => {
   if (showSidebar.value) showSidebar.value = false;
   if (showFileListSidebar.value) showFileListSidebar.value = false;
@@ -266,7 +257,7 @@ const closeMockupSidebar = () => {
 };
 
 const handleMockupFileSelected = (mockupFile) => {
-  console.log("HeaderBar received mockup file:", mockupFile); // 디버깅용 로그 추가
+  console.log("HeaderBar received mockup file:", mockupFile);
   emit("mockupFileSelected", mockupFile);
 };
 
@@ -280,11 +271,9 @@ const handleWithdraw = () => {
   closeProfileSidebar();
 };
 
-// 검색 사이드바
 const toggleSidebar = () => {
   if (showFileListSidebar.value) showFileListSidebar.value = false;
   if (showProfileSidebar.value) showProfileSidebar.value = false;
-  // 변경
   if (showMockupSidebar.value) showMockupSidebar.value = false;
   showSidebar.value = !showSidebar.value;
 };
@@ -293,11 +282,9 @@ const closeSidebar = () => {
   showSidebar.value = false;
 };
 
-// 파일 리스트 사이드 바
 const toggleFileListSidebar = () => {
   if (showSidebar.value) showSidebar.value = false;
   if (showProfileSidebar.value) showProfileSidebar.value = false;
-  // 변경
   if (showMockupSidebar.value) showMockupSidebar.value = false;
   showFileListSidebar.value = !showFileListSidebar.value;
 };
@@ -311,20 +298,20 @@ const closeFileListSidebar = () => {
   showFileListSidebar.value = false;
 };
 
-// 소스 업로드 모달
 const openSourceUploadModal = () => {
   closeAllSidebars();
   showSourceUploadModal.value = true;
 };
+
 const closeSourceUploadModal = () => {
   showSourceUploadModal.value = false;
 };
 
-// 요구사항 정의서 다운로드 모달
 const openDownloadFileModal = () => {
   closeAllSidebars();
   showDownloadFileModal.value = true;
 };
+
 const closeDownloadFileModal = () => {
   showDownloadFileModal.value = false;
 };
@@ -332,6 +319,7 @@ const closeDownloadFileModal = () => {
 const handleUploadSource = (newSourceName) => {
   closeSourceUploadModal();
 };
+
 const handleDownloadSource = (newSourceName) => {
   closeDownloadFileModal();
 };
@@ -344,15 +332,12 @@ const handleGoSettings = () => {
   const projectId = projectStore.projectId;
   console.log(`'${projectId}' 세팅, 관리자인지 확인 중... ${projectStore.isAdmin}`);
   if (projectStore.isAdmin) {
-    // 관리자인 경우: 기존 설정 페이지로 이동
     router.push({ name: "ProjectSetting", params: { projectId } });
   } else {
-    // 일반 사용자: 프로젝트 상세 페이지로 이동
     router.push({ name: "ProjectDetail", params: { projectId } });
   }
 };
 
-// 검색 이벤트 핸들러
 const handleSearch = (searchParams) => {
   emit("search", searchParams);
 };
@@ -366,7 +351,6 @@ defineExpose({ handleOpenMockupSidebar });
 </script>
 
 <style scoped>
-/* CSS는 기존과 동일합니다. */
 .project-main {
   min-height: 100vh;
   background-color: #fafbfc;
@@ -410,53 +394,23 @@ defineExpose({ handleOpenMockupSidebar });
   min-width: 0;
 }
 
-/* 로고 스타일 */
-.logo-container {
+.brand-logo {
   display: flex;
   align-items: center;
-  gap: 12px;
-  cursor: pointer;
-  padding: 8px 12px;
-  border-radius: 16px;
-  margin-bottom: 5px;
-}
-
-.logo-container:hover {
-  background: rgba(0, 0, 0, 0.03);
-  transform: translateY(-1px);
-}
-
-.logo-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 36px;
-  width: 36px;
-}
-
-.logo {
   height: 100%;
-  width: auto;
-  max-height: 36px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  object-fit: contain;
-  margin-top: 30px !important; /* 로고 이미지만 추가로 아래로 */
-  animation: none !important;
-  transform: none !important;
-  transition: none !important;
 }
 
-.logo-text {
-  font-size: 20px;
-  font-weight: 800;
-  color: #000000;
-  letter-spacing: 0.02em;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui,
-    sans-serif;
-  margin-top: 5px !important; /* 로고 텍스트도 아래로 */
+.logo-image {
+  padding-left: 20px;
+  height: 40px;
+  width: auto;
+  max-width: 150px;
+  object-fit: contain;
+  display: block;
+}
+
+.logo-image:hover {
+  transform: translateY(-2px);
 }
 
 /* 헤더 액션 버튼들 */
@@ -511,7 +465,6 @@ defineExpose({ handleOpenMockupSidebar });
   transform: translateY(0);
 }
 
-/* 특별한 버튼 스타일 */
 .search-btn:hover {
   color: #10b981;
 }
@@ -627,10 +580,6 @@ defineExpose({ handleOpenMockupSidebar });
     gap: 16px;
   }
 
-  .logo-text {
-    display: none;
-  }
-
   .project-title {
     font-size: 24px;
   }
@@ -732,10 +681,6 @@ defineExpose({ handleOpenMockupSidebar });
     border-bottom-color: rgba(148, 163, 184, 0.2);
   }
 
-  .logo-text {
-    color: #f1f5f9;
-  }
-
   .project-title {
     background: linear-gradient(135deg, #f1f5f9 0%, #3b82f6 100%);
     -webkit-background-clip: text;
@@ -752,12 +697,6 @@ defineExpose({ handleOpenMockupSidebar });
     background: rgba(15, 23, 42, 0.8);
     border-color: rgba(148, 163, 184, 0.2);
   }
-}
-
-/* 스크롤 시 헤더 효과 */
-.header.scrolled {
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(20px);
 }
 
 /* 애니메이션 */
