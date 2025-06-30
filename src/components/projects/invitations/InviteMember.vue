@@ -107,13 +107,12 @@ const acceptParticipation = async () => {
     if (!res.ok) {
       alert("잘못된 접근입니다.");
     } else if (result.data.joined === false) {
-      alert("회원가입을 먼저 진행해주세요.");
+      alert("회원가입을 먼저 진행한 뒤 프로젝트에 참여해주세요.");
+      window.location.href = "/signup"; // 회원가입 페이지로 이동
     } else {
       alert("프로젝트 참여 완료되었습니다. 로그인 해주세요.");
+      window.location.href = "/login"; // 로그인 페이지로 이동
     }
-
-    // 성공 시 홈으로 이동
-    window.location.href = "/home";
   } catch (err) {
     console.error(err);
     alert("프로젝트 참여에 실패했습니다.");
