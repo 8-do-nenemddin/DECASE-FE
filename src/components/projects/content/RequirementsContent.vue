@@ -1010,6 +1010,11 @@ async function createMockup() {
       mockupStatus.value = status;
       return;
     }
+    if (!fullList.value.some(item => item.type === "기능")) {
+      console.log("목업용 데이터 : ", fullList);
+      alert("기능적 요구사항이 없어서 목업 생성을 할 수 없습니다.");
+      return;
+    }
     // 실제 목업 생성 요청
     const response = await fetch(
       `/api/v1/projects/${projectId.value}/mockups/${props.revision}`,
