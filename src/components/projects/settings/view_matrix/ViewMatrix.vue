@@ -85,58 +85,14 @@
     </Transition>
 
     <!-- 상세 정보 모달 -->
-    <div v-if="selectedItem" class="modal-overlay" @click="closeDetail">
-      <div class="modal-content" @click.stop>
-        <div class="modal-header">
-          <h3>{{ selectedItem.name }}</h3>
-          <button class="close-btn" @click="closeDetail">×</button>
-        </div>
-        <div class="modal-body">
-          <div class="detail-info">
-            <div class="info-row">
-              <strong>요구사항 코드:</strong> {{ selectedItem.reqIdCode }}
-            </div>
-            <div class="info-row">
-              <strong>버전:</strong> Version. {{ selectedItem.version }}
-            </div>
-            <div class="info-row">
-              <strong>변경 유형:</strong> 
-              <span class="change-badge" :class="getChangeTypeClass(selectedItem.changeType)">
-                {{ getChangeTypeText(selectedItem.changeType) }}
-              </span>
-            </div>
-            <div class="info-row">
-              <strong>Level1:</strong> {{ selectedItem.level1 }}
-            </div>
-            <div class="info-row">
-              <strong>Level2:</strong> {{ selectedItem.level2 }}
-            </div>
-            <div class="info-row">
-              <strong>Level3:</strong> {{ selectedItem.level3 }} 
-            </div>
-            <div class="info-row">
-              <strong>우선순위:</strong> {{ selectedItem.priority === "HIGH" ? "상" : selectedItem.priority === "MIDDLE" ? "중" : "하"}} 
-            </div>
-            <div class="info-row">
-              <strong>난이도:</strong> {{ selectedItem.difficulty === "HIGH" ? "상" : selectedItem.difficulty === "MIDDLE" ? "중" : "하"}} 
-            </div>
-            <div class="info-row">
-              <strong>수정자:</strong> {{ selectedItem.modifiedByName }}
-            </div>
-            <div class="info-row">
-              <strong>수정일시:</strong> {{ formatDate(selectedItem.revisionDate) }}
-            </div>
-            <div class="info-row">
-              <strong>수정 사유:</strong> {{ selectedItem.modReason || "-" }}
-            </div>
-          </div>
-          <div class="description-section" v-if="selectedItem.description">
-            <h4>상세 설명</h4>
-            <div class="description-content" v-html="formatDescription(selectedItem.description)"></div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <Transition name="fade">
+      <ViewMatrixDetail
+        v-if="selectedItem"
+        :isVisible="true"
+        :item="selectedItem"
+        @close="closeDetail"
+      />
+    </Transition>
 
     <div class="pagination">
       <button 
@@ -164,10 +120,11 @@
 import { ref, computed, onMounted } from 'vue'
 import ViewMatrixSideBar from './ViewMatrixSideBar.vue'
 import { useProjectStore } from '../../../../stores/projectStore'
+import ViewMatrixDetail from './ViewMatrixDetail.vue'
 
 export default {
   name: 'ChangeHistory',
-  components: { ViewMatrixSideBar },
+  components: { ViewMatrixSideBar, ViewMatrixDetail },
   setup() {
     const historyData = ref([])
     const selectedChangeType = ref('')
@@ -228,7 +185,9 @@ export default {
     const getChangeTypeClass = (type) => ({ ADD: 'change-add', MOD: 'change-mod', DEL: 'change-del' }[type] || '')
     const formatDescription = (desc) => desc?.replace(/\[([^\]]+)\]/g, '<strong>[$1]</strong>').replace(/\n/g, '<br>') || ''
 
-    const handleRowClick = (item) => { selectedItem.value = item }
+    const handleRowClick = (item) => { 
+      console.log('Selected item:', item);
+      selectedItem.value = item; }
     const closeDetail = () => { selectedItem.value = null }
     const openViewMatrix = (item) => {
       selectedReqIdCode.value = item.reqIdCode
@@ -694,5 +653,13 @@ export default {
     max-width: none;
     max-height: none;
   }
+}
+
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
 }
 </style>
