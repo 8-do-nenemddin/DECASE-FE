@@ -160,6 +160,14 @@ const fetchSrsStatus = async () => {
     if (data.status === "COMPLETED") {
       // 상태가 완료되면, projectStore의 revision을 1로 갱신
       await projectStore.setProjectRevision(1);
+    } else if (data.status === "FAILED") {
+      // 요구사항 정의서 생성 실패 상태 처리
+      srsStatus.value = "FAILED";
+      srsMessage.value = "";
+      if (pollingInterval) {
+        clearInterval(pollingInterval);
+        pollingInterval = null;
+      }
     }
   } catch (e) {
     try {
