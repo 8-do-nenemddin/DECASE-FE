@@ -66,6 +66,17 @@
         <p>로딩 중...</p>
       </div>
       <template v-else>
+        <div
+          v-if="viewerTab === 'code' && sourceRequirements.length"
+          class="source-req-list"
+        >
+          <div class="source-req-title">🔖 반영된 요구사항</div>
+          <ul>
+            <li v-for="req in sourceRequirements" :key="req.id">
+              <strong>[{{ req.id }}]</strong> {{ req.description }}
+            </li>
+          </ul>
+        </div>
         <iframe
           v-if="viewerTab === 'preview'"
           class="preview-iframe"
@@ -113,6 +124,7 @@ const isLoading = ref(false);
 const totalLines = ref(1);
 const codeTextarea = ref(null);
 const emit = defineEmits(["openMockupSidebar"]);
+const sourceRequirements = ref([]);
 
 const updateLineNumbers = () => {
   if (!code.value) {
@@ -139,11 +151,13 @@ const fetchCode = async () => {
     const response = await axios.get(
       `/api/v1/projects/${projectId.value}/mockups/${props.activeFile.revision}/${props.activeFile.name}`
     );
-    code.value = response.data;
+    code.value = response.data.html;
+    sourceRequirements.value = response.data.sourceRequirements || [];
     updateLineNumbers();
   } catch (error) {
     console.error("코드 로딩 실패:", error);
     code.value = "<!-- 파일을 불러오는 데 실패했습니다. -->";
+    sourceRequirements.value = [];
     updateLineNumbers();
   } finally {
     isLoading.value = false;
@@ -491,3 +505,26 @@ onMounted(() => {
   }
 }
 </style>
+
+.source-req-list {
+  padding: 16px 16px 8px 56px;
+  background: #fef9c3;
+  border-bottom: 1px solid #facc15;
+  font-size: 14px;
+}
+
+.source-req-title {
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #92400e;
+}
+
+.source-req-list ul {
+  padding-left: 0;
+  list-style: none;
+}
+
+.source-req-list li {
+  margin-bottom: 4px;
+  color: #78350f;
+}
