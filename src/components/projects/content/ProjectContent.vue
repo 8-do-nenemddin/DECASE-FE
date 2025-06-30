@@ -5,8 +5,8 @@
       <!-- Mockup 파일이 활성화된 경우 -->
       <template v-if="activeMockupFile">
         <MockUpViewContent
-            :activeFile="activeMockupFile"
-            @openMockupSidebar="handleOpenMockupSidebar"
+          :activeFile="activeMockupFile"
+          @openMockupSidebar="handleOpenMockupSidebar"
         />
       </template>
       <!-- Mockup 파일이 활성화되지 않은 경우 -->
@@ -14,25 +14,25 @@
         <!-- 1. selectedFile이 있는 경우 -->
         <template v-if="selectedFile">
           <AsIsReportContent
-              v-if="selectedFile.type === 'as-is'"
-              :docId="selectedFile.docId"
-              :file="selectedFile.file"
+            v-if="selectedFile.type === 'as-is'"
+            :docId="selectedFile.docId"
+            :file="selectedFile.file"
           />
           <UploadContent
-              v-else-if="selectedFile.type === 'uploaded'"
-              :docId="selectedFile.docId"
-              :file="selectedFile.file"
+            v-else-if="selectedFile.type === 'uploaded'"
+            :docId="selectedFile.docId"
+            :file="selectedFile.file"
           />
           <RequirementsContent
-              v-else-if="selectedFile.type === 'generated'"
-              ref="requirementsContentRef"
-              :projectId="selectedFile.projectId"
-              :revision="
+            v-else-if="selectedFile.type === 'generated'"
+            ref="requirementsContentRef"
+            :projectId="selectedFile.projectId"
+            :revision="
               projectStore.projectRevision >= 1
                 ? projectStore.projectRevision
                 : selectedFile.revision
             "
-              @mockupFileSelected="handleMockupFileSelected"
+            @mockupFileSelected="handleMockupFileSelected"
           />
         </template>
         <!-- 2. selectedFile이 없는 경우 -->
@@ -47,15 +47,15 @@
           </template>
           <!-- 2-3. COMPLETED 상태 or revision >= 1: 요구사항 정의서 화면 -->
           <template
-              v-else-if="
+            v-else-if="
               projectStore.projectRevision >= 1 || srsStatus === 'COMPLETED'
             "
           >
             <RequirementsContent
-                ref="requirementsContentRef"
-                :projectId="projectStore.projectId"
-                :revision="projectStore.projectRevision"
-                @mockupFileSelected="handleMockupFileSelected"
+              ref="requirementsContentRef"
+              :projectId="projectStore.projectId"
+              :revision="projectStore.projectRevision"
+              @mockupFileSelected="handleMockupFileSelected"
             />
           </template>
           <!-- 2-4. revision === 0: RFP 업로드 화면 -->
@@ -69,7 +69,7 @@
 </template>
 
 <script setup>
-import {ref, computed, onMounted, onUnmounted, watch, nextTick} from "vue";
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from "vue";
 import BasicContent from "./BasicContent.vue";
 import UploadContent from "./UploadContent.vue";
 import RequirementsContent from "./RequirementsContent.vue";
@@ -114,8 +114,8 @@ const handleFileSelected = (fileData) => {
 // 검색 이벤트 처리
 const handleSearch = (searchParams) => {
   if (
-      requirementsContentRef.value &&
-      typeof requirementsContentRef.value.handleSearch === "function"
+    requirementsContentRef.value &&
+    typeof requirementsContentRef.value.handleSearch === "function"
   ) {
     requirementsContentRef.value.handleSearch(searchParams);
   }
@@ -149,8 +149,9 @@ const fetchSrsStatus = async () => {
   if (!projectStore.projectId || !projectStore.userId) return;
   try {
     const res = await fetch(
-        `/ai/api/v1/jobs/srs-agent/latest-status?project_id=${projectStore.projectId}&member_id=${projectStore.userId}&job_name=SRS`
+      `/ai/api/v1/jobs/srs-agent/latest-status?project_id=${projectStore.projectId}&member_id=${projectStore.userId}&job_name=SRS`
     );
+
     if (!res.ok) throw new Error("status fetch error");
     const data = await res.json();
     srsStatus.value = data.status;
@@ -170,7 +171,8 @@ const fetchSrsStatus = async () => {
         }
       );
 
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      if (!response.ok)
+        throw new Error(`HTTP error! status: ${response.status}`);
 
       const data = await response.json();
       if (!Array.isArray(data) || data.length === 0) {
@@ -181,8 +183,8 @@ const fetchSrsStatus = async () => {
 
       // 문서는 있지만 다른 에러가 난 경우 → FAILED 처리
       console.error("SRS 상태 확인 실패:", e);
-      srsStatus.value = "FAILED";
-      srsMessage.value = "";
+      // srsStatus.value = "FAILED";
+      // srsMessage.value = "";
       if (pollingInterval) {
         clearInterval(pollingInterval);
         pollingInterval = null;
