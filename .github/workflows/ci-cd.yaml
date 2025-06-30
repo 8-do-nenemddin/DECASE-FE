@@ -63,20 +63,23 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: 🏗️ Docker Build & Push
-        run: |
-          FINAL_TAG="${{ steps.tag.outputs.FINAL_IMAGE_TAG }}"
-          FULL_IMAGE_NAME="${{ secrets.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:${FINAL_TAG}"
-
-          echo "🐳 Building Docker image: ${FULL_IMAGE_NAME}"
-
-          # Jenkins와 동일한 방식으로 Docker 빌드
-          docker build --platform linux/amd64 -t "${FULL_IMAGE_NAME}" .
-
-          echo "📤 Pushing Docker image to registry..."
-          docker push "${FULL_IMAGE_NAME}"
-
-          echo "✅ Docker image built and pushed successfully"
-          echo "📦 Image: ${FULL_IMAGE_NAME}"
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ${{ secrets.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.tag.outputs.FINAL_IMAGE_TAG }}
+            ${{ secrets.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          cache-from: |
+            type=gha
+            type=registry,ref=${{ secrets.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:cache
+          cache-to: |
+            type=gha,mode=max
+            type=registry,ref=${{ secrets.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:cache,mode=max
+          build-args: |
+            BUILDKIT_INLINE_CACHE=1
+            NODE_ENV=production
 
       - name: 📝 Update Deploy.yaml and Git push
         run: |
