@@ -21,6 +21,45 @@
         </div>
       </div>
     </div>
+
+    <div v-if="requirements.length" class="requirements-section">
+      <div class="requirements-header" @click="toggleRequirements">
+        <div class="requirements-title">
+          <button class="toggle-btn" :class="{ expanded: requirementsExpanded }">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+          <h4>반영된 요구사항</h4>
+        </div>
+        <div class="requirements-count">
+          <span class="count-badge">{{ requirements.length }}</span>
+        </div>
+      </div>
+      <div class="requirements-list" v-show="requirementsExpanded">
+        <div
+            v-for="(req, index) in requirements"
+            :key="req.id"
+            class="requirement-item"
+            :style="{ animationDelay: `${index * 0.1}s` }"
+        >
+          <div class="requirement-id">
+            <span class="id-badge">{{ req.id }}</span>
+          </div>
+          <div class="requirement-content">
+            <p class="requirement-description">{{ req.description }}</p>
+          </div>
+          <div class="requirement-status">
+            <div class="status-indicator completed">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div style="height: 16px"></div>
     <div class="editor-toolbar" v-if="viewerTab === 'code'">
       <div class="toolbar-left">
@@ -109,10 +148,17 @@ const projectId = computed(() => projectStore.projectId);
 const revision = computed(() => props.activeFile.revision);
 const viewerTab = ref("preview");
 const code = ref("");
+const requirements = ref([]);
 const isLoading = ref(false);
 const totalLines = ref(1);
 const codeTextarea = ref(null);
 const emit = defineEmits(["openMockupSidebar"]);
+
+const requirementsExpanded = ref(true);
+
+const toggleRequirements = () => {
+  requirementsExpanded.value = !requirementsExpanded.value;
+};
 
 const updateLineNumbers = () => {
   if (!code.value) {
@@ -139,7 +185,8 @@ const fetchCode = async () => {
     const response = await axios.get(
       `/api/v1/projects/${projectId.value}/mockups/${props.activeFile.revision}/${props.activeFile.name}`
     );
-    code.value = response.data;
+    code.value = response.data.html;
+    requirements.value = response.data.sourceRequirements || [];
     updateLineNumbers();
   } catch (error) {
     console.error("코드 로딩 실패:", error);
@@ -490,4 +537,261 @@ onMounted(() => {
     border-radius: 16px;
   }
 }
+
+.requirements-section {
+  margin-top: 20px;
+  background: #f8fafc;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.requirements-section:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.requirements-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background: #ffffff;
+  border-bottom: 1px solid #f1f5f9;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.requirements-header:hover {
+  background: #f8fafc;
+}
+
+.requirements-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.toggle-btn:hover {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.toggle-btn svg {
+  transition: transform 0.2s ease;
+}
+
+.toggle-btn.expanded svg {
+  transform: rotate(180deg);
+}
+
+.requirements-title h4 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #374151;
+  letter-spacing: -0.2px;
+}
+
+.requirements-count {
+  display: flex;
+  align-items: center;
+}
+
+.count-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  background: #f1f5f9;
+  color: #64748b;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border: 1px solid #e2e8f0;
+}
+
+.requirements-list {
+  padding: 8px 12px 12px;
+  max-height: 300px;
+  overflow-y: auto;
+  background: #ffffff;
+}
+
+.requirements-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.requirements-list::-webkit-scrollbar-track {
+  background: #f8fafc;
+  border-radius: 3px;
+}
+
+.requirements-list::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.requirements-list::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.requirement-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  margin: 4px 0;
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #f1f5f9;
+  transition: all 0.2s ease;
+  animation: slideInUp 0.4s ease-out both;
+}
+
+.requirement-item:hover {
+  border-color: #e2e8f0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  background: #fafbfc;
+}
+
+.requirement-id {
+  flex-shrink: 0;
+}
+
+.id-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  height: 28px;
+  background: #f1f5f9;
+  color: #64748b;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s ease;
+}
+
+.requirement-item:hover .id-badge {
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.requirement-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.requirement-description {
+  margin: 0;
+  color: #475569;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  font-weight: 400;
+  word-break: break-word;
+}
+
+.requirement-status {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.status-indicator.completed {
+  background: #f0f9ff;
+  color: #0ea5e9;
+  border: 1px solid #e0f2fe;
+}
+
+.requirement-item:hover .status-indicator.completed {
+  background: #0ea5e9;
+  color: white;
+  border-color: #0ea5e9;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 모바일 반응형 */
+@media (max-width: 768px) {
+  .requirements-section {
+    margin-top: 16px;
+    border-radius: 12px;
+  }
+
+  .requirements-header {
+    padding: 12px 16px;
+  }
+
+  .requirements-title h4 {
+    font-size: 0.95rem;
+  }
+
+  .requirement-item {
+    padding: 10px 12px;
+    gap: 10px;
+    border-radius: 8px;
+  }
+
+  .id-badge {
+    min-width: 36px;
+    height: 24px;
+    font-size: 0.75rem;
+    border-radius: 6px;
+  }
+
+  .requirement-description {
+    font-size: 0.85rem;
+  }
+
+  .status-indicator {
+    width: 20px;
+    height: 20px;
+  }
+
+  .status-indicator svg {
+    width: 10px;
+    height: 10px;
+  }
+}
+
 </style>
