@@ -5,12 +5,19 @@
     :closeButtonClass="closeButtonClass"
     @close="handleClose"
   >
+    <!-- 에러 모달 -->
+    <div v-if="showError" class="error-modal-overlay">
+      <div class="error-modal">
+        <div class="error-icon">⚠️</div>
+        <h3 class="error-title">요청 실패</h3>
+        <p class="error-message">{{ errorMessage }}</p>
+        <button class="error-close-button" @click="hideErrorModal">확인</button>
+      </div>
+    </div>
+
     <!-- 상태에 따른 UI -->
-    <template v-if="isCompleted">
-      <SuccessUploadFileModal @close="handleSuccessClose" />
-    </template>
-    <template v-else-if="isGenerating">
-      <LoadingModal />
+    <template v-if="isGenerating || isCompleted">
+      <LoadingModal :isCompleted="isCompleted" @close="handleClose" />
     </template>
     <template v-else>
       <div class="modal">
@@ -124,7 +131,6 @@ import { ref, computed } from "vue";
 import { defineEmits } from "vue";
 import CommonModal from "../../../util/CommonModal.vue";
 import LoadingModal from "./LoadingModal.vue";
-import SuccessUploadFileModal from "./SuccessUploadFileModal.vue";
 import { useProjectStore } from "../../../../stores/projectStore";
 
 const emit = defineEmits(["close", "upload"]);
@@ -141,13 +147,15 @@ const isDragOver = ref(false);
 const isUploading = ref(false);
 const isGenerating = ref(false);
 const isCompleted = ref(false);
+const showError = ref(false);
+const errorMessage = ref("");
 
 const handleClose = () => {
   resetModal();
   emit("close");
 };
 
-const handleSuccessClose = () => {
+const handleComplete = () => {
   resetModal();
   emit("close");
 };
@@ -209,63 +217,53 @@ const handleUpload = async () => {
   isUploading.value = true;
 
   try {
+    // 첫 번째 파일만 사용 (단일 파일 업로드)
+    const file = selectedFiles.value[0];
     const formData = new FormData();
-    const types = [];
+    formData.append("file", file);
 
-    selectedFiles.value.forEach((file) => {
-      formData.append("files", file);
-
-      const ext = file.name.split(".").pop().toLowerCase();
-      let type = null;
-
-      switch (ext) {
-        case "pdf":
-          type = 1; // rfp
-          break;
-        case "wav":
-          type = 2; // 회의록 음성
-          break;
-        case "docx":
-          type = 3; // 회의록 문서
-          break;
-        case "csv":
-        case "xlsx":
-        case "xls":
-          type = 5; // 요구사항정의서
-          break;
-      }
-
-      if (type !== null) {
-        types.push(type);
-      }
-    });
-
-    formData.append("types", JSON.stringify(types));
-
-    await fetch(
-      `/api/v1/projects/${projectId.value}/documents/uploads?memberId=${memberId.value}`,
+    const response = await fetch(
+      `/api/v1/projects/${projectId.value}/requirement-documents/update?memberId=${memberId.value}`,
       {
         method: "POST",
         body: formData,
       }
     );
 
-    console.log(formData);
-
-    isUploading.value = false;
-    isGenerating.value = true;
-    await new Promise((res) => setTimeout(res, 3000));
-    isGenerating.value = false;
-    isCompleted.value = true;
+    if (response.ok) {
+      // 200 OK 응답
+      console.log("요구사항 정의서 수정 요청 성공");
+      isUploading.value = false;
+      isGenerating.value = true;
+      await new Promise((res) => setTimeout(res, 3000));
+      isGenerating.value = false;
+      isCompleted.value = true;
+    } else {
+      // HTTP 에러 응답
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
   } catch (err) {
     console.error("업로드 실패:", err);
     isUploading.value = false;
     isGenerating.value = false;
+
+    // 에러 모달 표시
+    showErrorModal(err.message || "요청 처리 중 오류가 발생했습니다.");
   }
 };
 
 const handleUploadAreaClick = () => {
   fileInput.value?.click();
+};
+
+const showErrorModal = (message) => {
+  errorMessage.value = message;
+  showError.value = true;
+};
+
+const hideErrorModal = () => {
+  showError.value = false;
+  errorMessage.value = "";
 };
 </script>
 
@@ -525,5 +523,91 @@ const handleUploadAreaClick = () => {
     width: 100%;
     padding: 12px 20px;
   }
+}
+
+@media (max-width: 480px) {
+  .content-wrapper {
+    padding: 24px 20px;
+  }
+
+  .ai-icon {
+    width: 56px;
+    height: 56px;
+    font-size: 24px;
+  }
+
+  .ai-icon svg {
+    width: 28px;
+    height: 28px;
+  }
+
+  .loading-text {
+    font-size: 18px;
+    margin-bottom: 20px;
+  }
+
+  .info-text {
+    font-size: 13px;
+  }
+}
+
+/* Error Modal Styles */
+.error-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.error-modal {
+  background: white;
+  border-radius: 16px;
+  padding: 32px;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+.error-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.error-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #dc2626;
+  margin: 0 0 16px 0;
+}
+
+.error-message {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0 0 24px 0;
+  line-height: 1.5;
+}
+
+.error-close-button {
+  background: #dc2626;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.error-close-button:hover {
+  background: #b91c1c;
 }
 </style>
