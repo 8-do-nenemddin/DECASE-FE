@@ -23,21 +23,20 @@
       </div>
       <div v-else class="main-content" :class="{ 'with-sidebar': showSidebar }">
         <div class="table-controls">
-          <button @click="bulkApprove" :disabled="selectedRequirements.length === 0" class="bulk-button approve">선택 승인</button>
-          <button @click="bulkApprove" class="bulk-button approve">전체 승인</button>
-          <button @click="bulkReject" class="bulk-button reject">전체 반려</button>
+          <button @click="bulkApprove" class="bulk-button approve">승인</button>
+          <button @click="bulkReject" class="bulk-button reject">반려</button>
         </div>
         <div class="table-container">
           <div class="table-wrapper">
             <table class="requirements-table">
               <thead>
               <tr>
-                <th class="col-toggle sticky-col" style="left: 0;"></th>
-                <th class="col-select sticky-col" style="left: 40px;">선택</th>
+                <th class="col-toggle sticky-col" style="left: 0;">선택</th>
+                <th class="col-select sticky-col" style="left: 40px;"></th>
                 <th class="col-approval sticky-col" style="left: 90px;">승인/반려</th>
                 <th class="col-request-type">요청 유형</th>
                 <th class="col-id">ID</th>
-                <th class="col-type">요구사항 유형</th>
+                <th class="col-type">유형</th>
                 <th class="col-name">요구사항명</th>
                 <th class="col-description">요구사항 설명</th>
                 <th class="col-category">대분류</th>
@@ -45,8 +44,6 @@
                 <th class="col-category">소분류</th>
                 <th class="col-priority">중요도</th>
                 <th class="col-difficulty">난이도</th>
-                <th class="col-source">출처</th>
-                <th class="col-page">출처 페이지</th>
                 <th class="col-date">변경일자</th>
                 <th class="col-modifier">변경자</th>
                 <th class="col-reason">수정 이유</th>
@@ -55,13 +52,13 @@
               <tbody>
               <template v-for="requirement in requirements" :key="requirement.id">
                 <tr @click="toggleRow(requirement.proposed.id)" class="clickable-row">
-                  <td class="col-toggle sticky-col" style="left: 0;">
+                  <td class="col-select sticky-col" style="left: 0px;">
+                    <input type="checkbox" v-model="selectedRequirements" :value="requirement.proposed.id" @click.stop />
+                  </td>
+                  <td class="col-toggle sticky-col" style="left: 40px;">
                     <button @click.stop="toggleRow(requirement.proposed.id)" class="toggle-button">
                       {{ expandedRows.includes(requirement.proposed.id) ? '▼' : '▶' }}
                     </button>
-                  </td>
-                  <td class="col-select sticky-col" style="left: 40px;">
-                    <input type="checkbox" v-model="selectedRequirements" :value="requirement.proposed.id" @click.stop />
                   </td>
                   <td class="col-approval sticky-col button-group" style="left: 90px;">
                     <button @click.stop="approveRequirement(requirement.proposed.id)" class="confirm-button approve">승인</button>
@@ -79,15 +76,13 @@
                   <td class="col-category" :class="{ 'cell-changed': isChanged(requirement, 'category3') }">{{ requirement.proposed.category3 }}</td>
                   <td class="col-priority" :class="{ 'cell-changed': isChanged(requirement, 'priority') }">{{ requirement.proposed.priority }}</td>
                   <td class="col-difficulty" :class="{ 'cell-changed': isChanged(requirement, 'difficulty') }">{{ requirement.proposed.difficulty }}</td>
-                  <td class="col-source" :class="{ 'cell-changed': isChanged(requirement, 'source') }">{{ requirement.proposed.source }}</td>
-                  <td class="col-page" :class="{ 'cell-changed': isChanged(requirement, 'sourcePage') }">{{ requirement.proposed.sourcePage }}</td>
                   <td class="col-date" :class="{ 'cell-changed': isChanged(requirement, 'modifiedDate') }">{{ formatDate(requirement.proposed.modifiedDate) }}</td>
                   <td class="col-modifier" :class="{ 'cell-changed': isChanged(requirement, 'modifier') }">{{ requirement.proposed.modifier }}</td>
                   <td class="col-reason" :class="{ 'cell-changed': isChanged(requirement, 'reason') }">{{ requirement.proposed.reason }}</td>
                 </tr>
                 <tr class="details-row" v-if="expandedRows.includes(requirement.proposed.id)">
                   <td></td>
-                  <td colspan="16">
+                  <td colspan="18">
                     <div class="change-details-container">
                       <h4>수정된 항목 상세 비교</h4>
                       <!-- ...상세 비교 동일... -->
@@ -199,7 +194,7 @@
                   </td>
                 </tr>
                 <tr class="separator-row">
-                  <td colspan="17"></td>
+                  <td colspan="18"></td>
                 </tr>
               </template>
               </tbody>
@@ -551,7 +546,28 @@ const toggleRow = (id) => {
 .clickable-row:hover .sticky-col { background-color: #f9fafb; }
 .requirements-table thead th.sticky-col { background-color: #f9fafb; z-index: 11; }
 
-.toggle-button { background: none; border: none; cursor: pointer; font-size: 16px; color: #9ca3af; }
+.toggle-button {
+  background: #64748b;
+  color: white;
+  border: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.toggle-button:hover {
+  background: #475569;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
 .button-group { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
 .confirm-button { padding: 5px 10px; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 500; transition: all 0.2s; width: 60px; }
 .confirm-button.approve { background-color: #10b981; color: white; }
