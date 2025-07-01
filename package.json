@@ -9,18 +9,23 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@react-three/drei": "^10.3.0",
+    "@react-three/fiber": "^9.1.4",
     "ag-grid-community": "^33.3.2",
     "ag-grid-vue3": "^33.3.2",
     "axios": "^1.9.0",
+    "html2canvas": "^1.4.1",
     "jszip": "^3.10.1",
     "pinia": "^3.0.3",
     "pinia-plugin-persistedstate": "^4.3.0",
+    "postprocessing": "^6.37.4",
+    "three": "^0.177.0",
+    "three.js": "^0.77.1",
     "vue": "^3.5.13",
     "vue-router": "^4.5.1",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
-    "@rollup/rollup-linux-x64-gnu": "^4.44.1",
     "@vitejs/plugin-vue": "^5.2.3",
     "vite": "^6.3.5"
   }
