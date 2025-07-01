@@ -29,6 +29,11 @@ const goToLogin = () => {
 
 const canvasRef = ref(null)
 
+let mixer = null;
+let clock = new THREE.Clock();
+let shatterModel = null;
+let shatterAnimations = null;
+
 onMounted(() => {
   const canvas = canvasRef.value
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true })
@@ -68,19 +73,61 @@ onMounted(() => {
   scene.environment = backgroundTexture
 
   const loader = new GLTFLoader()
+  loader.load('/D_Shatter.glb', (gltf) => {
+    shatterModel = gltf.scene;
+    shatterAnimations = gltf.animations;
+
+    const box = new THREE.Box3().setFromObject(shatterModel);
+    const center = new THREE.Vector3();
+    box.getCenter(center);
+    const size = new THREE.Vector3();
+    box.getSize(size);
+    shatterModel.position.sub(center);
+    shatterModel.position.y -= size.y / 2;
+    shatterModel.position.x -= size.x / 2;
+
+    shatterModel.scale.set(4, 4, 4);
+    shatterModel.visible = false;
+
+    shatterModel.traverse((child) => {
+      if (child.isMesh) {
+        child.material = new THREE.MeshPhysicalMaterial({
+          color: new THREE.Color(0xf5f5f5),
+          metalness: 0,
+          roughness: 0.05,
+          transparent: true,
+          opacity: 0.7,
+          transmission: 1.0,
+          thickness: 1.5,
+          ior: 1.5,
+          reflectivity: 0.9,
+          clearcoat: 1.0,
+          clearcoatRoughness: 0.05,
+          envMapIntensity: 1.5
+        });
+      }
+    });
+
+    scene.add(shatterModel);
+
+    controls.target.copy(center);
+  });
+
+  // Load Untitled.glb
   loader.load('/Untitled.glb', (gltf) => {
-    const model = gltf.scene
-    const wrapper = new THREE.Group()
-    wrapper.add(model)
+    const model = gltf.scene;
+    model.name = 'staticD';
 
-    // 중심 정렬
-    const box = new THREE.Box3().setFromObject(model)
-    const center = new THREE.Vector3()
-    box.getCenter(center)
-    model.position.sub(center)
+    const box = new THREE.Box3().setFromObject(model);
+    const center = new THREE.Vector3();
+    box.getCenter(center);
+    const size = new THREE.Vector3();
+    box.getSize(size);
+    model.position.sub(center);
+    model.position.y -= size.y / 2;
+    model.position.x -= size.x / 2;
 
-    wrapper.scale.set(4, 4, 4)
-    scene.add(wrapper)
+    model.scale.set(4, 4, 4);
 
     model.traverse((child) => {
       if (child.isMesh) {
@@ -97,20 +144,54 @@ onMounted(() => {
           clearcoat: 1.0,
           clearcoatRoughness: 0.05,
           envMapIntensity: 1.5
-        })
+        });
       }
-    })
-  })
+    });
+
+    scene.add(model);
+
+    controls.target.copy(center);
+
+    // Add click interaction
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+
+    canvas.addEventListener('click', (event) => {
+      const bounds = canvas.getBoundingClientRect();
+      mouse.x = ((event.clientX - bounds.left) / bounds.width) * 2 - 1;
+      mouse.y = -((event.clientY - bounds.top) / bounds.height) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(model.children, true);
+
+      if (intersects.length > 0) {
+        scene.remove(model);
+        shatterModel.visible = true;
+        controls.autoRotate = false;
+        controls.enableRotate = false;
+        if (shatterAnimations && shatterAnimations.length > 0) {
+          mixer = new THREE.AnimationMixer(shatterModel);
+          const action = mixer.clipAction(shatterAnimations[0]);
+          action.reset();
+          action.setLoop(THREE.LoopOnce);
+          action.clampWhenFinished = true;
+          action.play();
+        } else {
+          console.warn("D_Shatter.glb에 애니메이션이 없습니다.");
+        }
+      }
+    });
+  });
 
   const controls = new OrbitControls(camera, renderer.domElement)
   controls.enablePan = false
   controls.enableZoom = false
   controls.autoRotate = true
   controls.autoRotateSpeed = 1.5
-  controls.target.set(0, 0, 0)
 
   const animate = () => {
     requestAnimationFrame(animate)
+    if (mixer) mixer.update(clock.getDelta());
     controls.update()
     renderer.render(scene, camera)
   }
