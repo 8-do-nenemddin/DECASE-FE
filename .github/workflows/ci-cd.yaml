@@ -37,10 +37,10 @@ jobs:
         with:
           node-version: "18"
           cache: "npm"
-
-      - name: 📦 Install Dependencies
+      - name: 📦 Clean & Install Dependencies (Fix rollup error)
         run: |
-          npm ci
+          rm -rf node_modules package-lock.json
+          npm install
 
       - name: 🧪 Run Tests (Optional)
         run: |
