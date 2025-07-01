@@ -24,6 +24,12 @@
           <div class="summary-grid">
             <div class="summary-item">
               <div class="summary-content">
+                <div class="summary-label">요구사항 이름</div>
+                <div class="summary-value">{{ latestRequirement?.name }}</div>
+              </div>
+              </div>
+            <div class="summary-item">
+              <div class="summary-content">
                 <div class="summary-label">요구사항 설명</div>
                 <div class="summary-value">{{ latestRequirement?.description }}</div>
               </div>
@@ -71,12 +77,6 @@
                   </span>
                   <span class="history-date">{{ formatDate(history.revisionDate) }}</span>
                 </div>
-                <div class="history-details">
-                  <div class="history-user">수정자: {{ history.modifiedByName }}</div>
-                  <div class="history-description" v-if="history.modReason">
-                    <strong>수정 사유:</strong> {{ history.modReason }}
-                  </div>
-                </div>
                 <div v-if="history.type || history.level1 || history.level2 || history.level3">
                   <span class="info-value">[{{ history.type === "NFR" ? "비기능" : "기능" }}] > {{ history.level1 }} > {{ history.level2 }} > {{ history.level3 }}</span>
                 </div>
@@ -84,6 +84,13 @@
                 <div class="info-section">
                   <!-- 요구사항 설명 -->
                   <div class="info-description" v-if="history.description">
+                    <div class="history-details">
+                      <div class="history-name">요구사항 이름: {{ history.name }}</div>
+                      <div class="history-user">수정자: {{ history.modifiedByName }}</div>
+                      <div class="history-description" v-if="history.modReason">
+                        <strong>수정 사유:</strong> {{ history.modReason }}
+                      </div>
+                    </div>
                     <div class="info-description-content" v-html="formatDescription(history.description)"></div>
                   </div>
                   
@@ -566,8 +573,15 @@ export default {
   margin-bottom: 1rem;
 }
 
-.history-user {
+.history-name {
   font-weight: 600;
+  color: #000000;
+  margin-bottom: 0.25rem;
+  font-size: 0.875rem;
+}
+
+.history-user {
+  font-weight: 200;
   color: #000000;
   margin-bottom: 0.25rem;
   font-size: 0.875rem;
