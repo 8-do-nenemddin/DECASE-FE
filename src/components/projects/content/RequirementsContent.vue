@@ -115,7 +115,7 @@
           <button
             @click="saveChanges"
             class="save-button"
-            :disabled="modifiedRows.size === 0"
+            :disabled="modifiedRows.size === 0 || projectStore.permission !== 'READ_AND_WRITE'"
           >
             <svg
               width="16"
@@ -138,7 +138,7 @@
           <button
             @click="cancelChanges"
             class="cancel-button"
-            :disabled="modifiedRows.size === 0"
+            :disabled="modifiedRows.size === 0 || projectStore.permission !== 'READ_AND_WRITE'"
           >
             <svg
               width="16"
@@ -476,33 +476,35 @@ const columnDefs = ref([
     headerName: "행 삭제",
     width: 120,
     cellRenderer: (params) => {
+      if (projectStore.permission !== "READ_AND_WRITE") return '';
       return `
-      <button 
-        class="row-delete-button" 
-        data-reqpk="${params.data.reqPk}"
-        style="
-          background-color: #dc3545;
-          color: white;
-          border: none;
-          padding: 6px 12px;
-          border-radius: 10px;
-          cursor: pointer;
-          font-size: 12px;
-          font-weight: 500;
-        "
-      >삭제</button>
-    `;
+        <button
+          class="row-delete-button"
+          data-reqpk="${params.data.reqPk}"
+          style="
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+          "
+        >삭제</button>
+      `;
     },
   },
 ]);
 
-// 기본 컬럼 설정
-const defaultColDef = {
+// 기본 컬럼 설정 (권한에 따라 editable 제어)
+const defaultColDef = computed(() => ({
   resizable: true,
   sortable: true,
   filter: true,
   minWidth: 100,
-};
+  editable: projectStore.permission === "READ_AND_WRITE",
+}));
 
 // 그리드 옵션
 const gridOptions = {
@@ -514,6 +516,8 @@ const gridOptions = {
   rowSelection: "multiple",
   animateRows: true,
   getRowHeight: () => rowHeightOptions[rowHeightLevel.value],
+  suppressClickEdit: projectStore.permission !== 'READ_AND_WRITE',
+  suppressCellSelection: projectStore.permission !== 'READ_AND_WRITE',
 };
 
 // 그리드 준비 완료 시

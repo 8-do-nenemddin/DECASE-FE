@@ -2,7 +2,8 @@
   <main class="main-content">
     <!-- 추후 수정-->
     <!-- v-if : Project 상태에 따라서 (요구사항 입력 전 / 요구사항 생성중 / 요구사항 생성완료)-->
-    <div class="upload-container" v-if="projectStore.projectRevision === 0">
+
+    <div class="upload-container" v-if="projectStore.projectRevision === 0 && projectStore.permission === 'READ_AND_WRITE'">
       <div class="upload-card">
         <h2 class="upload-title">RFP 파일 업로드</h2>
         <p class="upload-subtitle">
@@ -155,6 +156,19 @@
             {{ Math.round(uploadProgressExtra) }}%
           </div>
         </div>
+      </div>
+    </div>
+    <div
+        class="upload-container"
+        v-else-if="projectStore.projectRevision === 0 && projectStore.permission !== 'READ_AND_WRITE'"
+    >
+      <div class="upload-card">
+        <h2 class="upload-title">권한이 없습니다</h2>
+        <p class="upload-subtitle">
+          이 프로젝트에 대한 파일 업로드 권한이 없습니다.
+          <br />
+          관리자에게 권한을 요청해주세요.
+        </p>
       </div>
     </div>
   </main>

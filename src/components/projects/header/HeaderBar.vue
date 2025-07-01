@@ -42,8 +42,9 @@
           </svg>
         </button>
         <button
+          v-if="projectStore.permission === 'READ_AND_WRITE'"
           class="icon-button upload-btn"
-          @click="openSourceUploadModal"
+          @click="handleUploadClick"
           title="파일 업로드"
           :disabled="projectStore.projectRevision === 0"
         >
@@ -301,6 +302,14 @@ const closeFileListSidebar = () => {
 const openSourceUploadModal = () => {
   closeAllSidebars();
   showSourceUploadModal.value = true;
+};
+
+const handleUploadClick = () => {
+  if (projectStore.permission !== "READ_AND_WRITE") {
+    alert("권한이 없습니다.");
+    return;
+  }
+  openSourceUploadModal();
 };
 
 const closeSourceUploadModal = () => {

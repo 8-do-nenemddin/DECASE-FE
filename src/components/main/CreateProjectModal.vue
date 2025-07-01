@@ -241,8 +241,9 @@ const handleCreateProject = async () => {
       newProject.name,
       0,
       newProject.status,
-      newProject.isAdmin
+      newProject.isAdmin,
     );
+    projectStore.setPermission("READ_AND_WRITE");
     projectStore.setRevisionCount(newProject.revisionCount);
 
     showSuccessModal.value = true;

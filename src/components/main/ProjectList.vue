@@ -100,6 +100,15 @@ const navigateToProject = async (projectId) => {
       const revisions = await response.json();
       const revisionCount = revisions.length || 0;
 
+      try {
+        const authResponse = await fetch(`/api/v1/projects/${projectId}/authority/${projectStore.userId}`);
+        const { permission } = await authResponse.json();
+        projectStore.setPermission(permission);
+        console.log(permission);
+      } catch (authError) {
+        console.error("Failed to fetch authority info:", authError);
+      }
+
       projectStore.setProject(
         selectedProject.projectId,
         selectedProject.name,

@@ -12,6 +12,7 @@ export const useProjectStore = defineStore("projectStore", {
     status: null,
     userId: null,
     isAdmin: null,
+    permission: null,
   }),
   actions: {
     setProject(projectId, projectName, projectRevision, status, isAdmin) {
@@ -31,6 +32,9 @@ export const useProjectStore = defineStore("projectStore", {
     setUser(userId) {
       this.userId = userId;
     },
+    setPermission(permission) {
+      this.permission = permission;
+    },
     resetProject() {
       this.projectId = null;
       this.projectName = null;
@@ -38,6 +42,7 @@ export const useProjectStore = defineStore("projectStore", {
       this.revisionCount = 0; // 리비전 카운트도 리셋
       this.status = null;
       this.isAdmin = null;
+      this.permission = null;
     },
     resetAll() {
       this.userId = null;
@@ -47,6 +52,7 @@ export const useProjectStore = defineStore("projectStore", {
       this.revisionCount = 0; // 리비전 카운트도 리셋
       this.status = null;
       this.isAdmin = null;
+      this.permission = null;
     },
   },
   persist: true,
