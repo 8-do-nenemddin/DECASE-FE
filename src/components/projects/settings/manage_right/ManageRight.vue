@@ -295,6 +295,11 @@ const fetchProjectMembers = async () => {
 
     if (response.ok) {
       members.value = result.data;
+      members.value.sort((a, b) => {
+        if (a.isAdmin && !b.isAdmin) return -1;
+        if (!a.isAdmin && b.isAdmin) return 1;
+        return 0;
+      });
     } else {
       console.error("멤버 불러오기 실패:", result.message);
     }
