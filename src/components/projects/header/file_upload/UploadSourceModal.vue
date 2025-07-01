@@ -1,6 +1,6 @@
 <template>
   <CommonModal
-    :closeOnOverlayClick="!isGenerating && !isCompleted"
+    :closeOnOverlayClick="!isGenerating && !isCompleted && !updateFailed"
     :modalClass="modalClass"
     :closeButtonClass="closeButtonClass"
     @close="handleClose"
@@ -15,11 +15,24 @@
       </div>
     </div>
 
+    <!-- 실패 화면 -->
+    <div v-if="updateFailed" class="error-modal-overlay">
+      <div class="error-modal">
+        <div class="error-icon">❌</div>
+        <h3 class="error-title">요구사항 정의서 업데이트 실패</h3>
+        <p class="error-message">
+          요구사항 정의서 업데이트 작업이 실패하였습니다.<br />다시 시도해
+          주세요.
+        </p>
+        <button class="error-close-button" @click="closeModal">확인</button>
+      </div>
+    </div>
+
     <!-- 상태에 따른 UI -->
     <template v-if="isGenerating || isCompleted">
       <LoadingModal :isCompleted="isCompleted" @close="handleClose" />
     </template>
-    <template v-else>
+    <template v-else-if="!updateFailed">
       <div class="modal">
         <!-- Upload Area -->
         <div
@@ -47,7 +60,7 @@
           </div>
           <h2 class="modal-title">소스 업로드</h2>
           <p class="modal-description">
-            업로드할 파일을 선택하거나 드래그 앤 드롭해주세요.<br />
+            업로드한 파일을 기반으로 요구사항 정의서를 업데이트합니다.<br />
             지원 파일 형식: PDF, Excel, Word, WAV
           </p>
           <input
@@ -149,8 +162,11 @@ const isGenerating = ref(false);
 const isCompleted = ref(false);
 const showError = ref(false);
 const errorMessage = ref("");
+const updateFailed = ref(false);
+let pollingInterval = null;
 
 const handleClose = () => {
+  stopPollingSrsUpdateStatus();
   resetModal();
   emit("close");
 };
@@ -169,6 +185,7 @@ const resetModal = () => {
 };
 
 const closeModal = () => {
+  stopPollingSrsUpdateStatus();
   resetModal();
   emit("close");
 };
@@ -235,9 +252,8 @@ const handleUpload = async () => {
       console.log("요구사항 정의서 수정 요청 성공");
       isUploading.value = false;
       isGenerating.value = true;
-      await new Promise((res) => setTimeout(res, 3000));
-      isGenerating.value = false;
-      isCompleted.value = true;
+      updateFailed.value = false;
+      startPollingSrsUpdateStatus();
     } else {
       // HTTP 에러 응답
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -246,11 +262,58 @@ const handleUpload = async () => {
     console.error("업로드 실패:", err);
     isUploading.value = false;
     isGenerating.value = false;
-
-    // 에러 모달 표시
     showErrorModal(err.message || "요청 처리 중 오류가 발생했습니다.");
   }
 };
+
+function startPollingSrsUpdateStatus() {
+  if (pollingInterval) return;
+  pollingInterval = setInterval(fetchSrsUpdateStatus, 5000); // 5초마다 polling
+  fetchSrsUpdateStatus(); // 즉시 1회 실행
+}
+
+function stopPollingSrsUpdateStatus() {
+  if (pollingInterval) {
+    clearInterval(pollingInterval);
+    pollingInterval = null;
+  }
+}
+
+async function fetchSrsUpdateStatus() {
+  if (!isGenerating.value) {
+    stopPollingSrsUpdateStatus();
+    return;
+  }
+  try {
+    const res = await fetch(
+      `/ai/api/v1/jobs/srs-agent/latest-status?project_id=${projectId.value}&member_id=${memberId.value}&job_name=SRS_UPDATE`
+    );
+    if (res.status === 404 || res.status === 500) {
+      stopPollingSrsUpdateStatus();
+      isGenerating.value = false;
+      showErrorModal("서버 오류");
+      return;
+    }
+    if (!res.ok) throw new Error("상태 확인 실패");
+    const data = await res.json();
+    if (data.status === "PROCESSING") {
+      // 계속 polling
+      return;
+    } else if (data.status === "FAILED") {
+      stopPollingSrsUpdateStatus();
+      isGenerating.value = false;
+      updateFailed.value = true;
+    } else if (data.status === "COMPLETED") {
+      stopPollingSrsUpdateStatus();
+      isGenerating.value = false;
+      isCompleted.value = true;
+    }
+  } catch (err) {
+    stopPollingSrsUpdateStatus();
+    isGenerating.value = false;
+    showErrorModal(err.message || "상태 확인 중 오류가 발생했습니다.");
+  }
+}
 
 const handleUploadAreaClick = () => {
   fileInput.value?.click();
@@ -554,11 +617,9 @@ const hideErrorModal = () => {
 /* Error Modal Styles */
 .error-modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  border-radius: 26px;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;

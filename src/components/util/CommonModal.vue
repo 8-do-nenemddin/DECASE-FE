@@ -72,7 +72,7 @@ const closeModal = () => {
   padding: 32px;
   transform: scale(0.9) translateY(20px);
   animation: slideUp 0.3s ease forwards;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  /* border: 1px solid rgba(255, 255, 255, 0.2); */
   position: relative;
 }
 
