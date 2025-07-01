@@ -271,6 +271,7 @@ const handleUpload = async () => {
   try {
     const formData = new FormData();
     formData.append("file", selectedFile.value);
+    formData.append("fileName", "파일이름임");
 
     const response = await fetch(
       `/api/v1/projects/${projectId.value}/requirement-documents/update?memberId=${memberId.value}`,
@@ -319,7 +320,7 @@ async function fetchSrsUpdateStatus() {
   }
   try {
     const res = await fetch(
-      `/ai/api/v1/jobs/srs-agent/latest-status?project_id=${projectId.value}&member_id=${memberId.value}&job_name=SRS_UPDATE`
+      `/ai/api/v1/jobs/srs-agent/latest-status?project_id=${projectId.value}&member_id=${memberId.value}&job_name=UPDATE`
     );
     if (res.status === 404 || res.status === 500) {
       stopPollingSrsUpdateStatus();
