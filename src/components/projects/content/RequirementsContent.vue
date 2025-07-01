@@ -874,36 +874,65 @@ function saveChanges() {
     );
     return;
   }
-  saveBulkChanges(modifiedRowsData);
+
+  // 💡 수정된 행 + 원본 데이터를 함께 준비
+  const changesWithOriginal = modifiedRowsData.map((row) => ({
+    modified: { ...row }, // 현재 상태
+    original: row._originalApiData, // API로부터 받아온 원본
+  }));
+
+  saveBulkChanges(changesWithOriginal);
 }
 
-// 일괄 저장 API 호출
-async function saveBulkChanges(modifiedData) {
+async function saveBulkChanges(changesWithOriginal) {
   try {
-    // 데이터 변환
-    const transformedData = modifiedData.map((row) => {
-      const priorityMap = { 상: "HIGH", 중: "MIDDLE", 하: "LOW" };
-      const typeMap = { 기능: "FR", 비기능: "NFR" };
+    const priorityMap = { 상: "HIGH", 중: "MIDDLE", 하: "LOW" };
+    const typeMap = { 기능: "FR", 비기능: "NFR" };
 
-      const transformed = {
-        memberId: userId.value,
-        reqPk: row._originalApiData.reqPk,
-        type: typeMap[row.type] || row.type,
-        level1: row.level1,
-        level2: row.level2,
-        level3: row.level3,
-        priority: priorityMap[row.priority] || row.priority,
-        difficulty: priorityMap[row.difficulty] || row.difficulty,
-        name: row.name,
-        description: row.description,
-        modReason: row.modification_reason,
+    const transformedData = [];
+
+    changesWithOriginal.forEach(({ modified, original }) => {
+      const changedFields = {};
+      const reqPk = original.reqPk;
+      const memberId = userId.value;
+      const modReason = modified.modification_reason;
+
+      const compareAndAdd = (key, map = null) => {
+        const newVal = map ? map[modified[key]] || modified[key] : modified[key];
+        const oldVal = original[key];
+        if ((newVal || "") !== (oldVal || "")) {
+          changedFields[key] = newVal;
+        }
       };
 
-      console.log("변환된 행 데이터:", transformed);
-      return transformed;
+      compareAndAdd("type", typeMap);
+      compareAndAdd("level1");
+      compareAndAdd("level2");
+      compareAndAdd("level3");
+      compareAndAdd("name");
+      compareAndAdd("description");
+      compareAndAdd("priority", priorityMap);
+      compareAndAdd("difficulty", priorityMap);
+
+      if (Object.keys(changedFields).length > 0) {
+        transformedData.push({
+          reqPk,
+          memberId,
+          modReason,
+          ...changedFields,
+        });
+        console.log(`✅ 변경 감지 reqPk=${reqPk}:`, changedFields);
+      } else {
+        console.log(`⚪ 변경 없음 reqPk=${reqPk}`);
+      }
     });
 
-    console.log("백엔드로 전송할 데이터:", transformedData);
+    if (transformedData.length === 0) {
+      alert("실제로 변경된 내용이 없습니다.");
+      return;
+    }
+
+    console.log("📤 전송될 최종 데이터:", transformedData);
 
     const response = await fetch(
       `/api/v1/projects/${projectId.value}/requirements/${props.revision}/edit`,
@@ -911,7 +940,6 @@ async function saveBulkChanges(modifiedData) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Accept: "*/*",
         },
         body: JSON.stringify(transformedData),
       }
@@ -919,24 +947,25 @@ async function saveBulkChanges(modifiedData) {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("서버 응답:", errorText);
-      throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+      throw new Error(`HTTP error ${response.status}: ${errorText}`);
     }
 
     const result = await response.json();
-    console.log("서버 응답:", result);
+    console.log("✅ 서버 응답:", result);
 
     if (result.status === 200) {
       modifiedRows.value.clear();
       await loadDataFromAPI();
     } else {
-      throw new Error(result.message || "저장 중 오류가 발생했습니다.");
+      throw new Error(result.message || "저장 중 오류 발생");
     }
-  } catch (error) {
-    console.error("❌ 일괄 저장 실패:", error);
-    alert(error.message || "저장 중 오류가 발생했습니다. 다시 시도해주세요.");
+  } catch (e) {
+    console.error("❌ 저장 실패:", e);
+    alert(e.message || "저장 중 오류가 발생했습니다.");
   }
 }
+
+
 
 // 변경사항 취소
 function cancelChanges() {
