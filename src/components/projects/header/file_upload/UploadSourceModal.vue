@@ -48,43 +48,42 @@
       <div class="modal">
         <!-- Upload Area -->
         <div
-          class="upload-area"
-          @click="handleUploadAreaClick"
-          @drop.prevent="handleDrop"
-          @dragover.prevent
-          @dragenter.prevent="isDragOver = true"
-          @dragleave="handleDragLeave"
-          :class="{ 'drag-over': isDragOver }"
-        >
-          <div class="upload-icon">
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-              <polyline points="17,8 12,3 7,8"></polyline>
-              <line x1="12" y1="3" x2="12" y2="15"></line>
-            </svg>
-          </div>
-          <h2 class="modal-title">소스 업로드</h2>
-          <p class="modal-description">
-            업로드한 파일을 기반으로 요구사항 정의서를 업데이트합니다.<br />
-            <strong>한 번에 하나의 파일만 업로드 가능합니다.</strong><br />
-            지원 파일 형식: PDF, Excel, Word, WAV
-          </p>
-          <input
-            type="file"
-            ref="fileInput"
-            @change="handleFileSelect"
-            accept=".pdf,.xlsx,.xls,.wav,.docx"
-            style="display: none"
-          />
-        </div>
-
+  class="upload-area"
+  @click="handleUploadAreaClick"
+  @drop.prevent="handleDrop"
+  @dragover.prevent
+  @dragenter.prevent="isDragOver = true"
+  @dragleave="handleDragLeave"
+  :class="{ 'drag-over': isDragOver }"
+>
+  <div class="upload-icon">
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+    >
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+      <polyline points="17,8 12,3 7,8"></polyline>
+      <line x1="12" y1="3" x2="12" y2="15"></line>
+    </svg>
+  </div>
+  <h2 class="modal-title">추가 자료 업로드</h2>
+  <p class="modal-description">
+    업로드한 자료를 기반으로 요구사항 정의서를 업데이트합니다.<br />
+    <strong>한 번에 하나의 파일만 업로드 가능합니다.</strong><br />
+    지원 파일 형식: PDF, Excel, Word, WAV
+  </p>
+  <input
+    type="file"
+    ref="fileInput"
+    @change="handleFileSelect"
+    accept=".pdf,.xlsx,.xls,.wav,.docx"
+    style="display: none"
+  />
+</div>
         <!-- File List -->
         <div v-if="selectedFile" class="file-list">
           <h3 class="file-list-title">선택된 파일</h3>
@@ -117,6 +116,16 @@
             <button class="remove-file" @click="removeFile">×</button>
           </div>
         </div>
+        
+        <!-- 문서 이름 입력 필드 -->
+<div class="document-name-section">
+  <input
+    type="text"
+    v-model="documentName"
+    placeholder="문서명을 입력해주세요."
+    class="document-name-input"
+  />
+</div>
 
         <!-- Button Group -->
         <div class="button-group">
@@ -187,6 +196,8 @@ const handleComplete = () => {
   resetModal();
   emit("close");
 };
+
+const documentName = ref('');
 
 const resetModal = () => {
   selectedFile.value = null; // 단일 파일로 변경
@@ -261,7 +272,7 @@ const formatFileSize = (bytes) => {
 };
 
 const handleUpload = async () => {
-  if (!selectedFile.value) {
+  if (!selectedFile.value || !documentName.value){
     closeModal();
     return;
   }
@@ -271,7 +282,7 @@ const handleUpload = async () => {
   try {
     const formData = new FormData();
     formData.append("file", selectedFile.value);
-    formData.append("fileName", "파일이름임");
+    formData.append("documentName", documentName.value);
 
     const response = await fetch(
       `/api/v1/projects/${projectId.value}/requirement-documents/update?memberId=${memberId.value}`,
@@ -280,6 +291,8 @@ const handleUpload = async () => {
         body: formData,
       }
     );
+    
+    console.log(formData.get("documentName"));
 
     if (response.ok) {
       // 200 OK 응답
@@ -320,7 +333,7 @@ async function fetchSrsUpdateStatus() {
   }
   try {
     const res = await fetch(
-      `/ai/api/v1/jobs/srs-agent/latest-status?project_id=${projectId.value}&member_id=${memberId.value}&job_name=UPDATE`
+      `/ai/api/v1/jobs/srs-agent/latest-status?project_id=${projectId.value}&member_id=${memberId.value}&job_name=SRS_UPDATE`
     );
     if (res.status === 404 || res.status === 500) {
       stopPollingSrsUpdateStatus();
@@ -708,5 +721,81 @@ const hideFileCountWarning = () => {
 
 .error-close-button:hover {
   background: #b91c1c;
+}
+
+/* 기존 upload-area 스타일 (변경 없음) */
+.upload-area {
+  border: 2px dashed #e0e0e0;
+  border-radius: 4px;
+  padding: 32px 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 16px; /* 수정: 문서 이름 섹션과의 간격 */
+  background: #fafafa;
+}
+
+/* 문서 이름 입력 섹션 */
+.document-name-section {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.document-name-input {
+  flex: 1;
+  padding: 12px 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  font-size: 14px;
+  font-family: inherit;
+  background: white;
+  transition: border-color 0.2s ease;
+}
+
+.document-name-input:focus {
+  outline: none;
+  border-color: #999;
+}
+
+.document-name-input::placeholder {
+  color: #999;
+}
+
+.input-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.confirm-name-button {
+  background: white;
+  color: black;
+  border: 1px solid #ccc;
+  padding: 12px 16px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.confirm-name-button:hover {
+  background: #f5f5f5;
+  border-color: #999;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .document-name-section {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .confirm-name-button {
+    width: 100%;
+  }
 }
 </style>
