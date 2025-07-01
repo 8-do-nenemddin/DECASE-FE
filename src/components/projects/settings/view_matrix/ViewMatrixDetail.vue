@@ -14,10 +14,7 @@
               <strong>버전:</strong> Version. {{ item.version }}
             </div>
             <div class="info-row">
-              <strong>변경 유형:</strong> 
-              <span class="change-badge" :class="getChangeTypeClass(item.changeType)">
-                {{ getChangeTypeText(item.changeType) }}
-              </span>
+              <strong>변경 유형:</strong> {{ getChangeTypeText(item.changeType) }}
             </div>
             <div class="info-row">
               <strong>Level1:</strong> {{ item.level1 }}
@@ -74,21 +71,12 @@
       handleOverlayClick() {
         this.closeModal();
       },
-      getChangeTypeClass(changeType) {
-        // 변경 유형에 따른 CSS 클래스 반환
-        const typeMap = {
-          'NEW': 'change-new',
-          'MODIFY': 'change-modify',
-          'DELETE': 'change-delete'
-        };
-        return typeMap[changeType] || '';
-      },
       getChangeTypeText(changeType) {
         // 변경 유형 텍스트 반환
         const typeMap = {
-          'NEW': '신규',
-          'MODIFY': '수정',
-          'DELETE': '삭제'
+          'ADD': '추가',
+          'MOD': '수정',
+          'DEL': '삭제'
         };
         return typeMap[changeType] || changeType;
       },
@@ -236,19 +224,6 @@
   padding: 4px 10px;
   border-radius: 12px;
   font-size: 12px;
-  font-weight: 600;
-  color: white;
-}
-
-.change-new {
-  background-color: #10b981; /* emerald */
-}
-
-.change-modify {
-  background-color: #f59e0b; /* amber */
-}
-
-.change-delete {
-  background-color: #ef4444; /* red */
+  color: black;
 }
   </style>
