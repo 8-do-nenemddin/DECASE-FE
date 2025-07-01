@@ -1,6 +1,6 @@
 <template>
   <CommonModal
-    :closeOnOverlayClick="!isGenerating && !isCompleted"
+    :closeOnOverlayClick="!isGenerating && !isCompleted && !updateFailed"
     :modalClass="modalClass"
     :closeButtonClass="closeButtonClass"
     @close="handleClose"
@@ -15,11 +15,36 @@
       </div>
     </div>
 
+    <!-- 실패 화면 -->
+    <div v-if="updateFailed" class="error-modal-overlay">
+      <div class="error-modal">
+        <div class="error-icon">❌</div>
+        <h3 class="error-title">요구사항 정의서 업데이트 실패</h3>
+        <p class="error-message">
+          요구사항 정의서 업데이트 작업이 실패하였습니다.<br />다시 시도해
+          주세요.
+        </p>
+        <button class="error-close-button" @click="closeModal">확인</button>
+      </div>
+    </div>
+
+    <!-- 파일 개수 제한 경고 모달 -->
+    <div v-if="showFileCountWarning" class="error-modal-overlay">
+      <div class="error-modal">
+        <div class="error-icon">📁</div>
+        <h3 class="error-title">파일 업로드 제한</h3>
+        <p class="error-message">한 번에 하나의 파일만 업로드할 수 있습니다.</p>
+        <button class="error-close-button" @click="hideFileCountWarning">
+          확인
+        </button>
+      </div>
+    </div>
+
     <!-- 상태에 따른 UI -->
     <template v-if="isGenerating || isCompleted">
       <LoadingModal :isCompleted="isCompleted" @close="handleClose" />
     </template>
-    <template v-else>
+    <template v-else-if="!updateFailed">
       <div class="modal">
         <!-- Upload Area -->
         <div
@@ -47,27 +72,23 @@
           </div>
           <h2 class="modal-title">소스 업로드</h2>
           <p class="modal-description">
-            업로드할 파일을 선택하거나 드래그 앤 드롭해주세요.<br />
+            업로드한 파일을 기반으로 요구사항 정의서를 업데이트합니다.<br />
+            <strong>한 번에 하나의 파일만 업로드 가능합니다.</strong><br />
             지원 파일 형식: PDF, Excel, Word, WAV
           </p>
           <input
             type="file"
             ref="fileInput"
             @change="handleFileSelect"
-            multiple
             accept=".pdf,.xlsx,.xls,.wav,.docx"
             style="display: none"
           />
         </div>
 
         <!-- File List -->
-        <div v-if="selectedFiles.length" class="file-list">
+        <div v-if="selectedFile" class="file-list">
           <h3 class="file-list-title">선택된 파일</h3>
-          <div
-            v-for="(file, index) in selectedFiles"
-            :key="index"
-            class="file-item"
-          >
+          <div class="file-item">
             <div class="file-info">
               <div class="file-icon">
                 <svg
@@ -87,11 +108,13 @@
                 </svg>
               </div>
               <div class="file-details">
-                <span class="file-name">{{ file.name }}</span>
-                <span class="file-size">{{ formatFileSize(file.size) }}</span>
+                <span class="file-name">{{ selectedFile.name }}</span>
+                <span class="file-size">{{
+                  formatFileSize(selectedFile.size)
+                }}</span>
               </div>
             </div>
-            <button class="remove-file" @click="removeFile(index)">×</button>
+            <button class="remove-file" @click="removeFile">×</button>
           </div>
         </div>
 
@@ -100,14 +123,14 @@
           <button
             class="upload-button"
             @click="handleUpload"
-            :disabled="!selectedFiles.length || isUploading"
+            :disabled="!selectedFile || isUploading"
           >
             <span v-if="isUploading" class="loading"></span>
             <span v-else class="upload-text">
               {{
                 isUploading
                   ? "업로드 중..."
-                  : selectedFiles.length
+                  : selectedFile
                   ? "업로드"
                   : "파일을 선택해주세요."
               }}
@@ -142,15 +165,20 @@ const modalClass = computed(() => "");
 const closeButtonClass = computed(() => "");
 
 const fileInput = ref(null);
-const selectedFiles = ref([]);
+const selectedFile = ref(null); // 단일 파일로 변경
 const isDragOver = ref(false);
 const isUploading = ref(false);
 const isGenerating = ref(false);
 const isCompleted = ref(false);
 const showError = ref(false);
 const errorMessage = ref("");
+const updateFailed = ref(false);
+let pollingInterval = null;
+
+const showFileCountWarning = ref(false); // 파일 개수 경고 모달
 
 const handleClose = () => {
+  stopPollingSrsUpdateStatus();
   resetModal();
   emit("close");
 };
@@ -161,7 +189,7 @@ const handleComplete = () => {
 };
 
 const resetModal = () => {
-  selectedFiles.value = [];
+  selectedFile.value = null; // 단일 파일로 변경
   isDragOver.value = false;
   isUploading.value = false;
   isGenerating.value = false;
@@ -169,6 +197,7 @@ const resetModal = () => {
 };
 
 const closeModal = () => {
+  stopPollingSrsUpdateStatus();
   resetModal();
   emit("close");
 };
@@ -182,23 +211,46 @@ const handleDragLeave = (e) => {
 const handleDrop = (e) => {
   const files = Array.from(e.dataTransfer.files);
   isDragOver.value = false;
-  addFiles(files);
+
+  // 여러 파일이 드롭된 경우 경고
+  if (files.length > 1) {
+    showFileCountWarning.value = true;
+    return;
+  }
+
+  addFile(files[0]);
 };
 
 const handleFileSelect = (e) => {
-  addFiles(Array.from(e.target.files));
+  const files = Array.from(e.target.files);
+
+  // 여러 파일이 선택된 경우 경고 (실제로는 input에 multiple이 없어서 발생하지 않음)
+  if (files.length > 1) {
+    showFileCountWarning.value = true;
+    return;
+  }
+
+  if (files.length > 0) {
+    addFile(files[0]);
+  }
+
+  // 파일 입력 초기화
+  e.target.value = "";
 };
 
-const addFiles = (files) => {
+const addFile = (file) => {
+  if (!file) return;
+
   const allowed = [".pdf", ".csv", ".xlsx", ".xls", ".wav", ".docx"];
-  const validFiles = files.filter((file) =>
-    allowed.includes("." + file.name.split(".").pop().toLowerCase())
-  );
-  selectedFiles.value.push(...validFiles);
+  const fileExtension = "." + file.name.split(".").pop().toLowerCase();
+
+  if (allowed.includes(fileExtension)) {
+    selectedFile.value = file;
+  }
 };
 
-const removeFile = (index) => {
-  selectedFiles.value.splice(index, 1);
+const removeFile = () => {
+  selectedFile.value = null;
 };
 
 const formatFileSize = (bytes) => {
@@ -209,7 +261,7 @@ const formatFileSize = (bytes) => {
 };
 
 const handleUpload = async () => {
-  if (!selectedFiles.value.length) {
+  if (!selectedFile.value) {
     closeModal();
     return;
   }
@@ -217,10 +269,8 @@ const handleUpload = async () => {
   isUploading.value = true;
 
   try {
-    // 첫 번째 파일만 사용 (단일 파일 업로드)
-    const file = selectedFiles.value[0];
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append("file", selectedFile.value);
 
     const response = await fetch(
       `/api/v1/projects/${projectId.value}/requirement-documents/update?memberId=${memberId.value}`,
@@ -235,9 +285,8 @@ const handleUpload = async () => {
       console.log("요구사항 정의서 수정 요청 성공");
       isUploading.value = false;
       isGenerating.value = true;
-      await new Promise((res) => setTimeout(res, 3000));
-      isGenerating.value = false;
-      isCompleted.value = true;
+      updateFailed.value = false;
+      startPollingSrsUpdateStatus();
     } else {
       // HTTP 에러 응답
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -246,11 +295,58 @@ const handleUpload = async () => {
     console.error("업로드 실패:", err);
     isUploading.value = false;
     isGenerating.value = false;
-
-    // 에러 모달 표시
     showErrorModal(err.message || "요청 처리 중 오류가 발생했습니다.");
   }
 };
+
+function startPollingSrsUpdateStatus() {
+  if (pollingInterval) return;
+  pollingInterval = setInterval(fetchSrsUpdateStatus, 5000); // 5초마다 polling
+  fetchSrsUpdateStatus(); // 즉시 1회 실행
+}
+
+function stopPollingSrsUpdateStatus() {
+  if (pollingInterval) {
+    clearInterval(pollingInterval);
+    pollingInterval = null;
+  }
+}
+
+async function fetchSrsUpdateStatus() {
+  if (!isGenerating.value) {
+    stopPollingSrsUpdateStatus();
+    return;
+  }
+  try {
+    const res = await fetch(
+      `/ai/api/v1/jobs/srs-agent/latest-status?project_id=${projectId.value}&member_id=${memberId.value}&job_name=SRS_UPDATE`
+    );
+    if (res.status === 404 || res.status === 500) {
+      stopPollingSrsUpdateStatus();
+      isGenerating.value = false;
+      showErrorModal("서버 오류");
+      return;
+    }
+    if (!res.ok) throw new Error("상태 확인 실패");
+    const data = await res.json();
+    if (data.status === "PROCESSING") {
+      // 계속 polling
+      return;
+    } else if (data.status === "FAILED") {
+      stopPollingSrsUpdateStatus();
+      isGenerating.value = false;
+      updateFailed.value = true;
+    } else if (data.status === "COMPLETED") {
+      stopPollingSrsUpdateStatus();
+      isGenerating.value = false;
+      isCompleted.value = true;
+    }
+  } catch (err) {
+    stopPollingSrsUpdateStatus();
+    isGenerating.value = false;
+    showErrorModal(err.message || "상태 확인 중 오류가 발생했습니다.");
+  }
+}
 
 const handleUploadAreaClick = () => {
   fileInput.value?.click();
@@ -264,6 +360,10 @@ const showErrorModal = (message) => {
 const hideErrorModal = () => {
   showError.value = false;
   errorMessage.value = "";
+};
+
+const hideFileCountWarning = () => {
+  showFileCountWarning.value = false;
 };
 </script>
 
@@ -554,11 +654,9 @@ const hideErrorModal = () => {
 /* Error Modal Styles */
 .error-modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  border-radius: 25px;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;

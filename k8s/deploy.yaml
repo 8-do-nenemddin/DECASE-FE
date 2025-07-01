@@ -21,7 +21,7 @@ spec:
       serviceAccountName: default
       containers:
         - name: decase-fe
-          image: amdp-registry.skala-ai.com/skala25a/sk-team-08-decase-fe:1.0.0-19-7905d80e6053
+          image: amdp-registry.skala-ai.com/skala25a/sk-team-08-decase-fe:1.0.0-22-ce665cf4d74f
           imagePullPolicy: Always
           env:
             - name: USER_NAME
