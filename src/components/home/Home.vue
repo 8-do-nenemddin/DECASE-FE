@@ -58,9 +58,9 @@ onMounted(() => {
   ctx.font = 'bold 100px Georgia'
   ctx.fillStyle = 'white'
   ctx.textAlign = 'center'
-  ctx.fillText('INNOVATE', 512, 380)
-  ctx.fillText('WITH', 512, 520)
-  ctx.fillText('DECASE', 512, 660)
+  ctx.fillText('BREAK', 512, 380)
+  ctx.fillText('THE', 512, 520)
+  ctx.fillText('CASE', 512, 660)
 
   const backgroundTexture = new THREE.CanvasTexture(textCanvas)
   backgroundTexture.encoding = THREE.sRGBEncoding

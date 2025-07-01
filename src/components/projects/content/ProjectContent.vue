@@ -79,6 +79,8 @@ import { useProjectStore } from "../../../stores/projectStore";
 import SrsFailedContent from "./SrsFailedContent.vue";
 import GeneratingContent from "./GeneratingContent.vue";
 
+import { useRoute } from "vue-router";
+
 const projectStore = useProjectStore();
 const projectId = computed(() => projectStore.projectId);
 let pollingInterval = null;
@@ -97,6 +99,8 @@ function handleOpenMockupSidebar() {
 
 // 파일 선택 이벤트 처리 (부모에서 호출)
 const handleFileSelected = (fileData) => {
+  activeMockupFile.value = null;
+
   selectedFile.value = {
     type: fileData.type,
     docId: fileData.docId,
@@ -127,6 +131,7 @@ const clearSelection = () => {
 };
 
 const activeMockupFile = ref(null);
+const route = useRoute();
 
 const handleMockupFileSelected = (file) => {
   console.log("ProjectContent received mockup file:", file);
@@ -137,6 +142,13 @@ const handleMockupFileSelected = (file) => {
   };
   console.log("Updated activeMockupFile:", activeMockupFile.value);
 };
+
+watch(
+    () => route.path,
+    () => {
+      activeMockupFile.value = null;
+    }
+);
 
 const handleGenerationStarted = () => {
   srsStatus.value = "PROCESSING";
