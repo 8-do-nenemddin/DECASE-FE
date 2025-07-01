@@ -1,5 +1,5 @@
 <template>
-  <div class="mockup-viewer-pane" v-if="activeFile">
+  <div class="mockup-viewer-pane" v-if="activeFile && viewerTab">
     <div class="viewer-header">
       <div class="header-content-row">
         <h3>{{ activeFile.name }} (v{{ activeFile.revision }})</h3>
@@ -231,6 +231,15 @@ watch(
     viewerTab.value = "preview";
   }
 );
+
+// Reset code and requirements when activeFile becomes invalid
+watch(() => props.activeFile, (newVal) => {
+  if (!newVal) {
+    code.value = "";
+    requirements.value = [];
+    isLoading.value = false;
+  }
+});
 
 onMounted(() => {
   if (codeTextarea.value) {
