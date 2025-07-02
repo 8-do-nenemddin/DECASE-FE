@@ -46,15 +46,20 @@
           <div class="requirement-id">
             <span class="id-badge">{{ req.id }}</span>
           </div>
-          <div class="requirement-content">
-            <p class="requirement-description">{{ req.description }}</p>
-          </div>
-          <div class="requirement-status">
-            <div class="status-indicator completed">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <polyline points="20 6 9 17 4 12"></polyline>
-              </svg>
-            </div>
+          <div class="requirement-content" @click="req.showDetail = !req.showDetail" style="cursor: pointer;">
+            <p class="requirement-description">
+              {{ req.description }}
+              <span style="margin-left: 6px; font-size: 0.8rem; color: #3b82f6;">
+                [{{ req.showDetail ? '접기' : '자세히' }}]
+              </span>
+            </p>
+            <p
+                v-if="req.showDetail"
+                class="requirement-detail-description"
+                style="margin-top: 6px; color: #334155; font-size: 0.85rem;"
+            >
+              {{ req.detailDescription || '상세 설명 없음' }}
+            </p>
           </div>
         </div>
       </div>
@@ -178,15 +183,44 @@ const copyCode = async () => {
   }
 };
 
+const fetchRequirementDescriptions = async (projectId, ids) => {
+  try {
+    const response = await axios.post(
+        `/api/v1/projects/${projectId}/requirements/descriptions`,
+        { requirementIds: ids }
+    );
+    return response.data.descriptions; // [{ id: 101, description: "..." }]
+  } catch (err) {
+    console.error("요구사항 설명 로딩 실패:", err);
+    return [];
+  }
+};
+
 const fetchCode = async () => {
   if (!props.activeFile) return;
   isLoading.value = true;
+
   try {
     const response = await axios.get(
-      `/api/v1/projects/${projectId.value}/mockups/${props.activeFile.revision}/${props.activeFile.name}`
+        `/api/v1/projects/${projectId.value}/mockups/${props.activeFile.revision}/${props.activeFile.name}`
     );
+
     code.value = response.data.html;
     requirements.value = response.data.sourceRequirements || [];
+
+    // 요구사항 설명 받아오기
+    const ids = requirements.value.map((r) => r.id);
+    const descriptions = await fetchRequirementDescriptions(projectId.value, ids);
+
+    // 요구사항에 설명 병합
+    requirements.value = requirements.value.map((req) => ({
+      id: req.id,
+      description: req.description,
+      detailDescription:
+          descriptions.find((desc) => desc.id === req.id)?.description || "",
+      showDetail: false,
+    }));
+
     updateLineNumbers();
   } catch (error) {
     console.error("코드 로딩 실패:", error);
@@ -803,4 +837,8 @@ onMounted(() => {
   }
 }
 
+.requirement-detail-description {
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
 </style>
